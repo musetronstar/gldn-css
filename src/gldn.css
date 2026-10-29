@@ -1,0 +1,15 @@
+/*
+ * gldn-css entry point.
+ *
+ * Declares the cascade layer order up front so precedence is structural,
+ * then imports every partial. Each partial assigns its own rules to a layer,
+ * which keeps src/ and dist/ identical layer trees and lets one file host
+ * two layers. Layer order is the framework's specificity contract:
+ * reset < tokens < layout < components < responsive.
+ */
+@layer reset, tokens, layout, components, responsive;
+
+@import url('./_tokens.css');
+@import url('./_layout.css');
+@import url('./_components.css');
+@import url('./_responsive.css');

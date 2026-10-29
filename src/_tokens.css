@@ -1,0 +1,162 @@
+/*
+ * gldn-css tokens - the golden ratio foundation.
+ *
+ * Single source of truth for proportions, spacing, typography, and surfaces.
+ * Every other layer composes these properties; none may define new ones.
+ * This file hosts two layers: the golden tokens and, in its own reset
+ * layer, the minimal global normalization, so integrators can override or
+ * drop the reset independently of the design tokens.
+ */
+@layer tokens {
+
+	/* ----------------------------------------------------------------------
+	 * 1. The golden ratio constant and the golden split of 100%.
+	 *    major and minor are the first two terms of the cascade below,
+	 *    so the split is exact rather than a rounded literal.
+	 * ------------------------------------------------------------------ */
+	:root {
+		color-scheme: light;
+		--gldn-phi: 1.61803398875;
+
+		--gldn-major: var(--gldn-phi-1);
+		--gldn-minor: var(--gldn-phi-2);
+
+		/* ------------------------------------------------------------------
+		 * 2. Golden division cascade: phi^-1 .. phi^-10 as percentages.
+		 *
+		 * Each term divides the previous term by phi, so term n is exactly
+		 * phi^-n of the whole. phi^-2 stays a subtraction so the first two
+		 * terms sum to exactly 100%, which is what the golden split needs.
+		 * The cascade gives the framework a full proportional scale for
+		 * widths and other horizontal proportions.
+		 * ---------------------------------------------------------------- */
+		--gldn-phi-1: calc(100% / var(--gldn-phi));
+		--gldn-phi-2: calc(100% - var(--gldn-phi-1));
+		--gldn-phi-3: calc(var(--gldn-phi-2) / var(--gldn-phi));
+		--gldn-phi-4: calc(var(--gldn-phi-3) / var(--gldn-phi));
+		--gldn-phi-5: calc(var(--gldn-phi-4) / var(--gldn-phi));
+		--gldn-phi-6: calc(var(--gldn-phi-5) / var(--gldn-phi));
+		--gldn-phi-7: calc(var(--gldn-phi-6) / var(--gldn-phi));
+		--gldn-phi-8: calc(var(--gldn-phi-7) / var(--gldn-phi));
+		--gldn-phi-9: calc(var(--gldn-phi-8) / var(--gldn-phi));
+		--gldn-phi-10: calc(var(--gldn-phi-9) / var(--gldn-phi));
+
+		/* ------------------------------------------------------------------
+		 * 3. Spacing scale: each step multiplies or divides by phi.
+		 * ---------------------------------------------------------------- */
+		--gldn-space-base: 1rem;
+		--gldn-space-xs: calc(var(--gldn-space-base) / var(--gldn-phi) / var(--gldn-phi));
+		--gldn-space-sm: calc(var(--gldn-space-base) / var(--gldn-phi));
+		--gldn-space-md: var(--gldn-space-base);
+		--gldn-space-lg: calc(var(--gldn-space-base) * var(--gldn-phi));
+		--gldn-space-xl: calc(var(--gldn-space-lg) * var(--gldn-phi));
+		--gldn-space-2xl: calc(var(--gldn-space-xl) * var(--gldn-phi));
+
+		/* The single gutter between golden split columns. Each column deducts
+		 * its golden share of it from its basis (1/phi + 1/phi^2 = 1, so the
+		 * bases plus the gutter sum to exactly 100%). Retune a row's gutter
+		 * through this token, never by setting gap directly. */
+		--gldn-gutter: var(--gldn-space-lg);
+
+		/* ------------------------------------------------------------------
+		 * 4. Typography scale and golden leading.
+		 * ---------------------------------------------------------------- */
+		--gldn-text-base: 1rem;
+		--gldn-text-sm: calc(var(--gldn-text-base) / var(--gldn-phi));
+		--gldn-text-md: calc(var(--gldn-text-base) * var(--gldn-phi));
+		--gldn-text-lg: calc(var(--gldn-text-md) * var(--gldn-phi));
+		--gldn-text-xl: calc(var(--gldn-text-lg) * var(--gldn-phi));
+		--gldn-leading: var(--gldn-phi);
+
+		/* ------------------------------------------------------------------
+		 * 5. Surfaces, colors, radii, shadow.
+		 * ---------------------------------------------------------------- */
+		--gldn-color-bg: #f4f5f7;
+		--gldn-color-surface: #ffffff;
+		--gldn-color-text: #111827;
+		--gldn-color-muted: #5f6673;
+		--gldn-color-primary: #2563eb;
+		--gldn-color-primary-hover: #1d4ed8;
+		--gldn-color-primary-fg: #ffffff;
+		--gldn-color-link: #2563eb;
+		--gldn-color-border: #e5e7eb;
+
+		--gldn-radius-sm: calc(0.25rem * var(--gldn-phi));
+		--gldn-radius-md: calc(0.5rem * var(--gldn-phi));
+		--gldn-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+
+		--gldn-font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+		--gldn-font-serif: Georgia, 'Times New Roman', serif;
+
+		/* ------------------------------------------------------------------
+		 * 6. Breakpoint reference values. Media query conditions cannot read
+		 * custom properties, so _responsive.css repeats these literals; the
+		 * tokens exist so value contexts (clamp, container queries in user
+		 * code) share the same source of truth.
+		 * ---------------------------------------------------------------- */
+		--gldn-bp-sm: 48rem;
+		--gldn-bp-lg: 75rem;
+	}
+
+	/* Dark theme: toggling one class re-skins every layer below. */
+	.gldn-theme-dark {
+		color-scheme: dark;
+		--gldn-color-bg: #0f172a;
+		--gldn-color-surface: #1e293b;
+		--gldn-color-text: #f1f5f9;
+		--gldn-color-muted: #94a3b8;
+		--gldn-color-primary: #2563eb;
+		--gldn-color-primary-hover: #3b82f6;
+		--gldn-color-link: #93c5fd;
+		--gldn-color-border: #334155;
+		--gldn-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5);
+	}
+
+	/* Minimal reset: cross-browser normalization, nothing opinionated.
+	 * Kept in its own layer so host projects can override or discard it
+	 * without touching the design tokens above. */
+	@layer reset {
+
+		*,
+		*::before,
+		*::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		html {
+			font-family: var(--gldn-font-sans);
+			line-height: var(--gldn-leading);
+			-webkit-text-size-adjust: 100%;
+			text-size-adjust: 100%;
+		}
+
+		body {
+			min-height: 100vh;
+			min-height: 100dvh;
+			background-color: var(--gldn-color-bg);
+			color: var(--gldn-color-text);
+		}
+
+		a {
+			color: var(--gldn-color-link);
+		}
+
+		img,
+		picture,
+		video,
+		canvas,
+		svg {
+			display: block;
+			max-width: 100%;
+		}
+
+		input,
+		button,
+		textarea,
+		select {
+			font: inherit;
+		}
+	}
+}

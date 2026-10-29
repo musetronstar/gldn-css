@@ -1,0 +1,143 @@
+/*
+ * gldn-css components - semantic classes composing tokens and layout
+ * primitives. HTML carries meaning (gldn-workspace, gldn-sidebar); the
+ * golden math stays here in CSS.
+ */
+@layer components {
+
+	/* Shared panel surface: sidebar, main, and cards present identically. */
+	.gldn-sidebar,
+	.gldn-main,
+	.gldn-card {
+		background-color: var(--gldn-color-surface);
+		border-radius: var(--gldn-radius-md);
+		box-shadow: var(--gldn-shadow);
+		padding: var(--gldn-space-lg);
+	}
+
+	/* The workspace fills the viewport and splits into golden columns. */
+	.gldn-workspace {
+		display: flex;
+		gap: var(--gldn-gutter);
+		padding: var(--gldn-space-lg);
+		min-height: 100vh;
+		min-height: 100dvh;
+	}
+
+	/* Same contract as the layout primitives: the bases are border-box
+	 * sizes minus each column's golden share of the gutter, so the padded
+	 * panels split their container in exactly the golden ratio. */
+	.gldn-sidebar {
+		flex: 0 0 calc(var(--gldn-minor) - var(--gldn-gutter) / var(--gldn-phi) / var(--gldn-phi));
+		min-width: 0;
+	}
+
+	.gldn-main {
+		flex: 0 0 calc(var(--gldn-major) - var(--gldn-gutter) / var(--gldn-phi));
+		min-width: 0;
+	}
+
+	/* Full-width bands anchoring the top and bottom of a page. Block-level
+	 * by default; inside a flex parent the workspace column flow keeps them
+	 * full width. */
+	.gldn-header,
+	.gldn-footer {
+		background-color: var(--gldn-color-surface);
+		padding: var(--gldn-space-lg);
+	}
+
+	.gldn-header {
+		border-bottom: 1px solid var(--gldn-color-border);
+	}
+
+	.gldn-footer {
+		border-top: 1px solid var(--gldn-color-border);
+	}
+
+	/* Display band for the top of a page. */
+	.gldn-hero {
+		background-color: var(--gldn-color-surface);
+		border-radius: var(--gldn-radius-md);
+		box-shadow: var(--gldn-shadow);
+		padding: var(--gldn-space-2xl);
+		text-align: center;
+	}
+
+	.gldn-nav {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--gldn-space-md);
+		list-style: none;
+	}
+
+	/* Typography components ride the golden type scale and carry their own
+	 * weight, so they render the same on any element. Display sizes use
+	 * tighter leading than the phi leading reserved for prose. Long words
+	 * must wrap rather than clip: narrow screens are a fact of life. */
+	.gldn-title-hero {
+		font-size: var(--gldn-text-xl);
+		font-weight: 700;
+		line-height: 1.2;
+		overflow-wrap: break-word;
+		color: var(--gldn-color-text);
+	}
+
+	.gldn-title-1 {
+		font-size: var(--gldn-text-lg);
+		font-weight: 700;
+		line-height: 1.2;
+		overflow-wrap: break-word;
+		color: var(--gldn-color-text);
+	}
+
+	.gldn-title-2 {
+		font-size: var(--gldn-text-md);
+		font-weight: 700;
+		line-height: 1.2;
+		overflow-wrap: break-word;
+		color: var(--gldn-color-text);
+	}
+
+	.gldn-title-3 {
+		font-size: var(--gldn-text-base);
+		font-weight: 600;
+		color: var(--gldn-color-text);
+	}
+
+	.gldn-lede {
+		font-size: var(--gldn-text-md);
+		color: var(--gldn-color-muted);
+	}
+
+	.gldn-text {
+		font-size: var(--gldn-text-base);
+		color: var(--gldn-color-muted);
+		max-width: 65ch;
+	}
+
+	.gldn-btn {
+		display: inline-block;
+		padding: var(--gldn-space-sm) var(--gldn-space-lg);
+		border: 0;
+		border-radius: var(--gldn-radius-md);
+		background-color: var(--gldn-color-primary);
+		color: var(--gldn-color-primary-fg);
+		cursor: pointer;
+		text-decoration: none;
+	}
+
+	.gldn-btn:hover {
+		background-color: var(--gldn-color-primary-hover);
+	}
+
+	.gldn-btn:focus-visible {
+		outline: 2px solid var(--gldn-color-link);
+		outline-offset: 2px;
+	}
+
+	.gldn-btn:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+}

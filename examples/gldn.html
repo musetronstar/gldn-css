@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css feature tour</title>
+	<link rel="stylesheet" href="../dist/gldn.min.css">
+	<style>
+		/*
+		 * Hero watermark: the spiral artwork ("Fibonacci Spiral" by nbpetersen,
+		 * public domain via OpenClipart, https://freesvg.org/fibonacci-spiral)
+		 * is black line art, so low opacity reads as a quiet graphite watermark
+		 * on the light hero. CSS masks cannot load from file:// documents, and
+		 * recoloring is unnecessary: the dark theme inverts the artwork to a
+		 * pale line instead.
+		 */
+		.spiral-bg {
+			position: absolute;
+			top: 50%;
+			translate: 0 -50%;
+			inset-inline-end: var(--gldn-space-2xl);
+			height: 135%;
+			opacity: 0.12;
+			pointer-events: none;
+		}
+
+		.gldn-theme-dark .spiral-bg {
+			filter: invert(1);
+			opacity: 0.18;
+		}
+
+		.gldn-hero > :not(.spiral-bg) {
+			position: relative;
+		}
+
+		/* The watermark is decorative; keep the small-screen hero clean. */
+		@media (max-width: 48rem) {
+			.spiral-bg {
+				display: none;
+			}
+		}
+
+		/* One bar per cascade term; only the width varies, so it stays inline. */
+		.demo-bar {
+			background: var(--gldn-color-primary);
+			height: var(--gldn-space-md);
+		}
+	</style>
+</head>
+<body>
+
+	<header class="gldn-header" id="top">
+		<nav class="gldn-nav">
+			<strong>gldn-css</strong>
+			<a href="#splits">golden splits</a>
+			<a href="#cascade">cascade</a>
+			<a href="#typography">typography</a>
+			<button class="gldn-btn" id="gldn-theme-toggle" type="button" aria-pressed="false">dark theme</button>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+
+		<section class="gldn-hero gldn-stack" style="position: relative; overflow: hidden">
+			<img class="spiral-bg" src="fibonacci-spiral.svg" alt="" aria-hidden="true">
+			<h1 class="gldn-title-hero">The divine proportional semantic CSS system</h1>
+			<p class="gldn-lede">
+				Every proportion on this page derives from one constant:
+				the golden ratio phi. Resize the window and watch the splits hold their ratio.
+			</p>
+			<p>
+				<a class="gldn-btn" href="#splits">see the golden splits</a>
+			</p>
+		</section>
+
+		<section class="gldn-stack" id="splits">
+			<h2 class="gldn-title-2">golden splits</h2>
+			<p class="gldn-text">
+				The fixed split deducts each column's golden share of the row gutter
+				from its basis, so the columns plus the gutter fill the container in
+				exact proportion; the fluid split grows the columns by weights phi
+				and 1 instead. Both hold the ratio at any width. The measured ratios
+				below are computed live from the rendered boxes.
+			</p>
+
+			<h3 class="gldn-title-3">fixed split: 61.803% / 38.197%</h3>
+			<div class="gldn-row">
+				<div class="gldn-sidebar" id="demo-fixed-minor">
+					<p class="gldn-text">minor column, 38.197% of the content width</p>
+				</div>
+				<div class="gldn-main" id="demo-fixed-major">
+					<p class="gldn-text">major column, 61.803% of the content width</p>
+				</div>
+			</div>
+			<p class="gldn-text">measured: <output id="gldn-ratio-fixed">resize to measure</output></p>
+
+			<h3 class="gldn-title-3">fluid split: flex-grow phi / 1</h3>
+			<div class="gldn-row">
+				<div class="gldn-minor-fluid" id="demo-fluid-minor">
+					<div class="gldn-card">
+						<p class="gldn-text">minor column, grows by 1</p>
+					</div>
+				</div>
+				<div class="gldn-major-fluid" id="demo-fluid-major">
+					<div class="gldn-card">
+						<p class="gldn-text">major column, grows by phi</p>
+					</div>
+				</div>
+			</div>
+			<p class="gldn-text">measured: <output id="gldn-ratio-fluid">resize to measure</output></p>
+		</section>
+
+		<section class="gldn-stack" id="cascade">
+			<h2 class="gldn-title-2">the golden division cascade</h2>
+			<p class="gldn-text">
+				Dividing the remainder by phi again and again yields the full proportional
+				scale phi^-1 .. phi^-10, exposed as the custom properties
+				<code>--gldn-phi-1</code> through <code>--gldn-phi-10</code>.
+			</p>
+			<div class="gldn-card gldn-stack" style="gap: var(--gldn-space-md)">
+				<div>
+					<div class="gldn-text">phi^-1 = 61.803%</div>
+					<div class="demo-bar" style="width: var(--gldn-phi-1)"></div>
+				</div>
+				<div>
+					<div class="gldn-text">phi^-2 = 38.197%</div>
+					<div class="demo-bar" style="width: var(--gldn-phi-2)"></div>
+				</div>
+				<div>
+					<div class="gldn-text">phi^-3 = 23.607%</div>
+					<div class="demo-bar" style="width: var(--gldn-phi-3)"></div>
+				</div>
+				<div>
+					<div class="gldn-text">phi^-4 = 14.590%</div>
+					<div class="demo-bar" style="width: var(--gldn-phi-4)"></div>
+				</div>
+				<div>
+					<div class="gldn-text">phi^-5 = 9.017%</div>
+					<div class="demo-bar" style="width: var(--gldn-phi-5)"></div>
+				</div>
+				<div>
+					<div class="gldn-text">phi^-6 = 5.573%</div>
+					<div class="demo-bar" style="width: var(--gldn-phi-6)"></div>
+				</div>
+			</div>
+		</section>
+
+		<section class="gldn-stack" id="typography">
+			<h2 class="gldn-title-2">typography on the golden scale</h2>
+			<p class="gldn-text">
+				Each size step multiplies or divides by phi, and prose keeps a golden
+				line height of phi itself.
+			</p>
+			<div class="gldn-card gldn-stack">
+				<p class="gldn-title-hero">gldn-title-hero rides --gldn-text-xl</p>
+				<p class="gldn-title-1">gldn-title-1 rides --gldn-text-lg</p>
+				<p class="gldn-title-2">gldn-title-2 rides --gldn-text-md</p>
+				<p class="gldn-title-3">gldn-title-3 rides --gldn-text-base</p>
+				<p class="gldn-lede">gldn-lede introduces a section at --gldn-text-md in muted color.</p>
+				<p class="gldn-text">gldn-text is body copy at --gldn-text-base, --gldn-text-sm is available for fine print.</p>
+			</div>
+		</section>
+
+		<section class="gldn-stack">
+			<h2 class="gldn-title-2">panels in proportion</h2>
+			<div class="gldn-row">
+				<div class="gldn-minor">
+					<article class="gldn-card gldn-stack">
+						<h3 class="gldn-title-3">minor panel</h3>
+						<p class="gldn-text">cards compose the same golden spacing and surfaces as the page splits.</p>
+					</article>
+				</div>
+				<div class="gldn-major">
+					<article class="gldn-card gldn-stack">
+						<h3 class="gldn-title-3">major panel</h3>
+						<p class="gldn-text">semantic classes keep the markup clean while the cascade layers keep specificity predictable: tokens, then layout, then components, then responsive.</p>
+						<p><a class="gldn-btn" href="#top">back to top</a></p>
+					</article>
+				</div>
+			</div>
+		</section>
+
+	</main>
+
+	<footer class="gldn-footer">
+		<p class="gldn-text">gldn-css: pure CSS, one constant, harmonious proportions.</p>
+	</footer>
+
+	<script src="gldn.js"></script>
+</body>
+</html>

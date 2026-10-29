@@ -1,0 +1,53 @@
+/*
+ * gldn-css responsive - breakpoint reflow.
+ *
+ * Because this layer ranks above components in the cascade, these overrides
+ * win without specificity hacks or !important. Breakpoint literals repeat
+ * the --gldn-bp-* token values; media query conditions cannot read custom
+ * properties, so the literals are the single editable source here.
+ */
+@layer responsive {
+
+	/* Small screens: horizontal splits reflow into a vertical stack. */
+	@media (max-width: 48rem) {
+		.gldn-workspace {
+			flex-direction: column;
+			gap: var(--gldn-space-md);
+			padding: var(--gldn-space-sm);
+			--gldn-gutter: 0;
+		}
+
+		.gldn-row {
+			flex-direction: column;
+			gap: var(--gldn-space-md);
+			align-items: stretch;
+			--gldn-gutter: 0;
+		}
+
+		.gldn-major,
+		.gldn-minor,
+		.gldn-major-fluid,
+		.gldn-minor-fluid,
+		.gldn-sidebar,
+		.gldn-main {
+			flex: 1 1 100%;
+		}
+
+		/* One golden step down keeps display type on the scale and inside
+		 * narrow screens. */
+		.gldn-title-hero {
+			font-size: var(--gldn-text-lg);
+		}
+
+		.gldn-hero {
+			padding: var(--gldn-space-xl);
+		}
+	}
+
+	/* Wide screens: grow the spacing base so the whole scale breathes. */
+	@media (min-width: 75rem) {
+		:root {
+			--gldn-space-base: 1.125rem;
+		}
+	}
+}
