@@ -43,9 +43,11 @@ gldn-css/
 ├── test/
 │   ├── contract.test.mjs  # source-level contract suite
 │   └── layout.test.mjs    # rendered layout regression suite (headless Chrome)
-├── examples/
-│   ├── gldn.html        # tour of features suitable for reuse
-│   ├── gldn.js          # JavaScript examples used in conjunction with `gldn.html`
+├── docs/
+│   ├── index.html       # demo and GitHub Pages entry point
+│   ├── gldn.js          # JavaScript examples used in conjunction with `index.html`
+│   ├── gldn.min.css     # Generated copy of the production bundle
+│   ├── .nojekyll        # Publish as plain static files
 │   └── fibonacci-spiral.svg  # hero artwork by nbpetersen via OpenClipart,
                              #   public domain: https://freesvg.org/fibonacci-spiral
 └── README.md
@@ -64,7 +66,7 @@ Link the compiled bundle and write semantic markup; the golden math stays in CSS
 </div>
 ```
 
-Open `examples/gldn.html` in a browser for a guided tour of every feature,
+Open `docs/index.html` in a browser for a guided tour of every feature,
 including live measurement of the rendered golden ratio.
 
 **Cascade layers**
@@ -158,7 +160,7 @@ The build and tests are zero-dependency Node scripts; the framework itself is
 pure CSS:
 
 ```sh
-node scripts/build.mjs        # rebuild dist/gldn.min.css from src/
+node scripts/build.mjs        # rebuild dist/ and docs/ CSS bundles from src/
 node test/contract.test.mjs   # run the source contract suite
 node test/layout.test.mjs     # render the framework in headless Chrome and
                               # pin its golden layout promises (skips without Chrome)
@@ -166,8 +168,12 @@ node test/layout.test.mjs     # render the framework in headless Chrome and
 
 The contract suite pins the file layout, cascade layer order, `gldn-` namespace
 purity, golden token math, cross-file reference integrity, and that the
-committed bundle matches `src/`. The layout suite renders the example page at
+committed bundles match `src/`. The layout suite renders the example page at
 phone through desktop widths (and enlarged root fonts), asserting zero
 horizontal overflow, both splits within 0.01% of phi, wide content unable to
 disturb a split, and full-width stacking below the breakpoint.
+
+## GitHub Pages
+
+See the framework in action in the [gldn-css demo](https://musetronstar.github.io/gldn-css/).
 

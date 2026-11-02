@@ -22,7 +22,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const exampleUrl = 'file://' + path.join(root, 'examples', 'gldn.html');
+const exampleUrl = 'file://' + path.join(root, 'docs', 'index.html');
 const PHI = 1.61803398875;
 const EXAMPLE_WIDTHS = [320, 390, 768, 1100, 1465, 1905];
 const FONTS = [16, 20];

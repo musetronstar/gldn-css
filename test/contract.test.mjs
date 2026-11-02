@@ -42,8 +42,8 @@ test('src partials and entry point exist', () => {
 		assert.ok(existsSync(srcFile(name)), `missing src/${name}`);
 	}
 	assert.ok(existsSync(path.join(root, 'dist', 'gldn.min.css')), 'missing dist/gldn.min.css');
-	assert.ok(existsSync(path.join(root, 'examples', 'gldn.html')), 'missing examples/gldn.html');
-	assert.ok(existsSync(path.join(root, 'examples', 'gldn.js')), 'missing examples/gldn.js');
+	assert.ok(existsSync(path.join(root, 'docs', 'index.html')), 'missing docs/index.html');
+	assert.ok(existsSync(path.join(root, 'docs', 'gldn.js')), 'missing docs/gldn.js');
 });
 
 /* --------------------------------------------------------------------------
@@ -220,11 +220,11 @@ test('responsive layer stacks golden splits to full width at the breakpoint', ()
  * 7. Example page integrity
  * ------------------------------------------------------------------------ */
 
-const htmlPath = path.join(root, 'examples', 'gldn.html');
+const htmlPath = path.join(root, 'docs', 'index.html');
 const html = existsSync(htmlPath) ? readFileSync(htmlPath, 'utf8') : '';
 
-test('example links the dist bundle and the example script', () => {
-	assert.match(html, /<link rel="stylesheet" href="\.\.\/dist\/gldn\.min\.css">/);
+test('example links the docs bundle and the example script', () => {
+	assert.match(html, /<link rel="stylesheet" href="gldn\.min\.css">/);
 	assert.match(html, /<script src="gldn\.js"><\/script>/);
 });
 
@@ -249,10 +249,12 @@ test('src is pure CSS', () => {
  * 9. dist bundle is in sync with src and minified
  * ------------------------------------------------------------------------ */
 
-test('dist/gldn.min.css matches a fresh build of src', () => {
-	const committed = readFileSync(path.join(root, 'dist', 'gldn.min.css'), 'utf8');
+test('dist and docs bundles match a fresh build of src', () => {
 	const fresh = build();
-	assert.equal(committed, fresh, 'dist is stale; run node scripts/build.mjs');
+	for (const directory of ['dist', 'docs']) {
+		const committed = readFileSync(path.join(root, directory, 'gldn.min.css'), 'utf8');
+		assert.equal(committed, fresh, `${directory} is stale; run node scripts/build.mjs`);
+	}
 });
 
 test('dist bundle is minified and structurally valid', () => {

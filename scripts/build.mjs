@@ -105,8 +105,11 @@ const invokedDirectly = process.argv[1]
 	&& fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
 
 if (invokedDirectly) {
-	const outDir = path.join(root, 'dist');
-	mkdirSync(outDir, { recursive: true });
-	writeFileSync(path.join(outDir, 'gldn.min.css'), build());
-	console.log('built dist/gldn.min.css');
+	const bundle = build();
+	for (const directory of ['dist', 'docs']) {
+		const outDir = path.join(root, directory);
+		mkdirSync(outDir, { recursive: true });
+		writeFileSync(path.join(outDir, 'gldn.min.css'), bundle);
+	}
+	console.log('built dist/gldn.min.css and docs/gldn.min.css');
 }
