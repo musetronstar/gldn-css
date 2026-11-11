@@ -19,8 +19,8 @@ the best of both worlds in a beautiful and harmonious system:
 
 * **The Golden Ratio Foundation:** Automatically divides sections into proportional
   major ($61.803\%$) and minor ($38.197\%$) sections that scale fluidly.
-* **The `gldn-` Namespace:** Unique, collision-free custom properties and
-  class prefixes designed to integrate seamlessly into projects.
+* **The `gldn-` Namespace:** Unique custom properties and class prefixes avoid
+  naming collisions; the separate global reset still affects host elements.
 * **Cascade Layers (`@layer`):** Strict separation of tokens, layout primitives,
   semantic classes, and responsive overrides for *conflict-free specificity*.
 * **Fluid Adaptability & Reflow:** Layouts dynamically recalculate on resize and
@@ -77,8 +77,11 @@ a layer, so `src/` and `dist/` build the same layer tree. Layer order is the
 framework's specificity contract: responsive overrides always win without
 `!important`, and unlayered author styles can still override everything.
 The global reset rides in the first layer, physically hosted by
-`_tokens.css`; host projects can override or discard it by layer without
-touching the design tokens.
+`_tokens.css`. It is not scoped to `gldn-` classes: it zeroes margin and
+padding on every element and pseudo-element, makes media elements block-level
+with a maximum width, and sets page typography, body background and text
+colors, link colors, and inherited form fonts. Host projects can override or
+discard the reset by layer without touching the design tokens.
 
 **Design tokens**
 

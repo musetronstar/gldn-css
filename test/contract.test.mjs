@@ -86,6 +86,16 @@ test('every partial assigns its rules to a layer block', () => {
 
 const allSrc = ['gldn.css', ...PARTIALS].map((n) => src(n)).join('\n');
 
+function missingClasses(used, css) {
+	const defined = new Set([...css.matchAll(/(?<![\w.])\.(-?[_a-zA-Z][\w-]*)/g)]
+		.map((match) => match[1]));
+	return [...used].filter((name) => !defined.has(name));
+}
+
+test('example class lookup requires complete identifiers', () => {
+	assert.deepEqual(missingClasses(['gldn-ma'], '.gldn-major {}'), ['gldn-ma']);
+});
+
 test('all custom properties use the --gldn- prefix', () => {
 	const props = [...allSrc.matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]);
 	const foreign = props.filter((p) => !p.startsWith('--gldn-'));
@@ -232,7 +242,7 @@ test('every gldn- class used in the example exists in src', () => {
 	const used = new Set([...html.matchAll(/class="([^"]*)"/g)]
 		.flatMap((m) => m[1].split(/\s+/))
 		.filter((c) => c.startsWith('gldn-')));
-	const missing = [...used].filter((c) => !allSrc.includes(`.${c}`));
+	const missing = missingClasses(used, allSrc);
 	assert.deepEqual(missing, [], `classes used but not defined: ${missing}`);
 });
 

@@ -37,9 +37,9 @@
 		min-width: 0;
 	}
 
-	/* Full-width bands anchoring the top and bottom of a page. Block-level
-	 * by default; inside a flex parent the workspace column flow keeps them
-	 * full width. */
+	/* Surface bands anchoring the top and bottom of a page. They are full
+	 * width in block flow or a stacked workspace, not in a horizontal flex
+	 * workspace. */
 	.gldn-header,
 	.gldn-footer {
 		background-color: var(--gldn-color-surface);
