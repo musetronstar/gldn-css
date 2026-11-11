@@ -168,10 +168,11 @@ node test/layout.test.mjs     # render the framework in headless Chrome and
 
 The contract suite pins the file layout, cascade layer order, `gldn-` namespace
 purity, golden token math, cross-file reference integrity, and that the
-committed bundles match `src/`. The layout suite renders the example page at
-phone through desktop widths (and enlarged root fonts), asserting zero
-horizontal overflow, both splits within 0.01% of phi, wide content unable to
-disturb a split, and full-width stacking below the breakpoint.
+committed bundles match `src/`. The layout suite uses computed styles and
+browser layer data to assert zero horizontal overflow, both splits within 0.01%
+of phi, wide content unable to disturb a split, full-width mobile stacking and
+workspace filling, AA link and muted-text contrast, native color schemes, and
+identical top-level cascade layers in `src/` and `dist/`.
 
 ## GitHub Pages
 

@@ -112,51 +112,52 @@
 		--gldn-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5);
 	}
 
-	/* Minimal reset: cross-browser normalization, nothing opinionated.
-	 * Kept in its own layer so host projects can override or discard it
-	 * without touching the design tokens above. */
-	@layer reset {
+}
 
-		*,
-		*::before,
-		*::after {
-			box-sizing: border-box;
-			margin: 0;
-			padding: 0;
-		}
+/* Minimal reset: cross-browser normalization, nothing opinionated.
+ * Kept in its own top-level layer so host projects can override or discard it
+ * without touching the design tokens above. */
+@layer reset {
 
-		html {
-			font-family: var(--gldn-font-sans);
-			line-height: var(--gldn-leading);
-			-webkit-text-size-adjust: 100%;
-			text-size-adjust: 100%;
-		}
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+		margin: 0;
+		padding: 0;
+	}
 
-		body {
-			min-height: 100vh;
-			min-height: 100dvh;
-			background-color: var(--gldn-color-bg);
-			color: var(--gldn-color-text);
-		}
+	html {
+		font-family: var(--gldn-font-sans);
+		line-height: var(--gldn-leading);
+		-webkit-text-size-adjust: 100%;
+		text-size-adjust: 100%;
+	}
 
-		a {
-			color: var(--gldn-color-link);
-		}
+	body {
+		min-height: 100vh;
+		min-height: 100dvh;
+		background-color: var(--gldn-color-bg);
+		color: var(--gldn-color-text);
+	}
 
-		img,
-		picture,
-		video,
-		canvas,
-		svg {
-			display: block;
-			max-width: 100%;
-		}
+	a {
+		color: var(--gldn-color-link);
+	}
 
-		input,
-		button,
-		textarea,
-		select {
-			font: inherit;
-		}
+	img,
+	picture,
+	video,
+	canvas,
+	svg {
+		display: block;
+		max-width: 100%;
+	}
+
+	input,
+	button,
+	textarea,
+	select {
+		font: inherit;
 	}
 }

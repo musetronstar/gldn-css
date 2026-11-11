@@ -10,7 +10,10 @@
  *   2. the padded fixed split and the fluid split hold phi within 0.01%;
  *   3. wide content cannot collapse or invert a split (min-width: 0);
  *   4. stacked columns fill the row below the breakpoint;
- *   5. the hero heading wraps instead of clipping at phone widths.
+ *   5. the hero heading wraps instead of clipping at phone widths;
+ *   6. mobile panels fill the workspace without row padding or shrinkage;
+ *   7. links, controls, and muted text meet their color contracts;
+ *   8. src/ and dist/ expose the same top-level cascade layers.
  *
  * Run: node test/layout.test.mjs
  * Skips with a notice when no Chrome/Chromium binary is available.
@@ -125,6 +128,8 @@ async function launch(browserPath) {
 
 	await send('Page.enable');
 	await send('Runtime.enable');
+	await send('DOM.enable');
+	await send('CSS.enable');
 
 	return {
 		viewport: async (width) => {
@@ -138,6 +143,21 @@ async function launch(browserPath) {
 			// which is how the enlarged-font cases surface in the wild.
 			await evaluate(`document.documentElement.style.fontSize = '${rootFont}px'`);
 			await settle();
+		},
+		layers: async () => {
+			const { root: documentNode } = await send('DOM.getDocument', { depth: 0 });
+			const { nodeId } = await send('DOM.querySelector',
+				{ nodeId: documentNode.nodeId, selector: 'body' });
+			const { rootLayer } = await send('CSS.getLayersForNode', { nodeId });
+			const names = [];
+			const visit = (layer, parent = '') => {
+				const name = layer.name || '';
+				const fullName = parent && name ? `${parent}.${name}` : name || parent;
+				if (name) names.push(fullName);
+				for (const child of layer.subLayers || []) visit(child, fullName);
+			};
+			for (const layer of rootLayer.subLayers || []) visit(layer);
+			return names;
 		},
 		evaluate,
 		settle,
@@ -176,6 +196,30 @@ const pageState = `(() => {
 	};
 })()`;
 
+const colorState = `(() => {
+	const channel = (value) => {
+		value /= 255;
+		return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+	};
+	const luminance = (color) => {
+		const [r, g, b] = color.match(/[\\d.]+/g).map(Number).map(channel);
+		return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+	};
+	const contrast = (a, b) => {
+		const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+		return (light + 0.05) / (dark + 0.05);
+	};
+	const link = document.querySelector('.gldn-nav a');
+	const muted = document.querySelector('#splits > .gldn-text');
+	const body = getComputedStyle(document.body);
+	const header = getComputedStyle(document.querySelector('.gldn-header'));
+	return {
+		linkContrast: contrast(getComputedStyle(link).color, header.backgroundColor),
+		mutedContrast: contrast(getComputedStyle(muted).color, body.backgroundColor),
+		colorScheme: getComputedStyle(document.documentElement).colorScheme
+	};
+})()`;
+
 /* ------------------------------------------------------------------ */
 /* suite                                                                */
 /* ------------------------------------------------------------------ */
@@ -197,6 +241,27 @@ writeFileSync(wideHarness, `<!DOCTYPE html><html><head>
 	<div class="gldn-major" id="hmaj"><p>content</p></div>
 </div>
 </body></html>`);
+
+const mobileHarness = path.join(os.tmpdir(), 'gldn-mobile-layout.html');
+writeFileSync(mobileHarness, `<!DOCTYPE html><html><head>
+<link rel="stylesheet" href="file://${path.join(root, 'dist', 'gldn.min.css')}">
+</head><body>
+<div class="gldn-workspace" id="mobile-workspace">
+	<aside class="gldn-sidebar" id="mobile-sidebar">sidebar</aside>
+	<main class="gldn-main" id="mobile-main">main</main>
+</div>
+<div class="gldn-row" id="mobile-row">
+	<div class="gldn-minor">minor</div><div class="gldn-major">major</div>
+</div>
+<div class="gldn-row gldn-center" id="mobile-centered-row">
+	<div class="gldn-minor" id="mobile-centered-minor">minor</div>
+</div>
+</body></html>`);
+
+const srcLayerHarness = path.join(os.tmpdir(), 'gldn-src-layers.html');
+writeFileSync(srcLayerHarness, `<!DOCTYPE html><html><head>
+<link rel="stylesheet" href="file://${path.join(root, 'src', 'gldn.css')}">
+</head><body><p class="gldn-text">layers</p></body></html>`);
 
 const browser = await launch(chrome);
 try {
@@ -251,14 +316,10 @@ try {
 	});
 
 	test('hero heading wraps instead of clipping at phone widths', () => {
-		const clipped = states.filter(({ width }) => width <= 390 && stateClip(width));
+		const clipped = states.filter(({ width, state }) =>
+			width <= 390 && state.headingOverflow > 1);
 		if (clipped.length) throw new Error('heading clipped at phone width');
 	});
-
-	function stateClip(width) {
-		const found = states.find((s) => s.width === width && s.font === 16);
-		return found && found.state.headingOverflow > 1;
-	}
 
 	await browser.viewport(1100);
 	await browser.navigate('file://' + wideHarness, 16);
@@ -281,9 +342,87 @@ try {
 			throw new Error('harness content did not overflow its column; test invalid');
 		}
 	});
+
+	await browser.viewport(390);
+	await browser.navigate('file://' + mobileHarness, 16);
+	const mobile = await browser.evaluate(`(() => {
+		const rect = (id) => document.getElementById(id).getBoundingClientRect();
+		const style = (id) => getComputedStyle(document.getElementById(id));
+		const workspace = rect('mobile-workspace');
+		const workspaceStyle = style('mobile-workspace');
+		const sidebar = rect('mobile-sidebar');
+		const main = rect('mobile-main');
+		const row = rect('mobile-row');
+		const rowStyle = style('mobile-row');
+		return {
+			panelHeightError: Math.abs(sidebar.height - main.height),
+			panelFillError: Math.abs(sidebar.height + main.height
+				+ parseFloat(workspaceStyle.rowGap)
+				+ parseFloat(workspaceStyle.paddingTop)
+				+ parseFloat(workspaceStyle.paddingBottom) - workspace.height),
+			shortestPanel: Math.min(sidebar.height, main.height),
+			rowPadding: ['Top', 'Right', 'Bottom', 'Left'].reduce((sum, side) =>
+				sum + parseFloat(rowStyle['padding' + side]), 0),
+			rowWidthError: Math.max(...['mobile-row'].flatMap((id) =>
+				[...document.getElementById(id).children].map((child) =>
+					Math.abs(child.getBoundingClientRect().width - row.width)))),
+			centeredWidthError: Math.abs(rect('mobile-centered-minor').width
+				- rect('mobile-centered-row').width)
+		};
+	})()`);
+
+	test('mobile panels fill the workspace and rows stay full width without padding', () => {
+		if (mobile.shortestPanel < 100 || mobile.panelHeightError > 1
+			|| mobile.panelFillError > 1) {
+			throw new Error(`invalid mobile panel sizes: ${JSON.stringify(mobile)}`);
+		}
+		if (mobile.rowPadding !== 0 || mobile.rowWidthError > 1
+			|| mobile.centeredWidthError > 1) {
+			throw new Error(`invalid mobile row sizes: ${JSON.stringify(mobile)}`);
+		}
+	});
+
+	await browser.viewport(1100);
+	await browser.navigate(exampleUrl, 16);
+	const lightColors = await browser.evaluate(colorState);
+	await browser.evaluate(`document.documentElement.classList.add('gldn-theme-dark')`);
+	await browser.settle();
+	const darkColors = await browser.evaluate(colorState);
+
+	test('links and native controls meet the dark theme contract', () => {
+		for (const [theme, colors] of [['light', lightColors], ['dark', darkColors]]) {
+			if (colors.linkContrast < 4.5) {
+				throw new Error(`${theme} link contrast is ${colors.linkContrast.toFixed(2)}:1`);
+			}
+		}
+		if (lightColors.colorScheme !== 'light' || darkColors.colorScheme !== 'dark') {
+			throw new Error(`color schemes: ${lightColors.colorScheme}, ${darkColors.colorScheme}`);
+		}
+	});
+
+	test('muted text meets WCAG AA on the page background', () => {
+		for (const [theme, colors] of [['light', lightColors], ['dark', darkColors]]) {
+			if (colors.mutedContrast < 4.5) {
+				throw new Error(`${theme} muted contrast is ${colors.mutedContrast.toFixed(2)}:1`);
+			}
+		}
+	});
+
+	const distLayers = await browser.layers();
+	await browser.navigate('file://' + srcLayerHarness, 16);
+	const srcLayers = await browser.layers();
+
+	test('src and dist expose the same top-level cascade layers', () => {
+		const expected = ['reset', 'tokens', 'layout', 'components', 'responsive'];
+		if (distLayers.join(',') !== expected.join(',')) {
+			throw new Error(`dist layers: ${distLayers.join(', ')}`);
+		}
+		if (srcLayers.join(',') !== distLayers.join(',')) {
+			throw new Error(`src layers: ${srcLayers.join(', ')}`);
+		}
+	});
 } finally {
 	await browser.close();
-	browser.close();
 }
 
 console.log(`\n${passed} layout tests passed`);
