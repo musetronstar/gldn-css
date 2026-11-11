@@ -87,13 +87,18 @@ test('every partial assigns its rules to a layer block', () => {
 const allSrc = ['gldn.css', ...PARTIALS].map((n) => src(n)).join('\n');
 
 function missingClasses(used, css) {
-	const defined = new Set([...css.matchAll(/(?<![\w.])\.(-?[_a-zA-Z][\w-]*)/g)]
+	const defined = new Set([...css.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)]
 		.map((match) => match[1]));
 	return [...used].filter((name) => !defined.has(name));
 }
 
 test('example class lookup requires complete identifiers', () => {
 	assert.deepEqual(missingClasses(['gldn-ma'], '.gldn-major {}'), ['gldn-ma']);
+});
+
+test('example class lookup finds compound and element-qualified classes', () => {
+	assert.deepEqual(missingClasses(['gldn-row', 'gldn-centered'], '.gldn-row.gldn-centered {}'), []);
+	assert.deepEqual(missingClasses(['gldn-card'], 'div.gldn-card {}'), []);
 });
 
 test('all custom properties use the --gldn- prefix', () => {

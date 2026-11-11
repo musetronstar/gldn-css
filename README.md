@@ -77,11 +77,13 @@ a layer, so `src/` and `dist/` build the same layer tree. Layer order is the
 framework's specificity contract: responsive overrides always win without
 `!important`, and unlayered author styles can still override everything.
 The global reset rides in the first layer, physically hosted by
-`_tokens.css`. It is not scoped to `gldn-` classes: it zeroes margin and
-padding on every element and pseudo-element, makes media elements block-level
-with a maximum width, and sets page typography, body background and text
-colors, link colors, and inherited form fonts. Host projects can override or
-discard the reset by layer without touching the design tokens.
+`_tokens.css`. It is not scoped to `gldn-` classes: it sets
+`box-sizing: border-box` and zeroes margin and padding on every element and
+pseudo-element, gives the body at least the viewport's height, makes media
+elements block-level with a maximum width, and sets page typography, body
+background and text colors, link colors, and inherited form fonts. Host
+projects can override or discard the reset by layer without touching the
+design tokens.
 
 **Design tokens**
 
