@@ -41,6 +41,18 @@
 		justify-content: center;
 	}
 
+	.gldn-visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
 	/* Each column gives up its own golden share of the single gutter:
 	 * major + minor + gutter = (1/phi + 1/phi^2)(100% - gutter) + gutter
 	 * = 100%. Retune the gutter through the --gldn-gutter token. */

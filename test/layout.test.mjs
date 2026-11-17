@@ -13,7 +13,9 @@
  *   5. the hero heading wraps instead of clipping at phone widths;
  *   6. mobile panels fill the workspace without row padding or shrinkage;
  *   7. links, controls, and muted text meet their color contracts;
- *   8. src/ and dist/ expose the same top-level cascade layers.
+ *   8. text controls have horizontal spacing before their contents;
+ *   9. src/ and dist/ expose the same top-level cascade layers;
+ *  10. the dock, tabs, and message pane meet their interaction contracts.
  *
  * Run: node test/layout.test.mjs
  * Skips with a notice when no Chrome/Chromium binary is available.
@@ -29,10 +31,6 @@ const exampleUrl = 'file://' + path.join(root, 'docs', 'index.html');
 const PHI = 1.61803398875;
 const EXAMPLE_WIDTHS = [320, 390, 768, 1100, 1465, 1905];
 const FONTS = [16, 20];
-
-/* ------------------------------------------------------------------ */
-/* minimal tap runner                                                   */
-/* ------------------------------------------------------------------ */
 
 let passed = 0;
 
@@ -55,10 +53,6 @@ function near(actual, expected, tolerance, label) {
 	}
 }
 
-/* ------------------------------------------------------------------ */
-/* chrome discovery                                                     */
-/* ------------------------------------------------------------------ */
-
 function findChrome() {
 	const candidates = [process.env.GLDN_CHROME, 'google-chrome', 'chromium', 'chromium-browser']
 		.filter(Boolean);
@@ -68,10 +62,6 @@ function findChrome() {
 	}
 	return null;
 }
-
-/* ------------------------------------------------------------------ */
-/* minimal CDP driver                                                   */
-/* ------------------------------------------------------------------ */
 
 async function launch(browserPath) {
 	const port = 9400 + Math.floor(Math.random() * 400);
@@ -99,7 +89,6 @@ async function launch(browserPath) {
 	const pending = new Map();
 	let closed = false;
 	ws.addEventListener('message', (ev) => {
-		// Chrome may send stray events while the browser tears down; ignore.
 		if (closed) return;
 		let msg;
 		try {
@@ -136,11 +125,14 @@ async function launch(browserPath) {
 			await send('Emulation.setDeviceMetricsOverride',
 				{ width, height: 900, deviceScaleFactor: 1, mobile: false });
 		},
+		reducedMotion: async (reduce) => {
+			await send('Emulation.setEmulatedMedia', {
+				features: [{ name: 'prefers-reduced-motion', value: reduce ? 'reduce' : 'no-preference' }]
+			});
+		},
 		navigate: async (url, rootFont) => {
 			await send('Page.navigate', { url });
 			await settle();
-			// A root font-size emulates a browser default-font preference,
-			// which is how the enlarged-font cases surface in the wild.
 			await evaluate(`document.documentElement.style.fontSize = '${rootFont}px'`);
 			await settle();
 		},
@@ -156,7 +148,7 @@ async function launch(browserPath) {
 				if (name) names.push(fullName);
 				for (const child of layer.subLayers || []) visit(child, fullName);
 			};
-			for (const layer of rootLayer.subLayers || []) visit(layer);
+			for (const child of rootLayer.subLayers || []) visit(child);
 			return names;
 		},
 		evaluate,
@@ -169,10 +161,6 @@ async function launch(browserPath) {
 		}
 	};
 }
-
-/* ------------------------------------------------------------------ */
-/* probes: expressions evaluated inside the page                        */
-/* ------------------------------------------------------------------ */
 
 const pageState = `(() => {
 	const de = document.documentElement;
@@ -220,10 +208,6 @@ const colorState = `(() => {
 	};
 })()`;
 
-/* ------------------------------------------------------------------ */
-/* suite                                                                */
-/* ------------------------------------------------------------------ */
-
 const chrome = findChrome();
 if (!chrome) {
 	console.log('SKIP - layout tests need Chrome or Chromium (set GLDN_CHROME)');
@@ -235,9 +219,7 @@ writeFileSync(wideHarness, `<!DOCTYPE html><html><head>
 <link rel="stylesheet" href="file://${path.join(root, 'dist', 'gldn.min.css')}">
 </head><body>
 <div class="gldn-row" id="row" style="width: 700px; margin: 1rem">
-	<div class="gldn-minor" id="hmin"><pre style="white-space: pre">${
-		'x'.repeat(120)
-	}</pre></div>
+	<div class="gldn-minor" id="hmin"><pre style="white-space: pre">${'x'.repeat(120)}</pre></div>
 	<div class="gldn-major" id="hmaj"><p>content</p></div>
 </div>
 </body></html>`);
@@ -256,6 +238,14 @@ writeFileSync(mobileHarness, `<!DOCTYPE html><html><head>
 <div class="gldn-row gldn-center" id="mobile-centered-row">
 	<div class="gldn-minor" id="mobile-centered-minor">minor</div>
 </div>
+</body></html>`);
+
+const formHarness = path.join(os.tmpdir(), 'gldn-form-controls.html');
+writeFileSync(formHarness, `<!DOCTYPE html><html><head>
+<link rel="stylesheet" href="file://${path.join(root, 'dist', 'gldn.min.css')}">
+</head><body>
+<input id="text-input" type="text" value="text">
+<textarea id="text-area">text</textarea>
 </body></html>`);
 
 const srcLayerHarness = path.join(os.tmpdir(), 'gldn-src-layers.html');
@@ -334,9 +324,7 @@ try {
 	})()`);
 
 	test('wide content cannot collapse or invert a split', () => {
-		if (wide.rowWidth !== 700) {
-			throw new Error(`row grew to ${wide.rowWidth}px`);
-		}
+		if (wide.rowWidth !== 700) throw new Error(`row grew to ${wide.rowWidth}px`);
 		near(wide.ratio, PHI, 0.0001, 'split ratio with wide content');
 		if (wide.contentOverflow <= 0) {
 			throw new Error('harness content did not overflow its column; test invalid');
@@ -408,6 +396,20 @@ try {
 		}
 	});
 
+	await browser.navigate('file://' + formHarness, 16);
+	const formPadding = await browser.evaluate(`['text-input', 'text-area'].map((id) => {
+		const style = getComputedStyle(document.getElementById(id));
+		return [parseFloat(style.paddingLeft), parseFloat(style.paddingRight)];
+	})`);
+
+	test('text controls have horizontal spacing before their contents', () => {
+		for (const [left, right] of formPadding) {
+			if (left <= 0 || right <= 0) {
+				throw new Error(`invalid horizontal padding: ${left}px ${right}px`);
+			}
+		}
+	});
+
 	const distLayers = await browser.layers();
 	await browser.navigate('file://' + srcLayerHarness, 16);
 	const srcLayers = await browser.layers();
@@ -421,6 +423,9 @@ try {
 			throw new Error(`src layers: ${srcLayers.join(', ')}`);
 		}
 	});
+
+	const { testDock } = await import('./dock.test.mjs');
+	await testDock(browser, test, root);
 } finally {
 	await browser.close();
 }

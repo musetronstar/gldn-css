@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css bottom dock</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body class="gldn-has-dock">
+	<header class="gldn-header">
+		<nav class="gldn-nav">
+			<strong>bottom dock</strong>
+			<a href="../index.html">feature tour</a>
+			<button class="gldn-btn" id="gldn-theme-toggle" type="button" aria-pressed="false">dark theme</button>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" id="dock-example" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-card gldn-stack">
+			<h1 class="gldn-title-1">Tabs and message pane</h1>
+			<p class="gldn-text">
+				The dock reserves its height on wide screens. New entries go to the top of Messages;
+				errors also open over the active panel without moving focus.
+			</p>
+			<div class="gldn-nav">
+				<button class="gldn-btn" id="demo-add-info" type="button">add information</button>
+				<button class="gldn-btn" id="demo-add-error" type="button">add error</button>
+				<button class="gldn-btn" id="demo-add-long" type="button">add long entry</button>
+				<button class="gldn-btn" id="demo-replace" type="button">replace entries</button>
+			</div>
+		</section>
+		<section class="gldn-card">
+			<h2 class="gldn-title-2">Page content</h2>
+			<p class="gldn-text">Selecting this content closes an open sheet on a narrow screen.</p>
+		</section>
+	</main>
+
+	<div class="gldn-dock" data-gldn-dock data-gldn-expanded="true">
+		<div class="gldn-dock-popin" data-gldn-popin role="alert" aria-atomic="true" hidden>
+			<div class="gldn-dock-popin-content" data-gldn-popin-content></div>
+			<button class="gldn-popin-dismiss" data-gldn-popin-dismiss type="button"
+				aria-label="Dismiss">&times;</button>
+		</div>
+		<div class="gldn-tabs" data-gldn-tabs data-gldn-expanded="true">
+			<div class="gldn-dock-strip">
+				<div class="gldn-tablist" role="tablist" aria-label="Dock panels">
+					<button class="gldn-tab" id="demo-input-tab" data-gldn-tab="input" role="tab"
+						aria-selected="true" aria-controls="demo-input-panel">Input</button>
+					<button class="gldn-tab" id="demo-messages-tab" data-gldn-tab="messages" role="tab"
+						aria-selected="false" aria-controls="demo-messages-panel" tabindex="-1">
+						Messages
+						<span class="gldn-tab-mark" data-gldn-tab-mark hidden>
+							(<span data-gldn-tab-count>0</span><span class="gldn-tab-error"
+								data-gldn-tab-error aria-label="Errors" hidden>!</span>)
+						</span>
+					</button>
+				</div>
+				<button class="gldn-dock-control" data-gldn-tabs-collapse type="button"
+					aria-expanded="true" aria-controls="demo-panels" aria-label="Collapse panels">⌄</button>
+			</div>
+			<div class="gldn-dock-panels" id="demo-panels" data-gldn-dock-panels>
+				<section class="gldn-tabpanel gldn-code-panel" id="demo-input-panel" data-gldn-panel="input"
+					role="tabpanel" aria-labelledby="demo-input-tab">
+					<label for="demo-command">Command</label>
+					<textarea class="gldn-code-input" id="demo-command" rows="4">show current entries</textarea>
+				</section>
+				<section class="gldn-tabpanel gldn-message-panel" id="demo-messages-panel"
+					data-gldn-panel="messages" role="tabpanel" aria-labelledby="demo-messages-tab" hidden>
+					<div class="gldn-message-tools">
+						<button class="gldn-dock-control" data-gldn-messages-expand type="button"
+							aria-expanded="false" aria-controls="demo-log">Expand</button>
+						<button class="gldn-dock-control" data-gldn-messages-clear type="button">Clear</button>
+					</div>
+					<div class="gldn-messages" id="demo-log" data-gldn-messages role="log"
+						aria-live="polite" aria-relevant="additions"></div>
+				</section>
+			</div>
+		</div>
+	</div>
+
+	<script type="module" src="dock.js"></script>
+</body>
+</html>

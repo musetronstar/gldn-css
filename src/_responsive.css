@@ -42,6 +42,47 @@
 		.gldn-hero {
 			padding: var(--gldn-space-xl);
 		}
+
+		:root {
+			--gldn-dock-reserve: var(--gldn-dock-strip-height);
+		}
+
+		.gldn-dock,
+		.gldn-dock[data-gldn-expanded="false"] {
+			height: var(--gldn-dock-strip-height);
+		}
+
+		.gldn-dock[data-gldn-expanded="true"] {
+			height: var(--gldn-dock-expanded-height);
+			max-height: 100dvh;
+		}
+
+		.gldn-dock-strip {
+			order: 2;
+			border-top: 1px solid var(--gldn-color-border);
+			border-bottom: 0;
+		}
+
+		.gldn-dock-panels {
+			order: 1;
+		}
+
+		.gldn-tab,
+		.gldn-dock-control,
+		.gldn-popin-dismiss {
+			min-width: var(--gldn-touch-target);
+			min-height: var(--gldn-touch-target);
+		}
+
+		.gldn-dock-popin,
+		.gldn-dock[data-gldn-expanded="false"] .gldn-dock-popin {
+			inset: auto 0 var(--gldn-dock-strip-height);
+			max-height: calc(var(--gldn-dock-expanded-height) - var(--gldn-dock-strip-height));
+		}
+
+		.gldn-dock[data-gldn-expanded="false"] .gldn-dock-popin {
+			bottom: 100%;
+		}
 	}
 
 	/* Wide screens: grow the spacing base so the whole scale breathes. */

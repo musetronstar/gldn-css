@@ -1,14 +1,14 @@
 /*
  * gldn-css build: inline the src/ partials into a single minified bundle.
  *
- * Zero-dependency on purpose: the framework ships pure CSS, so its build
- * tooling must not require a package install. The minifier is deliberately
+ * Zero-dependency on purpose: the framework's build tooling must not require
+ * a package install. The minifier is deliberately
  * conservative — it splits the source into quoted strings and code, touches
  * only the code, and never removes spaces around calc() operators, where
  * whitespace is significant. Malformed input fails the build loudly instead
  * of shipping a broken bundle.
  */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -106,10 +106,14 @@ const invokedDirectly = process.argv[1]
 
 if (invokedDirectly) {
 	const bundle = build();
+	const modules = readdirSync(srcDir).filter((name) => name.endsWith('.js'));
 	for (const directory of ['dist', 'docs']) {
 		const outDir = path.join(root, directory);
 		mkdirSync(outDir, { recursive: true });
 		writeFileSync(path.join(outDir, 'gldn.min.css'), bundle);
+		for (const name of modules) {
+			writeFileSync(path.join(outDir, name), readFileSync(path.join(srcDir, name)));
+		}
 	}
-	console.log('built dist/gldn.min.css and docs/gldn.min.css');
+	console.log('built CSS bundles and JavaScript modules in dist/ and docs/');
 }

@@ -17,6 +17,7 @@ const src = (name) => readFileSync(path.join(root, 'src', name), 'utf8');
 const srcFile = (name) => path.join(root, 'src', name);
 
 const PARTIALS = ['_tokens.css', '_layout.css', '_components.css', '_responsive.css'];
+const MODULES = ['gldn-tabs.js', 'gldn-messages.js', 'gldn-dock.js'];
 const LAYERS = ['reset', 'tokens', 'layout', 'components', 'responsive'];
 
 let passed = 0;
@@ -44,6 +45,14 @@ test('src partials and entry point exist', () => {
 	assert.ok(existsSync(path.join(root, 'dist', 'gldn.min.css')), 'missing dist/gldn.min.css');
 	assert.ok(existsSync(path.join(root, 'docs', 'index.html')), 'missing docs/index.html');
 	assert.ok(existsSync(path.join(root, 'docs', 'gldn.js')), 'missing docs/gldn.js');
+	for (const name of MODULES) {
+		for (const directory of ['src', 'dist', 'docs']) {
+			assert.ok(existsSync(path.join(root, directory, name)),
+				`missing ${directory}/${name}`);
+		}
+	}
+	assert.ok(existsSync(path.join(root, 'docs', 'components', 'dock.html')),
+		'missing dock example');
 });
 
 /* --------------------------------------------------------------------------
@@ -168,6 +177,23 @@ test('surface, color, radius, and shadow tokens are defined', () => {
 	assert.match(tokens, /--gldn-shadow:/, 'missing --gldn-shadow');
 });
 
+test('status, accessibility, dock, and stacking tokens are defined', () => {
+	for (const name of ['info', 'success', 'warning', 'error']) {
+		for (const suffix of ['', '-fg', '-surface']) {
+			assert.match(tokens, new RegExp(`--gldn-color-${name}${suffix}:`),
+				`missing --gldn-color-${name}${suffix}`);
+		}
+	}
+	for (const name of ['focus-ring', 'z-popover', 'z-dock', 'motion-duration',
+		'touch-target', 'dock-height', 'dock-panel-height', 'dock-expanded-height',
+		'dock-strip-height', 'dock-reserve', 'bp-sm']) {
+		assert.match(tokens, new RegExp(`--gldn-${name}:`), `missing --gldn-${name}`);
+	}
+	assert.match(tokens, /--gldn-motion-duration:\s*\d+(?:\.\d+)?m?s;/);
+	assert.match(layout, /\.gldn-visually-hidden\s*\{/,
+		'missing visually hidden utility');
+});
+
 /* --------------------------------------------------------------------------
  * 5. Reference integrity: var() uses resolve, and only against tokens
  * ------------------------------------------------------------------------ */
@@ -243,12 +269,35 @@ test('example links the docs bundle and the example script', () => {
 	assert.match(html, /<script src="gldn\.js"><\/script>/);
 });
 
-test('every gldn- class used in the example exists in src', () => {
-	const used = new Set([...html.matchAll(/class="([^"]*)"/g)]
-		.flatMap((m) => m[1].split(/\s+/))
-		.filter((c) => c.startsWith('gldn-')));
+test('every gldn- class used in the examples exists in src', () => {
+	const examples = [html, readFileSync(
+		path.join(root, 'docs', 'components', 'dock.html'), 'utf8')];
+	const used = new Set(examples.flatMap((example) =>
+		[...example.matchAll(/class="([^"]*)"/g)]
+			.flatMap((m) => m[1].split(/\s+/))
+			.filter((c) => c.startsWith('gldn-'))));
 	const missing = missingClasses(used, allSrc);
 	assert.deepEqual(missing, [], `classes used but not defined: ${missing}`);
+});
+
+test('dock example includes tabs, a polite log, and an alert pop-in', () => {
+	const example = readFileSync(path.join(root, 'docs', 'components', 'dock.html'), 'utf8');
+	assert.match(example, /role="tablist"/);
+	assert.equal((example.match(/role="tab"/g) || []).length, 2);
+	assert.equal((example.match(/role="tabpanel"/g) || []).length, 2);
+	assert.match(example, /data-gldn-messages[^>]*role="log"[^>]*aria-live="polite"/s);
+	assert.match(example, /data-gldn-popin[^>]*role="alert"/s);
+	assert.match(example, /data-gldn-popin-dismiss[^>]*aria-label="Dismiss"/s);
+});
+
+test('the notification module, rules, and example are removed', () => {
+	for (const directory of ['src', 'dist', 'docs']) {
+		assert.ok(!existsSync(path.join(root, directory, 'gldn-notify.js')),
+			`${directory}/gldn-notify.js remains`);
+	}
+	assert.ok(!existsSync(path.join(root, 'docs', 'components', 'notifications.html')));
+	assert.ok(!existsSync(path.join(root, 'docs', 'components', 'notifications.js')));
+	assert.doesNotMatch(allSrc, /gldn-notify/);
 });
 
 /* --------------------------------------------------------------------------
@@ -269,6 +318,16 @@ test('dist and docs bundles match a fresh build of src', () => {
 	for (const directory of ['dist', 'docs']) {
 		const committed = readFileSync(path.join(root, directory, 'gldn.min.css'), 'utf8');
 		assert.equal(committed, fresh, `${directory} is stale; run node scripts/build.mjs`);
+	}
+});
+
+test('dist and docs modules match src', () => {
+	for (const name of MODULES) {
+		const source = readFileSync(path.join(root, 'src', name), 'utf8');
+		for (const directory of ['dist', 'docs']) {
+			const committed = readFileSync(path.join(root, directory, name), 'utf8');
+			assert.equal(committed, source, `${directory}/${name} is stale; run node scripts/build.mjs`);
+		}
 	}
 });
 

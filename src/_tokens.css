@@ -80,13 +80,36 @@
 		--gldn-color-primary-fg: #ffffff;
 		--gldn-color-link: #2563eb;
 		--gldn-color-border: #e5e7eb;
+		--gldn-color-info: #1d4ed8;
+		--gldn-color-info-fg: #ffffff;
+		--gldn-color-info-surface: #eff6ff;
+		--gldn-color-success: #166534;
+		--gldn-color-success-fg: #ffffff;
+		--gldn-color-success-surface: #f0fdf4;
+		--gldn-color-warning: #92400e;
+		--gldn-color-warning-fg: #ffffff;
+		--gldn-color-warning-surface: #fffbeb;
+		--gldn-color-error: #b91c1c;
+		--gldn-color-error-fg: #ffffff;
+		--gldn-color-error-surface: #fef2f2;
 
 		--gldn-radius-sm: calc(0.25rem * var(--gldn-phi));
 		--gldn-radius-md: calc(0.5rem * var(--gldn-phi));
 		--gldn-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+		--gldn-focus-ring: calc(var(--gldn-space-xs) / var(--gldn-phi) / var(--gldn-phi)) solid var(--gldn-color-link);
+		--gldn-z-popover: 10000;
+		--gldn-z-dock: 11000;
+		--gldn-motion-duration: 160ms;
+		--gldn-touch-target: 44px;
+		--gldn-dock-strip-height: var(--gldn-touch-target);
+		--gldn-dock-panel-height: calc(var(--gldn-text-base) * var(--gldn-leading) * 5);
+		--gldn-dock-height: calc(var(--gldn-dock-strip-height) + var(--gldn-dock-panel-height));
+		--gldn-dock-expanded-height: 50vh;
+		--gldn-dock-reserve: var(--gldn-dock-height);
 
 		--gldn-font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 		--gldn-font-serif: Georgia, 'Times New Roman', serif;
+		--gldn-font-mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
 
 		/* ------------------------------------------------------------------
 		 * 6. Breakpoint reference values. Media query conditions cannot read
@@ -109,6 +132,18 @@
 		--gldn-color-primary-hover: #3b82f6;
 		--gldn-color-link: #93c5fd;
 		--gldn-color-border: #334155;
+		--gldn-color-info: #60a5fa;
+		--gldn-color-info-fg: #0f172a;
+		--gldn-color-info-surface: #172554;
+		--gldn-color-success: #4ade80;
+		--gldn-color-success-fg: #0f172a;
+		--gldn-color-success-surface: #052e16;
+		--gldn-color-warning: #fbbf24;
+		--gldn-color-warning-fg: #0f172a;
+		--gldn-color-warning-surface: #451a03;
+		--gldn-color-error: #f87171;
+		--gldn-color-error-fg: #0f172a;
+		--gldn-color-error-surface: #450a0a;
 		--gldn-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5);
 	}
 
@@ -159,5 +194,11 @@
 	textarea,
 	select {
 		font: inherit;
+	}
+
+	input,
+	textarea,
+	select {
+		padding: var(--gldn-space-xs) var(--gldn-space-sm);
 	}
 }
