@@ -1,0 +1,263 @@
+/*
+ * gldn-css reset - plain HTML on the golden scale.
+ *
+ * Normalizes box sizing and media, then gives headings, prose, lists, code, tables, forms and
+ * the other elements apps write a composed look, so a page needs no class to sit on the scale.
+ * The reset is its own layer and file: a host overrides it by layer, or leaves it out by
+ * linking gldn-tokens.min.css in place of gldn.min.css.
+ */
+@layer reset {
+
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+		margin: 0;
+		padding: 0;
+	}
+
+	html {
+		font-family: var(--gldn-font-sans);
+		line-height: var(--gldn-leading);
+		-webkit-text-size-adjust: 100%;
+		text-size-adjust: 100%;
+	}
+
+	body {
+		min-height: 100vh;
+		min-height: 100dvh;
+		background-color: var(--gldn-color-bg);
+		color: var(--gldn-color-text);
+		font-size: var(--gldn-text-base);
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		margin-block: var(--gldn-space-lg) var(--gldn-space-md);
+		font-family: var(--gldn-font-display);
+		font-weight: 700;
+		line-height: var(--gldn-leading-heading);
+		overflow-wrap: break-word;
+		text-wrap: balance;
+	}
+
+	h1 { font-size: var(--gldn-text-2xl); }
+	h2 { font-size: var(--gldn-text-xl); }
+	h3 { font-size: var(--gldn-text-lg); }
+	h4 { font-size: var(--gldn-text-md); }
+	h5 { font-size: var(--gldn-text-base); }
+	h6 { font-size: var(--gldn-text-sm); }
+
+	p,
+	ul,
+	ol,
+	dl,
+	blockquote,
+	pre,
+	table,
+	details {
+		margin-block-end: var(--gldn-space-md);
+	}
+
+	hr {
+		margin-block: var(--gldn-space-lg);
+		border: 0;
+		border-block-start: var(--gldn-hairline) solid var(--gldn-color-border);
+	}
+
+	/* Space belongs between siblings. The first and last child of a container add none, so a
+	 * panel's padding alone sets the space around its content. */
+	:is(h1, h2, h3, h4, h5, h6, hr):first-child {
+		margin-block-start: 0;
+	}
+
+	:is(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, blockquote, pre, table, details, hr):last-child {
+		margin-block-end: 0;
+	}
+
+	/* The measure belongs to running text. Lists, code and tables span their
+	 * container, so navigation, trees and data keep the width they are given. */
+	p,
+	li,
+	dd,
+	blockquote {
+		max-width: var(--gldn-measure);
+	}
+
+	p {
+		text-wrap: pretty;
+	}
+
+	ul,
+	ol {
+		padding-inline-start: var(--gldn-space-lg);
+	}
+
+	li + li {
+		margin-block-start: var(--gldn-space-xs);
+	}
+
+	dt {
+		font-weight: 600;
+	}
+
+	dd {
+		margin-inline-start: var(--gldn-space-lg);
+	}
+
+	blockquote {
+		padding-inline-start: var(--gldn-space-md);
+		border-inline-start: var(--gldn-space-xs) solid var(--gldn-color-border);
+		color: var(--gldn-color-muted);
+		font-family: var(--gldn-font-serif);
+		font-size: var(--gldn-text-md);
+	}
+
+	small {
+		font-size: var(--gldn-text-sm);
+	}
+
+	summary {
+		cursor: pointer;
+	}
+
+	code,
+	kbd,
+	samp,
+	pre {
+		font-family: var(--gldn-font-mono);
+	}
+
+	/* Inline code keeps the size of the text around it, in headings and tables
+	 * alike: the mono stacks have x-heights close to those of the text stacks. */
+	code,
+	kbd,
+	samp {
+		font-size: 1em;
+	}
+
+	pre {
+		font-size: var(--gldn-text-sm);
+	}
+
+	/* Code sits on a tint of the text color, resolved where it is used, so it
+	 * shows on the page, on cards and in both themes. */
+	code,
+	pre {
+		background-color: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-6), transparent);
+	}
+
+	code {
+		padding-inline: var(--gldn-space-xs);
+		border-radius: var(--gldn-radius-sm);
+	}
+
+	pre {
+		padding: var(--gldn-space-md);
+		overflow-x: auto;
+		border-radius: var(--gldn-radius-md);
+	}
+
+	pre code {
+		padding: 0;
+		background-color: transparent;
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: var(--gldn-text-sm);
+		font-variant-numeric: tabular-nums;
+	}
+
+	th,
+	td {
+		padding: var(--gldn-space-xs) var(--gldn-space-sm);
+		border-bottom: var(--gldn-hairline) solid var(--gldn-color-border);
+		text-align: start;
+		vertical-align: top;
+		overflow-wrap: anywhere;
+	}
+
+	th {
+		background-color: var(--gldn-color-surface);
+		font-weight: 600;
+	}
+
+	a {
+		color: var(--gldn-color-link);
+	}
+
+	img,
+	picture,
+	video,
+	canvas,
+	svg {
+		display: block;
+		max-width: 100%;
+	}
+
+	input,
+	button,
+	textarea,
+	select {
+		font: inherit;
+	}
+
+	/* Text controls and bare buttons share one quiet look: the surface, the text color, a
+	 * boundary with 3:1 contrast against the page and panels (WCAG 1.4.11), and the small
+	 * radius. The same padding and boundary give a button the height of the field beside it.
+	 * A control never grows wider than its container, whatever its default size. */
+	:is(
+		input:not([type]),
+		input:is([type="text"], [type="email"], [type="password"], [type="search"], [type="tel"],
+			[type="url"], [type="number"], [type="date"], [type="datetime-local"], [type="month"],
+			[type="week"], [type="time"]),
+		textarea,
+		select,
+		button,
+		input:is([type="button"], [type="submit"], [type="reset"])
+	) {
+		max-width: 100%;
+		padding: var(--gldn-space-xs) var(--gldn-space-sm);
+		border: var(--gldn-hairline) solid var(--gldn-color-control-border);
+		border-radius: var(--gldn-radius-sm);
+		background-color: var(--gldn-color-surface);
+		color: var(--gldn-color-text);
+	}
+
+	::placeholder {
+		color: var(--gldn-color-muted);
+		opacity: 1;
+	}
+
+	:is(button, input:is([type="button"], [type="submit"], [type="reset"])) {
+		cursor: pointer;
+	}
+
+	/* The hover fill is the tint that code sits on, laid over the surface. */
+	:is(button, input:is([type="button"], [type="submit"], [type="reset"])):hover:not(:disabled) {
+		background-color: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-6), var(--gldn-color-surface));
+	}
+
+	/* An explicit text color replaces the browser's disabled color, so the reset restores the cue. */
+	:is(button, input, select, textarea):disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+
+	input:is([type="checkbox"], [type="radio"], [type="range"]),
+	progress {
+		accent-color: var(--gldn-color-primary);
+	}
+
+	/* One focus ring for every focusable element, components included. */
+	:focus-visible {
+		outline: var(--gldn-focus-ring);
+		outline-offset: calc(var(--gldn-space-xs) / var(--gldn-phi) / var(--gldn-phi));
+	}
+}

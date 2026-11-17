@@ -97,8 +97,16 @@ export function build() {
 	if (/@import/.test(bundle)) {
 		throw new Error('unsupported @import form in src/gldn.css');
 	}
-	const min = collapse(stripComments(bundle));
-	return `/* gldn-css - generated from src/, do not edit */\n${min}\n`;
+	return minify(bundle, 'gldn-css');
+}
+
+/* The tokens layer alone, for pages that bring their own rules. */
+export function buildTokens() {
+	return minify(readFileSync(path.join(srcDir, '_tokens.css'), 'utf8'), 'gldn-css tokens');
+}
+
+function minify(css, name) {
+	return `/* ${name} - generated from src/, do not edit */\n${collapse(stripComments(css))}\n`;
 }
 
 const invokedDirectly = process.argv[1]
@@ -106,11 +114,13 @@ const invokedDirectly = process.argv[1]
 
 if (invokedDirectly) {
 	const bundle = build();
+	const tokens = buildTokens();
 	const modules = readdirSync(srcDir).filter((name) => name.endsWith('.js'));
 	for (const directory of ['dist', 'docs']) {
 		const outDir = path.join(root, directory);
 		mkdirSync(outDir, { recursive: true });
 		writeFileSync(path.join(outDir, 'gldn.min.css'), bundle);
+		writeFileSync(path.join(outDir, 'gldn-tokens.min.css'), tokens);
 		writeFileSync(path.join(outDir, 'gldn-fonts.css'),
 			readFileSync(path.join(srcDir, 'gldn-fonts.css')));
 		// Replace the whole directory so a renamed or removed font leaves no stale copy.
@@ -120,5 +130,5 @@ if (invokedDirectly) {
 			writeFileSync(path.join(outDir, name), readFileSync(path.join(srcDir, name)));
 		}
 	}
-	console.log('built CSS bundles, font assets, and JavaScript modules in dist/ and docs/');
+	console.log('built the CSS bundle, tokens bundle, font assets, and JavaScript modules in dist/ and docs/');
 }

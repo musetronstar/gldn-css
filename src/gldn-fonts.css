@@ -1,7 +1,8 @@
 /*
  * Opt-in self-hosted variable fonts: Inter, Literata and JetBrains Mono.
- * Link this file after gldn.min.css. fonts/LICENSE.txt holds their copyright
- * notices, the SIL Open Font License and their upstream sources.
+ * Link this file after gldn.min.css: its stacks join the tokens layer, where
+ * the later definition wins. fonts/LICENSE.txt holds their copyright notices,
+ * the SIL Open Font License and their upstream sources.
  */
 
 @font-face {
@@ -52,9 +53,11 @@
 	font-display: swap;
 }
 
-:root {
-	--gldn-font-sans: 'gldn Inter', system-ui, -apple-system, 'Segoe UI', Cantarell, Ubuntu, sans-serif;
-	--gldn-font-serif: 'gldn Literata', Palatino, 'Palatino Linotype', P052, 'URW Palladio L', Georgia, serif;
-	--gldn-font-mono: 'gldn JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
-	--gldn-font-display: var(--gldn-font-sans);
+@layer tokens {
+	:root {
+		--gldn-font-sans: 'gldn Inter', system-ui, -apple-system, 'Segoe UI', Cantarell, Ubuntu, sans-serif;
+		--gldn-font-serif: 'gldn Literata', Palatino, 'Palatino Linotype', P052, 'URW Palladio L', Georgia, serif;
+		--gldn-font-mono: 'gldn JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
+		--gldn-font-display: var(--gldn-font-sans);
+	}
 }

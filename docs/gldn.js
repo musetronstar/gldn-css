@@ -28,8 +28,8 @@
 		const majorWidth = major.getBoundingClientRect().width;
 		const minorWidth = minor.getBoundingClientRect().width;
 
-		// Below the breakpoint both columns stack to full width; report the
-		// reflow honestly instead of showing a meaningless deviation.
+		// A row narrower than its threshold stacks both columns to full width;
+		// report the reflow honestly instead of showing a meaningless deviation.
 		if (Math.abs(majorWidth - minorWidth) < 1.5) {
 			output.textContent = 'stacked: columns reflowed to full width';
 			return;

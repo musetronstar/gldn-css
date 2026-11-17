@@ -10,15 +10,17 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { build, collapse, stripComments } from '../scripts/build.mjs';
+import { build, buildTokens, collapse, stripComments } from '../scripts/build.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const src = (name) => readFileSync(path.join(root, 'src', name), 'utf8');
 const srcFile = (name) => path.join(root, 'src', name);
 
-const PARTIALS = ['_tokens.css', '_layout.css', '_components.css', '_responsive.css'];
+const PARTIALS = ['_reset.css', '_tokens.css', '_layout.css', '_components.css', '_responsive.css'];
 const MODULES = ['gldn-tabs.js', 'gldn-messages.js', 'gldn-dock.js'];
 const LAYERS = ['reset', 'tokens', 'layout', 'components', 'responsive'];
+const TOKEN_SELECTORS = [':root', '.gldn-theme-dark', '.gldn-scope', '.gldn-compact', '.gldn-spacious'];
+const PRIMITIVES = ['gldn-cluster', 'gldn-grid', 'gldn-switcher', 'gldn-frame', 'gldn-frame-portrait'];
 
 let passed = 0;
 
@@ -42,7 +44,11 @@ test('src partials and entry point exist', () => {
 	for (const name of [...PARTIALS, 'gldn.css']) {
 		assert.ok(existsSync(srcFile(name)), `missing src/${name}`);
 	}
-	assert.ok(existsSync(path.join(root, 'dist', 'gldn.min.css')), 'missing dist/gldn.min.css');
+	for (const directory of ['dist', 'docs']) {
+		for (const name of ['gldn.min.css', 'gldn-tokens.min.css']) {
+			assert.ok(existsSync(path.join(root, directory, name)), `missing ${directory}/${name}`);
+		}
+	}
 	assert.ok(existsSync(path.join(root, 'docs', 'index.html')), 'missing docs/index.html');
 	assert.ok(existsSync(path.join(root, 'docs', 'gldn.js')), 'missing docs/gldn.js');
 	for (const name of MODULES) {
@@ -79,21 +85,66 @@ test('gldn.css declares the layer order reset through responsive', () => {
 		'layer declaration missing or out of order');
 });
 
-test('gldn.css imports every partial', () => {
-	for (const partial of PARTIALS) {
-		assert.match(entry, new RegExp(`@import\\s+url\\('\\./${partial}'\\)\\s*;`),
-			`gldn.css must import ${partial}`);
+test('gldn.css imports every partial in layer order', () => {
+	const imports = [...entry.matchAll(/@import\s+url\('\.\/([\w-]+\.css)'\)\s*;/g)].map((m) => m[1]);
+	assert.deepEqual(imports, PARTIALS, 'gldn.css must import each partial once, in layer order');
+});
+
+test('every partial assigns its rules to its own layer block', () => {
+	for (const layer of LAYERS) {
+		const body = src(`_${layer}.css`);
+		const layers = [...body.matchAll(/@layer\s+([\w-]+)\s*\{/g)].map((m) => m[1]);
+		assert.deepEqual([...new Set(layers)], [layer], `_${layer}.css must wrap its rules in @layer ${layer} only`);
 	}
 });
 
-test('every partial assigns its rules to a layer block', () => {
-	for (const layer of LAYERS.slice(1)) {
-		assert.match(src(`_${layer}.css`), new RegExp(`@layer\\s+${layer}\\s*\\{`),
-			`_${layer}.css must wrap rules in @layer ${layer}`);
+/*
+ * Walks a stylesheet's blocks. Each declaration and each block comes with the headers of the
+ * blocks around it, innermost last, so a check can ask which selector or at-rule holds it.
+ */
+function walk(css) {
+	const text = stripComments(css);
+	const declarations = [];
+	const blocks = [];
+	const stack = [];
+	let start = 0;
+	for (let i = 0; i < text.length; i++) {
+		const ch = text[i];
+		if (ch === '{') {
+			stack.push(text.slice(start, i).trim());
+			blocks.push([...stack]);
+			start = i + 1;
+		} else if (ch === ';' || ch === '}') {
+			const chunk = text.slice(start, i).trim();
+			const colon = chunk.indexOf(':');
+			if (stack.length && colon > 0 && !chunk.startsWith('@')) {
+				declarations.push({
+					headers: [...stack],
+					property: chunk.slice(0, colon).trim(),
+					value: chunk.slice(colon + 1).trim()
+				});
+			}
+			if (ch === '}') stack.pop();
+			start = i + 1;
+		}
 	}
-	// The tokens file also hosts the global reset in its own layer.
-	assert.match(src('_tokens.css'), /@layer\s+reset\s*\{/,
-		'_tokens.css must wrap the reset in @layer reset');
+	return { declarations, blocks };
+}
+
+const shippedSheets = () => [
+	...['gldn.css', ...PARTIALS, 'gldn-fonts.css'].map((name) => [`src/${name}`, src(name)]),
+	...['gldn.min.css', 'gldn-tokens.min.css', 'gldn-fonts.css'].map((name) =>
+		[`dist/${name}`, readFileSync(path.join(root, 'dist', name), 'utf8')])
+];
+
+test('no style rule in a shipped stylesheet sits outside a layer', () => {
+	for (const [name, css] of shippedSheets()) {
+		const unlayered = walk(css).blocks
+			.filter((headers) => !headers.at(-1).startsWith('@'))
+			.filter((headers) => !headers.some((header) => header.startsWith('@layer')))
+			.map((headers) => headers.at(-1));
+		assert.deepEqual(unlayered, [], `${name} has rules outside a layer`);
+	}
 });
 
 /* --------------------------------------------------------------------------
@@ -129,6 +180,67 @@ test('all class selectors use the gldn- prefix', () => {
 	const classes = [...allSrc.matchAll(/(?<![\w.])\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]);
 	const foreign = classes.filter((c) => !c.startsWith('gldn-'));
 	assert.deepEqual(foreign, [], `non-gldn classes: ${foreign}`);
+});
+
+/*
+ * Every measure comes from a token. A literal length is allowed only where an entry below names
+ * its place and the reason the scale cannot supply it.
+ */
+const LENGTH_ALLOWLIST = [
+	{ property: /^--gldn-fluid-base$/, literals: ['1rem', '100vw'],
+		reason: 'turns the base and viewport numbers into lengths and reads the viewport width' },
+	{ property: /^--gldn-(?:measure|grid-min|switch-min)$/, literals: ['100ch'],
+		reason: 'the measure and the primitive thresholds are 100ch divided by powers of phi' },
+	{ property: /^--gldn-split-min$/, literals: ['100ch', '100vw'],
+		reason: 'the intrinsic threshold and the phone-width viewport floor' },
+	{ property: /^--gldn-bp-(?:sm|lg)$/, literals: ['48rem', '75rem'], reason: 'the breakpoints' },
+	{ header: /^@media/, literals: ['48rem'], reason: 'media queries cannot read --gldn-bp-sm' },
+	{ property: /^--gldn-touch-target$/, literals: ['44px'],
+		reason: 'the minimum touch target (WCAG 2.5.5)' },
+	{ property: /^--gldn-dock-expanded-height$/, literals: ['50vh'], reason: 'half the viewport' },
+	{ property: /^(?:min-|max-)?height$/, literals: ['100vh', '100dvh'], reason: 'the full viewport' },
+	{ property: /^--gldn-shadow$/, literals: ['4px', '6px', '-1px'], reason: 'shadow offset and blur' },
+	{ selector: /\.gldn-visually-hidden/, literals: ['1px', '-1px'],
+		reason: 'a one-pixel box that screen readers still read' },
+	{ property: /^font-size$/, literals: ['1em'], reason: 'inline code keeps the size of its text' }
+];
+
+const LENGTH = /(?<![\w.#-])-?\d*\.?\d+(?:px|rem|em|ch|ex|vh|vw|dvh|svh|lvh|vmin|vmax|cm|mm|in|pt|pc)\b/g;
+
+function allowedLength(literal, { headers, property }) {
+	return LENGTH_ALLOWLIST.some((entry) => entry.literals.includes(literal)
+		&& (!entry.property || (property !== undefined && entry.property.test(property)))
+		&& (!entry.selector || headers.some((header) => entry.selector.test(header)))
+		&& (!entry.header || (property === undefined && entry.header.test(headers.at(-1)))));
+}
+
+test('every literal length in src is on the allowlist', () => {
+	const found = [];
+	for (const name of ['gldn.css', ...PARTIALS, 'gldn-fonts.css']) {
+		const { declarations, blocks } = walk(src(name));
+		for (const declaration of declarations) {
+			for (const [literal] of declaration.value.matchAll(LENGTH)) {
+				if (!allowedLength(literal, declaration)) {
+					found.push(`${name}: ${declaration.property}: ${declaration.value}`);
+				}
+			}
+		}
+		for (const headers of blocks) {
+			for (const [literal] of headers.at(-1).matchAll(LENGTH)) {
+				if (!allowedLength(literal, { headers })) found.push(`${name}: ${headers.at(-1)}`);
+			}
+		}
+	}
+	assert.deepEqual(found, [], 'literal lengths must come from a token or the allowlist');
+});
+
+test('the length guard rejects a literal border and accepts an allowed one', () => {
+	const declaration = (css) => walk(css).declarations[0];
+	const literals = (css) => [...declaration(css).value.matchAll(LENGTH)].map((m) => m[0]);
+	assert.deepEqual(literals('.a { border: 1px solid #1e293b; }'), ['1px']);
+	assert.ok(!allowedLength('1px', declaration('.a { border: 1px solid red; }')));
+	assert.ok(allowedLength('1px', declaration('.gldn-visually-hidden { width: 1px; }')));
+	assert.ok(allowedLength('48rem', { headers: ['@layer responsive', '@media (max-width: 48rem)'] }));
 });
 
 /* --------------------------------------------------------------------------
@@ -268,12 +380,22 @@ test('the opt-in font sheet declares licensed woff2 fonts and redefines every st
 
 test('surface, color, radius, and shadow tokens are defined', () => {
 	for (const name of ['bg', 'surface', 'text', 'muted', 'primary', 'primary-hover',
-		'border', 'primary-fg', 'link']) {
+		'border', 'control-border', 'primary-fg', 'link']) {
 		assert.match(tokens, new RegExp(`--gldn-color-${name}:`), `missing --gldn-color-${name}`);
 	}
-	assert.match(tokens, /--gldn-radius-sm:/, 'missing --gldn-radius-sm');
-	assert.match(tokens, /--gldn-radius-md:/, 'missing --gldn-radius-md');
+	assert.match(tokens, /\.gldn-theme-dark\s*\{[^}]*--gldn-color-control-border:/s,
+		'the dark theme must define its control boundary');
 	assert.match(tokens, /--gldn-shadow:/, 'missing --gldn-shadow');
+});
+
+test('radii and the hairline are steps of the space scale', () => {
+	// phi^n = phi^(n-1) + phi^(n-2): a radius-lg panel padded by space-xs holds radius-md
+	// children with concentric corners, and padded by space-sm holds radius-sm children.
+	assert.match(tokens, /--gldn-radius-sm:\s*calc\(var\(--gldn-space-base\) \* pow\(var\(--gldn-phi\), -2\)\)/);
+	assert.match(tokens, /--gldn-radius-md:\s*calc\(var\(--gldn-space-base\) \* pow\(var\(--gldn-phi\), -1\)\)/);
+	assert.match(tokens, /--gldn-radius-lg:\s*var\(--gldn-space-base\)/);
+	assert.match(tokens, /--gldn-hairline:\s*calc\(var\(--gldn-space-base\) \* pow\(var\(--gldn-phi\), -5\)\)/);
+	assert.doesNotMatch(allSrc, /\b1px solid/, 'borders use --gldn-hairline');
 });
 
 test('status, accessibility, dock, and stacking tokens are defined', () => {
@@ -303,8 +425,8 @@ test('every var() reference resolves to a token defined in the tokens layer', ()
 	assert.deepEqual(missing, [], `undefined custom properties: ${missing}`);
 });
 
-test('layout and components define no custom properties; responsive only overrides tokens', () => {
-	for (const layer of ['layout', 'components']) {
+test('reset, layout and components define no custom properties; responsive only overrides tokens', () => {
+	for (const layer of ['reset', 'layout', 'components']) {
 		const body = src(`_${layer}.css`);
 		const defs = [...body.matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]);
 		assert.deepEqual(defs, [], `_${layer}.css must not define custom properties: ${defs}`);
@@ -314,6 +436,33 @@ test('layout and components define no custom properties; responsive only overrid
 	assert.deepEqual(novel, [], `responsive layer may only override existing tokens: ${novel}`);
 });
 
+test('buttons share the controls\' size and offer four variants', () => {
+	// Block padding and boundary match the reset's controls, so a gldn-btn beside a field or a
+	// bare button has the same height.
+	assert.match(components, /\.gldn-btn\s*\{[^}]*padding:\s*var\(--gldn-space-xs\)[^}]*border:\s*var\(--gldn-hairline\) solid/s);
+	for (const variant of ['secondary', 'quiet', 'danger']) {
+		assert.match(components, new RegExp(`\\.gldn-btn-${variant}\\s*\\{`), `missing .gldn-btn-${variant}`);
+	}
+	assert.match(src('_reset.css'), /:is\([\s\S]*?button[\s\S]*?\)\s*\{[^}]*padding:\s*var\(--gldn-space-xs\)[^}]*border:\s*var\(--gldn-hairline\) solid/s);
+});
+
+test('one reset rule gives every focusable element the focus ring', () => {
+	assert.match(src('_reset.css'), /:focus-visible\s*\{[^}]*outline:\s*var\(--gldn-focus-ring\)/s);
+	for (const name of PARTIALS.filter((partial) => partial !== '_reset.css')) {
+		assert.doesNotMatch(src(name), /:focus-visible/, `${name} must not repeat the focus ring`);
+	}
+});
+
+test('the reset styles the plain elements apps write', () => {
+	const reset = src('_reset.css');
+	for (const element of ['textarea', 'select', 'button', 'dt', 'dd', 'hr', 'small', 'summary']) {
+		assert.match(reset, new RegExp(`(?<![\\w-])${element}(?![\\w-])[^{]*\\{`), `the reset must style ${element}`);
+	}
+	assert.match(reset, /::placeholder/);
+	assert.match(reset, /accent-color:\s*var\(--gldn-color-primary\)/);
+	assert.match(reset, /font-variant-numeric:\s*tabular-nums/);
+});
+
 /* --------------------------------------------------------------------------
  * 6. Golden layout primitives and responsive reflow
  * ------------------------------------------------------------------------ */
@@ -321,16 +470,52 @@ test('layout and components define no custom properties; responsive only overrid
 test('fixed and fluid golden split primitives exist', () => {
 	// Fixed splits deduct each column's golden share of the single gutter
 	// from its basis; bases + gutter = exactly 100%, and the border-box
-	// basis never shrinks, so padding cannot disturb the ratio.
-	assert.match(layout, /\.gldn-major\s*\{[^}]*flex:\s*0 0 calc\(var\(--gldn-major\) - var\(--gldn-gutter\)[^}]*min-width:\s*0/s,
-		'.gldn-major must hold the gutter-aware basis with a zero content floor');
-	assert.match(layout, /\.gldn-minor\s*\{[^}]*flex:\s*0 0 calc\(var\(--gldn-minor\) - var\(--gldn-gutter\)[^}]*min-width:\s*0/s,
-		'.gldn-minor must hold the gutter-aware basis with a zero content floor');
+	// basis never shrinks, so padding cannot disturb the ratio. Below the
+	// threshold the second term of max() wins and each column takes its line.
+	const stackTerm = (token) => `calc\\(\\(var\\(${token}\\) - 100%\\) \\* 999\\)`;
+	assert.match(layout, new RegExp(`\\.gldn-major\\s*\\{[^}]*flex:\\s*0 0 max\\(calc\\(var\\(--gldn-major\\) - var\\(--gldn-gutter\\)[^}]*${stackTerm('--gldn-split-min')}[^}]*min-width:\\s*0`, 's'),
+		'.gldn-major must hold the gutter-aware basis, stack below the threshold, and have a zero content floor');
+	assert.match(layout, new RegExp(`\\.gldn-minor\\s*\\{[^}]*flex:\\s*0 0 max\\(calc\\(var\\(--gldn-minor\\) - var\\(--gldn-gutter\\)[^}]*${stackTerm('--gldn-split-min')}[^}]*min-width:\\s*0`, 's'),
+		'.gldn-minor must hold the gutter-aware basis, stack below the threshold, and have a zero content floor');
 	// Fluid split: growing by phi and 1 keeps the 1:phi ratio at any width.
-	assert.match(layout, /\.gldn-major-fluid\s*\{[^}]*flex:\s*var\(--gldn-phi\) 1 0/s,
+	assert.match(layout, new RegExp(`\\.gldn-major-fluid\\s*\\{[^}]*flex:\\s*var\\(--gldn-phi\\) 1 max\\(0%, ${stackTerm('--gldn-split-min')}\\)`, 's'),
 		'.gldn-major-fluid must grow by phi');
-	assert.match(layout, /\.gldn-minor-fluid\s*\{[^}]*flex:\s*1 1 0/s,
+	assert.match(layout, new RegExp(`\\.gldn-minor-fluid\\s*\\{[^}]*flex:\\s*1 1 max\\(0%, ${stackTerm('--gldn-split-min')}\\)`, 's'),
 		'.gldn-minor-fluid must grow by 1');
+	assert.match(tokens, /--gldn-split-min:\s*max\(calc\(100ch \/ pow\(var\(--gldn-phi\), 2\)\),\s*calc\(\(var\(--gldn-bp-sm\) - 100vw\) \* 999\)\)/,
+		'golden rows stack below their intrinsic threshold or on a phone-width viewport');
+	assert.match(layout, /\.gldn-row:has\([^{]*\)\s*\{[^}]*flex-wrap:\s*wrap/s,
+		'only rows of golden columns wrap');
+});
+
+test('the layout primitives exist and their thresholds are tokens', () => {
+	for (const cls of PRIMITIVES) {
+		assert.match(layout, new RegExp(`\\.${cls}\\s*\\{`), `missing .${cls}`);
+	}
+	assert.match(tokens, /--gldn-grid-min:\s*calc\(100ch \/ pow\(var\(--gldn-phi\), 3\)\)/);
+	assert.match(tokens, /--gldn-switch-min:\s*calc\(100ch \/ pow\(var\(--gldn-phi\), 2\)\)/);
+	assert.match(layout, /\.gldn-grid\s*\{[^}]*var\(--gldn-grid-min\)/s);
+	assert.match(layout, /\.gldn-switcher > \*\s*\{[^}]*var\(--gldn-switch-min\)/s);
+	assert.match(layout, /\.gldn-stack > \*\s*\{[^}]*margin-block:\s*0/s,
+		'the gap alone separates a stack\'s children');
+	assert.doesNotMatch(layout, /(?:^|[\s;{])(?:color|background(?:-color)?|border-radius|box-shadow)\s*:/m,
+		'layout primitives set no color, radius or shadow');
+	for (const cls of [...PRIMITIVES, 'gldn-stack']) {
+		assert.doesNotMatch(responsive, new RegExp(`\\.${cls}(?![\\w-])`), `.${cls} must not need a breakpoint`);
+	}
+});
+
+test('scopes re-derive the scales from one set of derivations', () => {
+	for (const name of ['--gldn-space-xs', '--gldn-text-lg', '--gldn-gutter', '--gldn-radius-md', '--gldn-hairline']) {
+		assert.equal((tokens.match(new RegExp(`${name}:`, 'g')) || []).length, 1, `${name} is derived once`);
+	}
+	const derivations = walk(tokens).declarations.find((d) => d.property === '--gldn-space-xs').headers.at(-1);
+	for (const selector of [':root', '.gldn-scope', '.gldn-compact', '.gldn-spacious']) {
+		assert.ok(derivations.split(',').map((part) => part.trim()).includes(selector),
+			`the derivations must apply to ${selector}`);
+	}
+	assert.match(tokens, /\.gldn-compact\s*\{[^}]*--gldn-space-base:\s*calc\(var\(--gldn-fluid-base\) \/ var\(--gldn-phi\)\)/s);
+	assert.match(tokens, /\.gldn-spacious\s*\{[^}]*--gldn-space-base:\s*calc\(var\(--gldn-fluid-base\) \* var\(--gldn-phi\)\)/s);
 });
 
 test('rows carry exactly one gutter between split columns', () => {
@@ -343,17 +528,18 @@ test('semantic workspace components exist', () => {
 	for (const cls of ['gldn-workspace', 'gldn-sidebar', 'gldn-main']) {
 		assert.match(components, new RegExp(`\\.${cls}\\s*\\{`), `missing .${cls}`);
 	}
-	assert.match(components, /\.gldn-sidebar\s*\{[^}]*flex:\s*0 0 calc\(var\(--gldn-minor\) - var\(--gldn-gutter\)[^}]*min-width:\s*0/s,
-		'.gldn-sidebar must compose the gutter-aware minor split');
-	assert.match(components, /\.gldn-main\s*\{[^}]*flex:\s*0 0 calc\(var\(--gldn-major\) - var\(--gldn-gutter\)[^}]*min-width:\s*0/s,
-		'.gldn-main must compose the gutter-aware major split');
+	assert.match(components, /\.gldn-sidebar\s*\{[^}]*flex:\s*0 0 max\(calc\(var\(--gldn-minor\) - var\(--gldn-gutter\)[^}]*var\(--gldn-bp-sm\)[^}]*min-width:\s*0/s,
+		'.gldn-sidebar must compose the gutter-aware minor split and stack below --gldn-bp-sm');
+	assert.match(components, /\.gldn-main\s*\{[^}]*flex:\s*0 0 max\(calc\(var\(--gldn-major\) - var\(--gldn-gutter\)[^}]*var\(--gldn-bp-sm\)[^}]*min-width:\s*0/s,
+		'.gldn-main must compose the gutter-aware major split and stack below --gldn-bp-sm');
+	assert.match(components, /\.gldn-workspace\s*\{[^}]*flex-wrap:\s*wrap/s);
 });
 
-test('responsive layer stacks golden splits to full width at the breakpoint', () => {
-	assert.match(responsive, /@media\s*\(max-width:\s*48rem\)\s*\{[\s\S]*?flex:\s*1 1 100%/,
-		'responsive layer must stack major/minor to 100% below 48rem');
-	assert.match(responsive, /@media[\s\S]*?\.gldn-workspace[\s\S]*?flex-direction:\s*column/,
-		'.gldn-workspace must stack vertically on small screens');
+test('no responsive rule stacks a row, a split, the sidebar or the main panel', () => {
+	assert.doesNotMatch(responsive,
+		/\.gldn-(?:row|major|minor|major-fluid|minor-fluid|sidebar|main)(?![\w-])/,
+		'golden splits stack by their own width');
+	assert.doesNotMatch(responsive, /flex-direction|flex:\s*1 1 100%/);
 });
 
 /* --------------------------------------------------------------------------
@@ -380,18 +566,104 @@ test('the tour shows both full scales, fluid endpoints, and plain HTML in both t
 	assert.match(html, /id="fluid-base"/);
 	assert.match(html, /320px/);
 	assert.match(html, /1200px/);
-	assert.match(html, /id="plain-light"/);
-	assert.match(html, /id="plain-dark"/);
+	for (const id of ['plain-light', 'plain-dark']) {
+		const start = html.indexOf(`id="${id}"`);
+		assert.ok(start > 0, `missing ${id}`);
+		const specimen = html.slice(start, html.indexOf('</article>', start));
+		for (const element of ['form', 'input', 'select', 'textarea', 'button', 'dl', 'hr', 'small', 'details']) {
+			assert.match(specimen, new RegExp(`<${element}[\\s>]`), `${id} must show <${element}>`);
+		}
+	}
+	for (const cls of [...PRIMITIVES, 'gldn-stack', 'gldn-compact', 'gldn-spacious',
+		'gldn-btn-secondary', 'gldn-btn-quiet', 'gldn-btn-danger']) {
+		assert.match(html, new RegExp(`class="[^"]*\\b${cls}\\b`), `the tour must show .${cls}`);
+	}
 });
 
-test('the font specimen opts in and offers three pairings in both themes', () => {
+test('the font specimen records pairing B and still offers three pairings in both themes', () => {
 	assert.match(fontHtml, /<link rel="stylesheet" href="gldn-fonts\.css">/);
 	assert.equal((fontHtml.match(/data-pairing=/g) || []).length, 6);
 	assert.equal((fontHtml.match(/data-theme="light"/g) || []).length, 1);
 	assert.equal((fontHtml.match(/data-theme="dark"/g) || []).length, 1);
-	assert.match(fontHtml, /Choice:\s*pending user review/);
+	assert.match(fontHtml, /Selected: pairing B/);
+	assert.doesNotMatch(fontHtml, /pending/i, 'the font choice is settled');
+	assert.equal((fontHtml.match(/data-pairing="B" data-selected/g) || []).length, 2,
+		'both themes mark pairing B as the selected pairing');
+	// The opt-in sheet bundles exactly the selected pairing.
+	const families = [...new Set([...fonts.matchAll(/font-family:\s*'([^']+)'/g)].map((m) => m[1]))];
+	assert.deepEqual(families, ['gldn Inter', 'gldn Literata', 'gldn JetBrains Mono']);
 	const specimenFaces = (fontHtml.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || '';
 	checkFontDirectory(path.join(root, 'docs', 'specimen', 'fonts'), specimenFaces);
+});
+
+/*
+ * gldn-css is a generic framework: no project names in its sources, examples, scripts or
+ * README, and no project-domain copy outside cited quotations. Examples quote their sources
+ * verbatim, in <q cite> or <blockquote cite>.
+ */
+const exampleFiles = () => [
+	...readdirSync(path.join(root, 'docs')).filter((name) => name.endsWith('.html'))
+		.map((name) => path.join(root, 'docs', name)),
+	...readdirSync(path.join(root, 'docs', 'components')).filter((name) => name.endsWith('.html'))
+		.map((name) => path.join(root, 'docs', 'components', name))
+];
+const QUOTATION = /<(q|blockquote)\b([^>]*)>([\s\S]*?)<\/\1>/g;
+
+test('sources and examples carry no project names, and project-domain words only in quotations', () => {
+	const projectNames = /\b(?:tagd|tagl|tagsh|httagd|tagspaces?|filepile|recordstack|record views?)\b/i;
+	const domainWords = /\b(?:memex|trails?|associations?)\b/i;
+	const files = [
+		...readdirSync(path.join(root, 'src')).filter((name) => /\.(?:css|js)$/.test(name))
+			.map((name) => path.join(root, 'src', name)),
+		...readdirSync(path.join(root, 'docs')).filter((name) => /\.(?:html|js)$/.test(name))
+			.map((name) => path.join(root, 'docs', name)),
+		...readdirSync(path.join(root, 'docs', 'components')).map((name) => path.join(root, 'docs', 'components', name)),
+		path.join(root, 'scripts', 'build.mjs'),
+		path.join(root, 'README.md')
+	];
+	const found = [];
+	for (const file of files) {
+		const text = readFileSync(file, 'utf8');
+		const unquoted = text.replace(QUOTATION, '');
+		const where = path.relative(root, file);
+		const name = text.match(projectNames);
+		if (name) found.push(`${where}: ${name[0]}`);
+		const word = unquoted.match(domainWords);
+		if (word) found.push(`${where}: ${word[0]} outside a quotation`);
+	}
+	assert.deepEqual(found, []);
+});
+
+test('every quotation in the examples names its source', () => {
+	for (const file of exampleFiles()) {
+		for (const [, element, attributes] of readFileSync(file, 'utf8').matchAll(QUOTATION)) {
+			assert.match(attributes, /\bcite="https?:\/\/[^"]+"/,
+				`${path.relative(root, file)}: <${element}> needs a cite URL`);
+		}
+	}
+});
+
+/*
+ * Quotations are verbatim. GLDN_QUOTE_SOURCES names plain-text copies of the quoted works
+ * (separated by the path delimiter); without it this check is skipped.
+ */
+test('every quotation appears verbatim in its source text, when the sources are given', () => {
+	const sources = (process.env.GLDN_QUOTE_SOURCES || '').split(path.delimiter).filter(Boolean);
+	if (sources.length === 0) {
+		console.log('  (skipped: set GLDN_QUOTE_SOURCES to check quotations verbatim)');
+		return;
+	}
+	const normalize = (text) => text.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&')
+		.replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/\s+/g, ' ').trim();
+	const corpus = sources.map((file) => normalize(readFileSync(file, 'utf8'))).join('\n');
+	const missing = [];
+	for (const file of exampleFiles()) {
+		for (const [, , , inner] of readFileSync(file, 'utf8').matchAll(QUOTATION)) {
+			const quoted = normalize(inner.replace(/<footer>[\s\S]*?<\/footer>/, ''));
+			if (!corpus.includes(quoted)) missing.push(`${path.relative(root, file)}: ${quoted.slice(0, 60)}`);
+		}
+	}
+	assert.deepEqual(missing, []);
 });
 
 test('every gldn- class used in the examples exists in src', () => {
@@ -439,11 +711,23 @@ test('src is pure CSS', () => {
  * ------------------------------------------------------------------------ */
 
 test('dist and docs bundles match a fresh build of src', () => {
-	const fresh = build();
-	for (const directory of ['dist', 'docs']) {
-		const committed = readFileSync(path.join(root, directory, 'gldn.min.css'), 'utf8');
-		assert.equal(committed, fresh, `${directory} is stale; run node scripts/build.mjs`);
+	for (const [name, fresh] of [['gldn.min.css', build()], ['gldn-tokens.min.css', buildTokens()]]) {
+		for (const directory of ['dist', 'docs']) {
+			const committed = readFileSync(path.join(root, directory, name), 'utf8');
+			assert.equal(committed, fresh, `${directory}/${name} is stale; run node scripts/build.mjs`);
+		}
 	}
+});
+
+test('the tokens bundle holds the tokens layer alone', () => {
+	const bundle = readFileSync(path.join(root, 'dist', 'gldn-tokens.min.css'), 'utf8');
+	const { blocks } = walk(bundle);
+	assert.deepEqual([...new Set(blocks.map((headers) => headers[0]))], ['@layer tokens']);
+	const selectors = [...new Set(blocks.filter((headers) => headers.length > 1)
+		.flatMap((headers) => headers.at(-1).split(',').map((selector) => selector.trim())))];
+	assert.deepEqual(selectors.filter((selector) => !TOKEN_SELECTORS.includes(selector)), [],
+		'the tokens bundle may only set tokens on :root, theme classes and scope classes');
+	assert.doesNotMatch(bundle, /@layer reset|@layer layout|@layer components|@layer responsive/);
 });
 
 test('dist and docs modules match src', () => {

@@ -9,13 +9,16 @@
  *      at default and enlarged root font sizes;
  *   2. the padded fixed split and the fluid split hold phi within 0.01%;
  *   3. wide content cannot collapse or invert a split (min-width: 0);
- *   4. stacked columns fill the row below the breakpoint;
+ *   4. stacked columns fill the row when it is narrower than its threshold;
  *   5. the hero heading wraps instead of clipping at phone widths;
  *   6. mobile panels fill the workspace without row padding or shrinkage;
  *   7. links, controls, and muted text meet their color contracts;
  *   8. text controls have horizontal spacing before their contents;
  *   9. src/ and dist/ expose the same top-level cascade layers;
- *  10. the dock, tabs, and message pane meet their interaction contracts.
+ *  10. the dock, tabs, and message pane meet their interaction contracts;
+ *  11. plain HTML controls, focus and panel edges meet the reset's contract;
+ *  12. the layout primitives and scopes meet their contracts;
+ *  13. golden splits use their intrinsic threshold and default phone floor.
  *
  * Run: node test/layout.test.mjs
  * Skips with a notice when no Chrome/Chromium binary is available.
@@ -153,6 +156,14 @@ async function launch(browserPath) {
 			for (const child of rootLayer.subLayers || []) visit(child);
 			return names;
 		},
+		press: async (key) => {
+			const code = { Tab: 9 }[key];
+			for (const type of ['keyDown', 'keyUp']) {
+				await send('Input.dispatchKeyEvent',
+					{ type, key, code: key, windowsVirtualKeyCode: code, nativeVirtualKeyCode: code });
+			}
+			await settle();
+		},
 		evaluate,
 		settle,
 		close: async () => {
@@ -199,6 +210,10 @@ const scaleState = `(() => {
 	for (const name of ['xs', 'sm', 'md', 'lg', 'xl', '2xl']) {
 		probe.style.width = 'var(--gldn-space-' + name + ')';
 		values['space-' + name] = parseFloat(getComputedStyle(probe).width);
+	}
+	for (const name of ['sm', 'md', 'lg']) {
+		probe.style.width = 'var(--gldn-radius-' + name + ')';
+		values['radius-' + name] = parseFloat(getComputedStyle(probe).width);
 	}
 	probe.remove();
 	return values;
@@ -299,12 +314,13 @@ try {
 		scales.push({ width, values: await browser.evaluate(scaleState) });
 	}
 
-	test('fluid type and space scales equal base times their powers of phi', () => {
+	test('fluid type, space and radius scales equal base times their powers of phi', () => {
 		const typePowers = { xs: -1, sm: -0.5, base: 0, md: 0.5, lg: 1, xl: 1.5, '2xl': 2, '3xl': 2.5 };
 		const spacePowers = { xs: -2, sm: -1, md: 0, lg: 1, xl: 2, '2xl': 3 };
+		const radiusPowers = { sm: -2, md: -1, lg: 0 };
 		for (const { width, values } of scales) {
 			const base = 16 + Math.max(0, Math.min(880, width - 320)) * 2 / 880;
-			for (const [group, powers] of [['text', typePowers], ['space', spacePowers]]) {
+			for (const [group, powers] of [['text', typePowers], ['space', spacePowers], ['radius', radiusPowers]]) {
 				for (const [name, power] of Object.entries(powers)) {
 					const token = `${group}-${name}`;
 					const expected = base * PHI ** power;
@@ -408,7 +424,8 @@ try {
 		}
 	});
 
-	test('columns stack to full width below the breakpoint', () => {
+	// The tour's fixed split is gldn-sidebar and gldn-main, which stack below --gldn-bp-sm.
+	test('workspace panels stack to full width when their row is narrower than 48rem', () => {
 		const phone = states.filter(({ width }) => width <= 390);
 		const sideBySide = states.filter(({ width }) => width > 768);
 		if (!phone.every(({ state }) => state.stacked)) {
@@ -445,7 +462,7 @@ try {
 		}
 	});
 
-	await browser.viewport(390);
+	await browser.viewport(320);
 	await browser.navigate('file://' + mobileHarness, 16);
 	const mobile = await browser.evaluate(`(() => {
 		const rect = (id) => document.getElementById(id).getBoundingClientRect();
@@ -473,7 +490,7 @@ try {
 		};
 	})()`);
 
-	test('mobile panels fill the workspace and rows stay full width without padding', () => {
+	test('stacked panels fill the workspace and stacked rows stay full width without padding', () => {
 		if (mobile.shortestPanel < 100 || mobile.panelHeightError > 1
 			|| mobile.panelFillError > 1) {
 			throw new Error(`invalid mobile panel sizes: ${JSON.stringify(mobile)}`);
@@ -540,6 +557,15 @@ try {
 
 	const { testDock } = await import('./dock.test.mjs');
 	await testDock(browser, test, root);
+
+	const { testPlainHtml } = await import('./plain-html.test.mjs');
+	await testPlainHtml(browser, test, root);
+
+	const { testPrimitives } = await import('./primitives.test.mjs');
+	await testPrimitives(browser, test, root);
+
+	const { testSplits } = await import('./splits.test.mjs');
+	await testSplits(browser, test, root);
 } finally {
 	await browser.close();
 }

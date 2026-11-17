@@ -15,12 +15,20 @@
  * Split columns set min-width to 0 so wide content (code, tables, long
  * URLs) cannot steal the sibling's share; authors give such content its
  * own overflow-x: auto.
+ *
+ * A row of golden columns stacks when the row is narrower than
+ * --gldn-split-min. The default token also supplies a phone-width viewport
+ * floor; at 48rem and above, the row's own width alone controls the split.
+ * Each basis is the larger of its golden size and (threshold - row width) * 999,
+ * which is hugely negative above the threshold and hugely positive below it.
+ * The row wraps, so below the threshold each column takes a line of its own,
+ * capped at the row width.
  */
 @layer layout {
 
 	.gldn-container {
 		width: 100%;
-		max-width: 75rem;
+		max-width: var(--gldn-bp-lg);
 		margin-inline: auto;
 		padding-inline: var(--gldn-space-md);
 	}
@@ -30,10 +38,70 @@
 		gap: var(--gldn-gutter);
 	}
 
+	/* Only rows of golden columns wrap; a plain row keeps its children on one line. */
+	.gldn-row:has(> :is(.gldn-major, .gldn-minor, .gldn-major-fluid, .gldn-minor-fluid, .gldn-sidebar, .gldn-main)) {
+		flex-wrap: wrap;
+	}
+
 	.gldn-stack {
 		display: flex;
 		flex-direction: column;
 		gap: var(--gldn-space-lg);
+	}
+
+	/* The gap alone separates a stack's children; their own block margins add nothing. */
+	.gldn-stack > * {
+		margin-block: 0;
+	}
+
+	/* An inline group (tags, chips, buttons) that wraps onto new lines and never stacks:
+	 * each child keeps its own width. */
+	.gldn-cluster {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--gldn-space-sm);
+	}
+
+	/* As many equal columns as fit --gldn-grid-min, with no breakpoint; a container
+	 * narrower than one track gets a single full-width column. */
+	.gldn-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--gldn-grid-min)), 1fr));
+		gap: var(--gldn-gutter);
+	}
+
+	/* Equal columns that become a stack below --gldn-switch-min. Each child's basis is
+	 * (threshold - container width) * 999: hugely positive below the threshold, so each
+	 * child takes its own line, and hugely negative above it, so all share one line and
+	 * grow equally. */
+	.gldn-switcher {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--gldn-gutter);
+	}
+
+	.gldn-switcher > * {
+		flex-grow: 1;
+		flex-basis: calc((var(--gldn-switch-min) - 100%) * 999);
+		min-width: 0;
+	}
+
+	/* A golden box, phi wide to 1 high (portrait: 1 to phi). Hidden overflow lets the
+	 * ratio hold against taller content, and its media child covers it. */
+	.gldn-frame {
+		aspect-ratio: var(--gldn-phi) / 1;
+		overflow: hidden;
+	}
+
+	.gldn-frame-portrait {
+		aspect-ratio: 1 / var(--gldn-phi);
+	}
+
+	.gldn-frame > :is(img, video, canvas, svg, iframe) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 
 	.gldn-center {
@@ -57,22 +125,28 @@
 	 * major + minor + gutter = (1/phi + 1/phi^2)(100% - gutter) + gutter
 	 * = 100%. Retune the gutter through the --gldn-gutter token. */
 	.gldn-major {
-		flex: 0 0 calc(var(--gldn-major) - var(--gldn-gutter) / var(--gldn-phi));
+		flex: 0 0 max(calc(var(--gldn-major) - var(--gldn-gutter) / var(--gldn-phi)),
+			calc((var(--gldn-split-min) - 100%) * 999));
 		min-width: 0;
+		max-width: 100%;
 	}
 
 	.gldn-minor {
-		flex: 0 0 calc(var(--gldn-minor) - var(--gldn-gutter) / var(--gldn-phi) / var(--gldn-phi));
+		flex: 0 0 max(calc(var(--gldn-minor) - var(--gldn-gutter) / var(--gldn-phi) / var(--gldn-phi)),
+			calc((var(--gldn-split-min) - 100%) * 999));
 		min-width: 0;
+		max-width: 100%;
 	}
 
 	.gldn-major-fluid {
-		flex: var(--gldn-phi) 1 0;
+		flex: var(--gldn-phi) 1 max(0%, calc((var(--gldn-split-min) - 100%) * 999));
 		min-width: 0;
+		max-width: 100%;
 	}
 
 	.gldn-minor-fluid {
-		flex: 1 1 0;
+		flex: 1 1 max(0%, calc((var(--gldn-split-min) - 100%) * 999));
 		min-width: 0;
+		max-width: 100%;
 	}
 }

@@ -40,6 +40,20 @@
 			}
 		}
 
+		/* Frames keep their own heights: a stretched row item would ignore its ratio. */
+		.demo-frames {
+			align-items: flex-start;
+		}
+
+		.demo-frame {
+			background-color: var(--gldn-color-bg);
+		}
+
+		/* The spiral is black line art; the dark theme inverts it. */
+		.gldn-theme-dark .demo-art {
+			filter: invert(1);
+		}
+
 		/* One bar per cascade term; only the width varies, so it stays inline. */
 		.demo-bar {
 			background: var(--gldn-color-primary);
@@ -55,6 +69,8 @@
 			<a href="#splits">golden splits</a>
 			<a href="#cascade">cascade</a>
 			<a href="#typography">typography</a>
+			<a href="#buttons">buttons</a>
+			<a href="#primitives">primitives</a>
 			<a href="fonts.html">font pairings</a>
 			<a href="components/dock.html">bottom dock</a>
 			<button class="gldn-btn" id="gldn-theme-toggle" type="button" aria-pressed="false">dark theme</button>
@@ -199,32 +215,222 @@
 		<section class="gldn-stack" id="plain-html">
 			<h2 class="gldn-title-2">plain HTML, composed in both themes</h2>
 			<p class="gldn-text">
-				Headings, prose, lists, quotations, code and tables use the scale
-				without a typography class. Only the cards and columns are components.
+				Headings, prose, lists, quotations, code, tables and forms use the scale
+				without a class. Only the cards, columns and the Save button are components.
 			</p>
 			<div class="gldn-row">
 				<div class="gldn-minor-fluid">
 					<article class="gldn-card" id="plain-light">
 						<h1>Light specimen</h1>
 						<h2>Proportion and rhythm</h2>
-						<p>Plain prose keeps a golden line height, a readable measure and balanced spacing.</p>
+						<p><q cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">A record if it is to be useful to science, must be continuously extended, it must be stored, and above all it must be consulted.</q></p>
 						<ul><li>Native elements</li><li>Golden intervals</li></ul>
-						<blockquote>One base gives every part its place.</blockquote>
+						<blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
+							<p>The human mind does not work that way. It operates by association.</p>
+							<footer><cite>Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945</cite></footer>
+						</blockquote>
 						<p>Inline <code>proportion</code> shares the monospace stack.</p>
 						<pre><code>base × pow(φ, step)</code></pre>
 						<table><thead><tr><th>part</th><th>step</th></tr></thead><tbody><tr><td>prose</td><td>base</td></tr></tbody></table>
+						<dl><dt>measure</dt><dd>100ch / φ for running text</dd><dt>leading</dt><dd>φ for prose</dd></dl>
+						<hr>
+						<p><small>Fine print sits at text-sm.</small></p>
+						<details><summary>Why phi?</summary><p>Each step is the sum of the two below it.</p></details>
+						<form action="#" onsubmit="return false">
+							<p><label for="light-name">Name</label> <input id="light-name" type="text" placeholder="Ada"></p>
+							<p><label for="light-step">Step</label> <select id="light-step"><option>base</option><option>φ</option></select></p>
+							<p><label for="light-note">Note</label><br><textarea id="light-note" rows="2"></textarea></p>
+							<p><label><input type="checkbox" checked> on the scale</label></p>
+							<p><button type="reset">Clear</button> <button class="gldn-btn" type="submit">Save</button></p>
+						</form>
 					</article>
 				</div>
 				<div class="gldn-major-fluid">
 					<article class="gldn-card gldn-theme-dark" id="plain-dark">
 						<h1>Dark specimen</h1>
 						<h2>Proportion and rhythm</h2>
-						<p>Plain prose keeps a golden line height, a readable measure and balanced spacing.</p>
+						<p><q cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">A record if it is to be useful to science, must be continuously extended, it must be stored, and above all it must be consulted.</q></p>
 						<ul><li>Native elements</li><li>Golden intervals</li></ul>
-						<blockquote>One base gives every part its place.</blockquote>
+						<blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
+							<p>The human mind does not work that way. It operates by association.</p>
+							<footer><cite>Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945</cite></footer>
+						</blockquote>
 						<p>Inline <code>proportion</code> shares the monospace stack.</p>
 						<pre><code>base × pow(φ, step)</code></pre>
 						<table><thead><tr><th>part</th><th>step</th></tr></thead><tbody><tr><td>prose</td><td>base</td></tr></tbody></table>
+						<dl><dt>measure</dt><dd>100ch / φ for running text</dd><dt>leading</dt><dd>φ for prose</dd></dl>
+						<hr>
+						<p><small>Fine print sits at text-sm.</small></p>
+						<details><summary>Why phi?</summary><p>Each step is the sum of the two below it.</p></details>
+						<form action="#" onsubmit="return false">
+							<p><label for="dark-name">Name</label> <input id="dark-name" type="text" placeholder="Ada"></p>
+							<p><label for="dark-step">Step</label> <select id="dark-step"><option>base</option><option>φ</option></select></p>
+							<p><label for="dark-note">Note</label><br><textarea id="dark-note" rows="2"></textarea></p>
+							<p><label><input type="checkbox" checked> on the scale</label></p>
+							<p><button type="reset">Clear</button> <button class="gldn-btn" type="submit">Save</button></p>
+						</form>
+					</article>
+				</div>
+			</div>
+		</section>
+
+		<section class="gldn-stack" id="buttons">
+			<h2 class="gldn-title-2">buttons beside fields</h2>
+			<p class="gldn-text">
+				A field, a bare button and every button variant share one height and boundary,
+				so controls set side by side align. <code>gldn-btn</code> marks the primary
+				action; <code>gldn-btn-secondary</code>, <code>gldn-btn-quiet</code> and
+				<code>gldn-btn-danger</code> change only its colors.
+			</p>
+			<div class="gldn-row">
+				<div class="gldn-minor-fluid">
+					<article class="gldn-card">
+						<p class="gldn-cluster">
+							<input type="text" aria-label="Name" placeholder="Name">
+							<button type="button">Bare</button>
+							<button class="gldn-btn" type="button">Save</button>
+							<button class="gldn-btn gldn-btn-secondary" type="button">Preview</button>
+							<button class="gldn-btn gldn-btn-quiet" type="button">Cancel</button>
+							<button class="gldn-btn gldn-btn-danger" type="button">Delete</button>
+							<button class="gldn-btn" type="button" disabled>Disabled</button>
+						</p>
+					</article>
+				</div>
+				<div class="gldn-major-fluid">
+					<article class="gldn-card gldn-theme-dark">
+						<p class="gldn-cluster">
+							<input type="text" aria-label="Name" placeholder="Name">
+							<button type="button">Bare</button>
+							<button class="gldn-btn" type="button">Save</button>
+							<button class="gldn-btn gldn-btn-secondary" type="button">Preview</button>
+							<button class="gldn-btn gldn-btn-quiet" type="button">Cancel</button>
+							<button class="gldn-btn gldn-btn-danger" type="button">Delete</button>
+							<button class="gldn-btn" type="button" disabled>Disabled</button>
+						</p>
+					</article>
+				</div>
+			</div>
+		</section>
+
+		<section class="gldn-stack" id="primitives">
+			<h2 class="gldn-title-2">layout primitives</h2>
+			<p class="gldn-text">
+				The grid, switcher, cluster and frames answer to their own width, not the
+				viewport's. The narrow column and the wide column hold the same markup: the
+				grid fits fewer tracks, the switcher stacks, the cluster wraps, and the frames
+				keep their golden ratio. Golden rows use the same intrinsic rule at 48rem and
+				above; their default token also stacks them on phone-width viewports. Density
+				classes step the space scale, gutter included, one power of phi.
+			</p>
+			<div class="gldn-row">
+				<div class="gldn-minor">
+					<article class="gldn-card gldn-stack">
+						<h3 class="gldn-title-3">cluster</h3>
+						<div class="gldn-cluster">
+							<button type="button">golden</button><button type="button">ratio</button><button type="button">scale</button><button type="button">rhythm</button><button type="button">measure</button>
+						</div>
+						<h3 class="gldn-title-3">grid</h3>
+						<div class="gldn-grid">
+							<div class="gldn-card">one</div><div class="gldn-card">two</div><div class="gldn-card">three</div><div class="gldn-card">four</div>
+						</div>
+						<h3 class="gldn-title-3">switcher</h3>
+						<div class="gldn-switcher">
+							<div class="gldn-card">one</div><div class="gldn-card">two</div><div class="gldn-card">three</div>
+						</div>
+						<h3 class="gldn-title-3">frame</h3>
+						<div class="gldn-row demo-frames">
+							<div class="gldn-major gldn-frame demo-frame"><img class="demo-art" src="fibonacci-spiral.svg" alt="Fibonacci spiral in a φ:1 frame"></div>
+							<div class="gldn-minor gldn-frame gldn-frame-portrait demo-frame"><img class="demo-art" src="fibonacci-spiral.svg" alt="Fibonacci spiral in a 1:φ frame"></div>
+						</div>
+						<h3 class="gldn-title-3">density</h3>
+						<div class="gldn-switcher">
+							<div class="gldn-card gldn-stack gldn-compact"><p>compact</p><p>space one step down</p></div>
+							<div class="gldn-card gldn-stack"><p>page</p><p>the base scale</p></div>
+							<div class="gldn-card gldn-stack gldn-spacious"><p>spacious</p><p>space one step up</p></div>
+						</div>
+					</article>
+				</div>
+				<div class="gldn-major">
+					<article class="gldn-card gldn-stack gldn-theme-dark">
+						<h3 class="gldn-title-3">cluster</h3>
+						<div class="gldn-cluster">
+							<button type="button">golden</button><button type="button">ratio</button><button type="button">scale</button><button type="button">rhythm</button><button type="button">measure</button>
+						</div>
+						<h3 class="gldn-title-3">grid</h3>
+						<div class="gldn-grid">
+							<div class="gldn-card">one</div><div class="gldn-card">two</div><div class="gldn-card">three</div><div class="gldn-card">four</div>
+						</div>
+						<h3 class="gldn-title-3">switcher</h3>
+						<div class="gldn-switcher">
+							<div class="gldn-card">one</div><div class="gldn-card">two</div><div class="gldn-card">three</div>
+						</div>
+						<h3 class="gldn-title-3">frame</h3>
+						<div class="gldn-row demo-frames">
+							<div class="gldn-major gldn-frame demo-frame"><img class="demo-art" src="fibonacci-spiral.svg" alt="Fibonacci spiral in a φ:1 frame"></div>
+							<div class="gldn-minor gldn-frame gldn-frame-portrait demo-frame"><img class="demo-art" src="fibonacci-spiral.svg" alt="Fibonacci spiral in a 1:φ frame"></div>
+						</div>
+						<h3 class="gldn-title-3">density</h3>
+						<div class="gldn-switcher">
+							<div class="gldn-card gldn-stack gldn-compact"><p>compact</p><p>space one step down</p></div>
+							<div class="gldn-card gldn-stack"><p>page</p><p>the base scale</p></div>
+							<div class="gldn-card gldn-stack gldn-spacious"><p>spacious</p><p>space one step up</p></div>
+						</div>
+					</article>
+				</div>
+			</div>
+			<div class="gldn-row">
+				<div class="gldn-minor">
+					<article class="gldn-card gldn-stack gldn-theme-dark">
+						<h3 class="gldn-title-3">cluster</h3>
+						<div class="gldn-cluster">
+							<button type="button">golden</button><button type="button">ratio</button><button type="button">scale</button><button type="button">rhythm</button><button type="button">measure</button>
+						</div>
+						<h3 class="gldn-title-3">grid</h3>
+						<div class="gldn-grid">
+							<div class="gldn-card">one</div><div class="gldn-card">two</div><div class="gldn-card">three</div><div class="gldn-card">four</div>
+						</div>
+						<h3 class="gldn-title-3">switcher</h3>
+						<div class="gldn-switcher">
+							<div class="gldn-card">one</div><div class="gldn-card">two</div><div class="gldn-card">three</div>
+						</div>
+						<h3 class="gldn-title-3">frame</h3>
+						<div class="gldn-row demo-frames">
+							<div class="gldn-major gldn-frame demo-frame"><img class="demo-art" src="fibonacci-spiral.svg" alt="Fibonacci spiral in a φ:1 frame"></div>
+							<div class="gldn-minor gldn-frame gldn-frame-portrait demo-frame"><img class="demo-art" src="fibonacci-spiral.svg" alt="Fibonacci spiral in a 1:φ frame"></div>
+						</div>
+						<h3 class="gldn-title-3">density</h3>
+						<div class="gldn-switcher">
+							<div class="gldn-card gldn-stack gldn-compact"><p>compact</p><p>space one step down</p></div>
+							<div class="gldn-card gldn-stack"><p>page</p><p>the base scale</p></div>
+							<div class="gldn-card gldn-stack gldn-spacious"><p>spacious</p><p>space one step up</p></div>
+						</div>
+					</article>
+				</div>
+				<div class="gldn-major">
+					<article class="gldn-card gldn-stack">
+						<h3 class="gldn-title-3">cluster</h3>
+						<div class="gldn-cluster">
+							<button type="button">golden</button><button type="button">ratio</button><button type="button">scale</button><button type="button">rhythm</button><button type="button">measure</button>
+						</div>
+						<h3 class="gldn-title-3">grid</h3>
+						<div class="gldn-grid">
+							<div class="gldn-card">one</div><div class="gldn-card">two</div><div class="gldn-card">three</div><div class="gldn-card">four</div>
+						</div>
+						<h3 class="gldn-title-3">switcher</h3>
+						<div class="gldn-switcher">
+							<div class="gldn-card">one</div><div class="gldn-card">two</div><div class="gldn-card">three</div>
+						</div>
+						<h3 class="gldn-title-3">frame</h3>
+						<div class="gldn-row demo-frames">
+							<div class="gldn-major gldn-frame demo-frame"><img class="demo-art" src="fibonacci-spiral.svg" alt="Fibonacci spiral in a φ:1 frame"></div>
+							<div class="gldn-minor gldn-frame gldn-frame-portrait demo-frame"><img class="demo-art" src="fibonacci-spiral.svg" alt="Fibonacci spiral in a 1:φ frame"></div>
+						</div>
+						<h3 class="gldn-title-3">density</h3>
+						<div class="gldn-switcher">
+							<div class="gldn-card gldn-stack gldn-compact"><p>compact</p><p>space one step down</p></div>
+							<div class="gldn-card gldn-stack"><p>page</p><p>the base scale</p></div>
+							<div class="gldn-card gldn-stack gldn-spacious"><p>spacious</p><p>space one step up</p></div>
+						</div>
 					</article>
 				</div>
 			</div>

@@ -16,9 +16,12 @@
 		padding: var(--gldn-space-lg);
 	}
 
-	/* The workspace fills the viewport and splits into golden columns. */
+	/* The workspace fills the viewport and splits into golden columns. It
+	 * stacks when it is narrower than --gldn-bp-sm, by the same max() basis
+	 * as the golden row primitives. */
 	.gldn-workspace {
 		display: flex;
+		flex-wrap: wrap;
 		gap: var(--gldn-gutter);
 		padding: var(--gldn-space-lg);
 		min-height: 100vh;
@@ -29,13 +32,17 @@
 	 * sizes minus each column's golden share of the gutter, so the padded
 	 * panels split their container in exactly the golden ratio. */
 	.gldn-sidebar {
-		flex: 0 0 calc(var(--gldn-minor) - var(--gldn-gutter) / var(--gldn-phi) / var(--gldn-phi));
+		flex: 0 0 max(calc(var(--gldn-minor) - var(--gldn-gutter) / var(--gldn-phi) / var(--gldn-phi)),
+			calc((var(--gldn-bp-sm) - 100%) * 999));
 		min-width: 0;
+		max-width: 100%;
 	}
 
 	.gldn-main {
-		flex: 0 0 calc(var(--gldn-major) - var(--gldn-gutter) / var(--gldn-phi));
+		flex: 0 0 max(calc(var(--gldn-major) - var(--gldn-gutter) / var(--gldn-phi)),
+			calc((var(--gldn-bp-sm) - 100%) * 999));
 		min-width: 0;
+		max-width: 100%;
 	}
 
 	/* Surface bands anchoring the top and bottom of a page. They are full
@@ -48,11 +55,11 @@
 	}
 
 	.gldn-header {
-		border-bottom: 1px solid var(--gldn-color-border);
+		border-bottom: var(--gldn-hairline) solid var(--gldn-color-border);
 	}
 
 	.gldn-footer {
-		border-top: 1px solid var(--gldn-color-border);
+		border-top: var(--gldn-hairline) solid var(--gldn-color-border);
 	}
 
 	/* Display band for the top of a page. */
@@ -111,28 +118,63 @@
 		text-wrap: pretty;
 	}
 
+	/* A button has the size of the reset's controls: the same block padding, boundary and
+	 * radius as a field or a bare button, so controls set side by side align. gldn-btn is the
+	 * primary action; each variant changes only colors. */
 	.gldn-btn {
 		display: inline-block;
-		padding: var(--gldn-space-sm) var(--gldn-space-lg);
-		border: 0;
-		border-radius: var(--gldn-radius-md);
+		padding: var(--gldn-space-xs) var(--gldn-space-md);
+		border: var(--gldn-hairline) solid var(--gldn-color-primary);
+		border-radius: var(--gldn-radius-sm);
 		background-color: var(--gldn-color-primary);
 		color: var(--gldn-color-primary-fg);
 		cursor: pointer;
+		text-align: center;
 		text-decoration: none;
 	}
 
-	.gldn-btn:hover {
+	.gldn-btn:hover:not(:disabled) {
+		border-color: var(--gldn-color-primary-hover);
 		background-color: var(--gldn-color-primary-hover);
 	}
 
-	.gldn-btn:focus-visible,
-	.gldn-nav a:focus-visible,
-	.gldn-tab:focus-visible,
-	.gldn-dock-control:focus-visible,
-	.gldn-popin-dismiss:focus-visible {
-		outline: var(--gldn-focus-ring);
-		outline-offset: calc(var(--gldn-space-xs) / var(--gldn-phi) / var(--gldn-phi));
+	/* Secondary: the bare button's surface and boundary, beside a primary action. */
+	.gldn-btn-secondary {
+		border-color: var(--gldn-color-control-border);
+		background-color: var(--gldn-color-surface);
+		color: var(--gldn-color-text);
+	}
+
+	/* Quiet: no fill and no visible boundary, for actions of low emphasis. */
+	.gldn-btn-quiet {
+		border-color: transparent;
+		background-color: transparent;
+		color: var(--gldn-color-text);
+	}
+
+	/* Secondary and quiet buttons hover with the tint that code sits on. */
+	.gldn-btn-secondary:hover:not(:disabled) {
+		border-color: var(--gldn-color-control-border);
+		background-color: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-6), var(--gldn-color-surface));
+	}
+
+	.gldn-btn-quiet:hover:not(:disabled) {
+		border-color: transparent;
+		background-color: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-6), transparent);
+	}
+
+	/* Danger: the error color for destructive actions; the label names the action too. */
+	.gldn-btn-danger {
+		border-color: var(--gldn-color-error);
+		background-color: var(--gldn-color-error);
+		color: var(--gldn-color-error-fg);
+	}
+
+	/* Mixing toward the text color darkens the light theme's red and lightens the dark
+	 * theme's, which raises the label's contrast in both. */
+	.gldn-btn-danger:hover:not(:disabled) {
+		border-color: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-4), var(--gldn-color-error));
+		background-color: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-4), var(--gldn-color-error));
 	}
 
 	.gldn-btn:disabled {
@@ -153,7 +195,7 @@
 		left: 0;
 		z-index: var(--gldn-z-dock);
 		height: var(--gldn-dock-height);
-		border-top: 1px solid var(--gldn-color-border);
+		border-top: var(--gldn-hairline) solid var(--gldn-color-border);
 		background-color: var(--gldn-color-surface);
 		box-shadow: var(--gldn-shadow);
 		color: var(--gldn-color-text);
@@ -181,7 +223,7 @@
 		align-items: stretch;
 		justify-content: space-between;
 		min-width: 0;
-		border-bottom: 1px solid var(--gldn-color-border);
+		border-bottom: var(--gldn-hairline) solid var(--gldn-color-border);
 	}
 
 	.gldn-tablist {
@@ -200,8 +242,9 @@
 		cursor: pointer;
 	}
 
+	/* Block padding stays 0: the strip, not the reset's control padding, sets a tab's height. */
 	.gldn-tab {
-		padding-inline: var(--gldn-space-md);
+		padding: 0 var(--gldn-space-md);
 		white-space: nowrap;
 	}
 
@@ -222,7 +265,7 @@
 	}
 
 	.gldn-dock-control {
-		padding-inline: var(--gldn-space-md);
+		padding: 0 var(--gldn-space-md);
 	}
 
 	.gldn-dock-panels {
@@ -283,7 +326,7 @@
 
 	.gldn-message {
 		padding: var(--gldn-space-sm);
-		border: 1px solid var(--gldn-color-info);
+		border: var(--gldn-hairline) solid var(--gldn-color-info);
 		border-inline-start: var(--gldn-space-xs) solid var(--gldn-color-info);
 		border-radius: var(--gldn-radius-sm);
 		background-color: var(--gldn-color-info-surface);
@@ -389,7 +432,7 @@
 		gap: var(--gldn-space-sm);
 		padding: var(--gldn-space-md);
 		overflow: auto;
-		border-top: 1px solid var(--gldn-color-error);
+		border-top: var(--gldn-hairline) solid var(--gldn-color-error);
 		background-color: var(--gldn-color-error-surface);
 		box-shadow: var(--gldn-shadow);
 	}

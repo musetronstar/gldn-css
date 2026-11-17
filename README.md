@@ -18,6 +18,27 @@ the best of both worlds in a beautiful and harmonious system:
   Cascade Layers (`@layer`) for predictable, conflict-free specificity.
   Optional zero-dependency JavaScript modules supply behavior CSS cannot express.
 
+## Philosophy & Lineage
+
+**gldn-css** is built from small parts that each do one thing and compose without
+dictating markup. It learns from seven works and copies none of them:
+
+|    Source    |       Lesson        |                        In gldn-css                        |
+| ------------ | ------------------- | --------------------------------------------------------- |
+| Bringhurst   | measure and rhythm  | φ leading, a `100ch / φ` measure, no space at panel edges |
+| Tim Brown    | one ratio, one base | type, space, radii and lines are the base times φ^n       |
+| Utopia       | fluid type, space   | one `clamp()` base from a 20rem to a 75rem viewport       |
+| Every Layout | intrinsic layout    | splits, stack, cluster, grid, switcher and frame          |
+| CUBE CSS     | styles by intent    | five layers, from reset to responsive                     |
+| Open Props   | tokens used alone   | `--gldn-*` tokens, also alone in `gldn-tokens.min.css`    |
+| Pico CSS     | plain HTML composed | the reset styles prose, code, tables and forms            |
+
+The sources: Robert Bringhurst, *The Elements of Typographic Style*; Tim Brown,
+*More Meaningful Typography* (modular scales); Utopia (utopia.fyi); Every Layout,
+by Heydon Pickering and Andy Bell; CUBE CSS, by Andy Bell; Open Props; and Pico CSS.
+The reset is part of `gldn.min.css`. Only the base is fluid: the padding of
+`gldn-hero` and `gldn-workspace` steps down at the 48rem breakpoint.
+
 ## Features
 
 * **The Golden Ratio Foundation:** Automatically divides sections into proportional
@@ -34,7 +55,8 @@ the best of both worlds in a beautiful and harmonious system:
 ```text
 gldn-css/
 ├── src/
-│   ├── _tokens.css      # Fluid golden scales and system fonts; hosts the reset layer
+│   ├── _reset.css       # Plain HTML on the golden scale, in the reset layer
+│   ├── _tokens.css      # Fluid golden scales, radii, colors, and system fonts
 │   ├── _layout.css      # Global layout wrappers and flex/grid primitives
 │   ├── _components.css  # Semantic component classes (.gldn-sidebar, etc.)
 │   ├── _responsive.css  # @layer responsive media queries
@@ -46,6 +68,7 @@ gldn-css/
 │   └── gldn-dock.js     # Optional fixed dock and visual-viewport module
 ├── dist/
 │   ├── gldn.min.css     # Production-ready compiled bundle
+│   ├── gldn-tokens.min.css  # The tokens layer alone
 │   ├── gldn-fonts.css   # Generated copy of the opt-in font sheet
 │   ├── fonts/           # Generated copies of the font files and license
 │   └── gldn-*.js        # Generated copies of optional behavior modules
@@ -53,14 +76,17 @@ gldn-css/
 │   └── build.mjs        # zero-dependency inliner and minifier
 ├── test/
 │   ├── contract.test.mjs  # source-level contract suite
-│   └── layout.test.mjs    # rendered layout regression suite (headless Chrome)
+│   ├── layout.test.mjs    # rendered layout regression suite (headless Chrome)
+│   ├── dock.test.mjs      # rendered dock, tabs, and message pane suite
+│   └── plain-html.test.mjs  # rendered reset, focus, and tokens bundle suite
 ├── docs/
 │   ├── index.html       # Feature tour, full scales, and plain HTML specimens
-│   ├── fonts.html       # Three font pairings in both themes
+│   ├── fonts.html       # The bundled pairing and two alternatives in both themes
 │   ├── specimen/fonts/  # Fonts used only by fonts.html, with their LICENSE.txt
 │   ├── components/      # One working example page per component
 │   ├── gldn.js          # JavaScript examples used in conjunction with `index.html`
 │   ├── gldn.min.css     # Generated copy of the production bundle
+│   ├── gldn-tokens.min.css  # Generated copy of the tokens bundle
 │   ├── gldn-fonts.css   # Generated copy of the opt-in font sheet
 │   ├── fonts/           # Generated copies of the font files and license
 │   ├── gldn-*.js        # Generated copies of optional behavior modules
@@ -83,34 +109,65 @@ Link the compiled bundle and write semantic markup; the golden math stays in CSS
 </div>
 ```
 
+To use the tokens with your own rules, link only the tokens bundle. It sets
+`--gldn-*` custom properties on `:root` and the dark theme class, and styles no
+element:
+
+```html
+<link rel="stylesheet" href="dist/gldn-tokens.min.css">
+
+<style>
+	article { padding: var(--gldn-space-lg); font-size: var(--gldn-text-md); }
+</style>
+```
+
 Open `docs/index.html` in a browser for a guided tour of the foundation,
 including the full scales, plain HTML in both themes, and live measurement of
 the rendered golden ratio. The tour links working component examples under
-`docs/components/`.
+`docs/components/`. Their prose quotes Vannevar Bush, "As We May Think" (*The Atlantic
+Monthly*, July 1945), verbatim and with attribution, in `<q cite>` and
+`<blockquote cite>`. The quotations remain their author's work; the CC0 dedication
+covers gldn-css, not them.
 
 The default stacks use fonts shipped with macOS, Windows, and Linux. To opt in
 to the bundled Inter, Literata, and JetBrains Mono variable fonts, link
 `gldn-fonts.css` after the main bundle. Nothing downloads until that sheet is
 linked. Each font is the Latin subset of an SIL Open Font License font with a
 roman and an italic face; `fonts/LICENSE.txt` holds their copyright notices,
-sources, and the license. See `docs/fonts.html` for three pairings in both themes.
+sources, and the license. `docs/fonts.html` shows this pairing beside the system
+fonts and one alternative, in both themes.
+Headings use the sans stack; for serif headings, set
+`--gldn-font-display: var(--gldn-font-serif)` on `:root`.
 
 **Cascade layers**
 
 `src/gldn.css` declares the layer order `reset, tokens, layout, components,
 responsive` and imports each partial; every partial assigns its own rules to
-a layer, so `src/` and `dist/` build the same layer tree. Layer order is the
+its own layer, so `src/` and `dist/` build the same layer tree. Layer order is the
 framework's specificity contract: responsive overrides always win without
-`!important`, and unlayered author styles can still override everything.
-The global reset rides in the first layer, physically hosted by `_tokens.css`.
-It is not scoped to `gldn-` classes: it normalizes box sizing and media, then
-styles bare headings, prose, lists, blockquotes, code, preformatted blocks, and
-tables on the golden scale. Headings use balanced wrapping and tighter leading;
-paragraphs, list items, definitions, and quotations use golden leading, pretty
-wrapping, and a readable measure, while lists, preformatted blocks, and tables
-span their container. Inline code keeps the size of the text around it on a tint
-of the text color. Host projects can override or discard the reset by layer
-without touching the design tokens.
+`!important`, and unlayered author styles can still override everything. Every
+rule gldn-css ships sits in a layer, the opt-in font stacks included.
+
+The reset (`src/_reset.css`) is the first layer. It is not scoped to `gldn-`
+classes: it normalizes box sizing and media, then styles bare headings, prose,
+lists, definition lists, rules, blockquotes, code, preformatted blocks, tables,
+and forms on the golden scale. Headings use balanced wrapping and tighter
+leading; paragraphs, list items, definitions, and quotations use golden leading,
+pretty wrapping, and a readable measure, while lists, preformatted blocks, and
+tables span their container. Space falls between siblings: the first and last
+child of a container add none, so a panel's padding alone sets the space around
+its content. Inline code keeps the size of the text around it on a tint of the
+text color.
+
+Text fields, selects, and bare buttons share one quiet look: the surface and text
+colors, a boundary with 3:1 contrast against the page and panels, and the small
+radius. A bare button is as tall as the field beside it; `gldn-btn` marks the
+primary action. Checkboxes, radios, ranges, and progress bars take the primary
+color as their accent. One `:focus-visible` rule gives every focusable element,
+components included, the focus ring.
+
+Host projects override the reset by layer without touching the design tokens.
+A page that wants no reset links `gldn-tokens.min.css` in place of `gldn.min.css`.
 
 **Design tokens**
 
@@ -132,13 +189,20 @@ form the single source of truth:
   split columns
 * *Typography:* `--gldn-text-xs` through `--gldn-text-3xl`, advancing by half
   phi powers from the fluid base; `--gldn-leading` is phi for prose,
-  `--gldn-leading-heading` is `1 + phi^-3`, and `--gldn-measure` is `100ch / phi`
+  `--gldn-leading-heading` is `1 + phi^-3`, and `--gldn-measure` is `100ch / phi`.
+  `--gldn-text-sm` is the smallest size for text people read; `--gldn-text-xs`
+  (9.9px at a 20rem viewport) is for marks such as superscripts
 * *Fonts:* `--gldn-font-sans`, `--gldn-font-serif`, and `--gldn-font-mono` name
   platform fonts, and `--gldn-font-display`, the heading stack, is the sans stack;
   the opt-in font sheet redefines them
 * *Surfaces:* `--gldn-color-bg/surface/text/muted/primary/primary-hover/primary-fg/link/border`,
-              `--gldn-radius-sm/md`,
-              `--gldn-shadow`
+  `--gldn-color-control-border` (a control's boundary, 3:1 against `bg` and
+  `surface`), and `--gldn-shadow`
+* *Lines and corners:* `--gldn-hairline` is the base times phi^-5. `--gldn-radius-sm`,
+  `-md`, and `-lg` equal `--gldn-space-xs`, `-sm`, and `-md`. Since
+  phi^n = phi^(n-1) + phi^(n-2), a `radius-lg` panel padded by `space-xs` holds
+  `radius-md` children with concentric corners, and padded by `space-sm` holds
+  `radius-sm` children
 * *Status colors:* `--gldn-color-info/success/warning/error`, each with `-fg`
   for text on the base color and `-surface` for a tinted background, in both themes
 * *Interaction:* `--gldn-focus-ring`, `--gldn-z-popover`, `--gldn-z-dock`, and
@@ -146,14 +210,37 @@ form the single source of truth:
 * *Dock:* `--gldn-dock-strip-height`, `--gldn-dock-panel-height`, `--gldn-dock-height`,
   `--gldn-dock-expanded-height`, and the measured `--gldn-dock-reserve`; narrow sheets use
   `--gldn-bp-sm` and controls meet `--gldn-touch-target`
+* *Thresholds:* `--gldn-grid-min` is `100ch / phi^3` (23.6ch), the narrowest grid
+  track, and `--gldn-switch-min` is `100ch / phi^2` (38.2ch), the width below which a
+  switcher stacks. `--gldn-split-min` combines the same intrinsic threshold with a
+  default viewport floor that stacks golden rows below 48rem. At 48rem and above,
+  only the row's width and the 38.2ch threshold control the split. Retune each on
+  the element, like `--gldn-gutter`; a row override replaces both split thresholds
 * *Reference values:* `--gldn-bp-sm` (48rem) and `--gldn-bp-lg` (75rem);
   media query conditions cannot read custom properties,
   so `src/_responsive.css` repeats these literals
 
 Override tokens on `:root` to re-theme globally without touching markup.
-Scoped overrides work for leaf tokens (colors, shadow); derived tokens
-(spacing, type, radii) resolve on `:root` and are inherited as computed
-values, so a scoped `--gldn-space-base` change does not re-derive the scale.
+Scoped overrides work for leaf tokens (colors, shadow) on any element. Derived
+tokens (space, type, gutter, radii, hairline) inherit as computed values, so
+they follow a new base only where they are derived again: on `:root` and on a
+scope element.
+
+* `gldn-scope` re-derives the scales in its subtree from its own
+  `--gldn-space-base` and `--gldn-text-base`:
+
+  ```html
+  <section class="gldn-scope" style="--gldn-text-base: 0.875rem">
+  	<!-- text-lg is 0.875rem × φ here -->
+  </section>
+  ```
+
+* `gldn-compact` and `gldn-spacious` are scopes whose space base is one phi step
+  below or above the page's; type keeps its scale. A compact card has a smaller
+  padding, and a row inside it a smaller gutter. A custom property cannot refer
+  to itself, so the step is taken from the page's base and nested density
+  classes do not compound.
+
 Adding `class="gldn-theme-dark"` to `<html>` switches to the built-in dark theme.
 
 **Layout primitives**
@@ -161,17 +248,37 @@ Adding `class="gldn-theme-dark"` to `<html>` switches to the built-in dark theme
 The utility layer (`src/_layout.css`) provides low-level golden proportions for
 composing your own components:
 
-* `gldn-container` centers content at a 75rem maximum width
-* `gldn-row` / `gldn-stack` arrange children horizontally / vertically with golden gaps
+* `gldn-container` centers content at the `--gldn-bp-lg` maximum width (75rem)
+* `gldn-row` / `gldn-stack` arrange children horizontally / vertically with golden gaps;
+  a stack's gap alone separates its children, whatever their own margins
+* `gldn-cluster` keeps an inline group (tags, chips, buttons) on as few lines as
+  fit, wrapping and never stacking; each child keeps its own width
+* `gldn-grid` lays out as many equal columns as fit `--gldn-grid-min`; a container
+  narrower than one track gets one full-width column
+* `gldn-switcher` shares one line among equal columns and becomes a stack when the
+  switcher is narrower than `--gldn-switch-min`. At a 1200px viewport it is a row in
+  the workspace's main panel (629px) and a stack in its sidebar (367px)
+* `gldn-frame` is a box phi wide to 1 high; add `gldn-frame-portrait` for 1 to phi.
+  An `img`, `video`, `canvas`, `svg`, or `iframe` child covers it, cropped
+* none of these primitives needs a breakpoint or sets a color, radius, or shadow
 * `gldn-center` centers a row or stack on both axes
 * `gldn-visually-hidden` hides content visually without removing it from the accessibility tree
 * `gldn-major` / `gldn-minor` split a row in the golden ratio: each basis is its
   golden percentage minus the column's golden share of the one gutter, so
   bases + gutter = exactly 100%, and the border-box basis never shrinks or
   redistributes. A row holds one major and one minor; retune its gutter via
-  `--gldn-gutter`, never by setting `gap` directly
+  `--gldn-gutter`, never by setting `gap` directly, and give it a length:
+  `0px`, not `0`, since a unitless number cannot be subtracted from a percentage
 * `gldn-major-fluid` / `gldn-minor-fluid` divide available space by flex-grow weights phi and 1,
   keeping the ratio at any width
+* a row of golden columns stacks when the row is narrower than `--gldn-split-min`.
+  The default token uses the 38.2ch intrinsic threshold at 48rem and above, and a
+  viewport floor that stacks every default golden row below 48rem. At a 1200px
+  viewport a golden row splits in the workspace's main panel and stacks in its
+  sidebar; retune the token on the row to replace both default thresholds. At the
+  intrinsic threshold the columns are about 22ch and 13ch wide: enough for navigation
+  and metadata, not for prose. `gldn-sidebar` and `gldn-main` stack when their
+  workspace or row is narrower than `--gldn-bp-sm` (48rem)
 * all four split columns set `min-width: 0`, so wide content (code blocks,
   tables, long URLs) overflows its own column instead of stealing the
   sibling's share; give such content `overflow-x: auto`
@@ -193,7 +300,11 @@ Semantic classes (`src/_components.css`) compose tokens and primitives:
 * `gldn-title-3` small heading at `--gldn-text-lg`, semibold
 * `gldn-lede` section introduction at the larger type size, muted
 * `gldn-text` body copy at the base type size, muted, readable measure
-* `gldn-btn` primary-colored action surface for `<button>` and `<a>`
+* `gldn-btn` primary-colored action for `<button>` and `<a>`, with the same height and
+  boundary as a field or a bare button beside it. Add `gldn-btn-secondary` (the
+  surface and control boundary), `gldn-btn-quiet` (no fill or visible boundary),
+  or `gldn-btn-danger` (the error color, for destructive actions); a variant changes
+  only colors
 * `gldn-dock` fixed bottom panel with a tab strip, resizable message log, and error pop-in
 * `gldn-tab` / `gldn-tabpanel` accessible tab controls and their panels
 * `gldn-messages` newest-first, scrollable `role="log"` message pane
@@ -281,10 +392,12 @@ dock.tabs.mark('messages', { error: true });
 
 **Responsive behavior**
 
-Below 48rem the responsive layer stacks `gldn-workspace`, `gldn-row`, and every
-golden split into full-width columns with tighter gaps. The dock starts as a
-one-line tab strip and opens panels as bottom sheets. Type and space need no
-breakpoint override because their shared base interpolates smoothly.
+The workspace and layout primitives respond to their own width, and no media
+query stacks them. Golden rows also use the default `--gldn-split-min` viewport
+floor to stack below 48rem. At that width the responsive layer only tightens the
+padding of `gldn-workspace` and `gldn-hero`. The dock starts as a one-line tab
+strip and opens panels as bottom sheets. Type and space need no breakpoint
+override because their shared base interpolates smoothly.
 
 **Building and testing**
 
@@ -298,11 +411,16 @@ node test/layout.test.mjs     # render the framework in headless Chrome and
                               # pin its golden layout promises (skips without Chrome)
 ```
 
+With `GLDN_QUOTE_SOURCES` set to plain-text copies of the quoted works, the contract
+suite also checks that every quotation in the examples appears in them verbatim.
+
 The contract suite pins the file layout, cascade layer order, `gldn-` namespace
 purity, fluid golden token math, opt-in font records, cross-file reference
-integrity, and that the committed bundles and modules match `src/`. The layout
-suite measures every type and space token at 320, 768, and 1200px, checks plain
-HTML and font loading, and exercises the existing layout and component contracts.
+integrity, and that the committed bundles and modules match `src/`. It rejects a
+style rule outside a layer, and a literal length that its allowlist does not name
+with a reason. The layout suite measures every type, space, and radius token at
+320, 768, and 1200px, checks plain HTML, controls, focus, and font loading, links
+the tokens bundle alone, and exercises the layout and component contracts.
 
 ## GitHub Pages
 
