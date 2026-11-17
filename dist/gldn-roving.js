@@ -2,11 +2,17 @@
  * Roving focus for one composite widget: a listbox, a menu, or a tree. One item is in the Tab
  * order; arrows, Home, End and typeahead move among the visible items. In a tree, Right opens
  * a closed item (dispatching gldn-expand, so the application can load its children) or enters
- * it, and Left closes an open item or moves to its parent. Enter or Space dispatch
- * gldn-activate. Ordinary links and buttons outside the widget keep the normal Tab order.
+ * it, and Left closes an open item or moves to its parent; a click on an item's
+ * gldn-tree-toggle opens or closes it. Enter or Space dispatch gldn-activate and follow the
+ * item's link. Links inside items leave the Tab order; other controls in the current item's
+ * own row follow it, so Tab reaches them and Enter or Space press them. Items added later,
+ * such as loaded children, join the widget.
  */
 
 const ITEMS = '[role="option"], [role="menuitem"], [role="treeitem"]';
+const CONTROLS = 'a[href], button, input, select, textarea, [tabindex]';
+// An item's own row: its children other than a nested group.
+const ROW = ':scope > :not([role="group"])';
 const TYPEAHEAD_RESET = 500;
 
 function isEditable(element) {
@@ -17,6 +23,7 @@ function isEditable(element) {
 export function createRoving(root, { selectFollowsFocus = false } = {}) {
 	let typed = '';
 	let typedAt = 0;
+	let current = null;
 
 	// An item is visible when no ancestor item between it and the root is closed.
 	function items() {
@@ -29,8 +36,34 @@ export function createRoving(root, { selectFollowsFocus = false } = {}) {
 		});
 	}
 
+	// The item that owns a control: its nearest item ancestor.
+	function owner(control) {
+		return control.parentElement?.closest(ITEMS);
+	}
+
+	// One Tab stop: the current item, then the controls in its own row other than links.
+	function settle() {
+		if (!current || !root.contains(current)) current = initial();
+		for (const item of root.querySelectorAll(ITEMS)) item.tabIndex = item === current ? 0 : -1;
+		for (const control of root.querySelectorAll(CONTROLS)) {
+			if (control.matches(ITEMS)) continue;
+			const follows = owner(control) === current && !control.matches('a[href]');
+			control.tabIndex = follows ? 0 : -1;
+		}
+	}
+
+	function initial() {
+		const visible = items();
+		return visible.find((item) => item.getAttribute('aria-selected') === 'true'
+			|| item.hasAttribute('aria-current')
+			|| item.querySelector(`:scope > [aria-current]:not([aria-current="false"]),
+				${ROW} [aria-current]:not([aria-current="false"])`))
+			|| visible[0] || null;
+	}
+
 	function focus(item) {
-		for (const other of root.querySelectorAll(ITEMS)) other.tabIndex = other === item ? 0 : -1;
+		current = item;
+		settle();
 		item.focus();
 		if (selectFollowsFocus) {
 			for (const other of root.querySelectorAll(ITEMS)) {
@@ -50,13 +83,15 @@ export function createRoving(root, { selectFollowsFocus = false } = {}) {
 	}
 
 	function keydown(event) {
-		const current = event.target.closest(ITEMS);
-		if (!current || !root.contains(current) || isEditable(event.target)) return;
+		const item = event.target.closest(ITEMS);
+		if (!item || !root.contains(item) || isEditable(event.target)) return;
 		if (event.altKey || event.ctrlKey || event.metaKey) return;
+		// A control in the row presses natively.
+		if (event.target !== item && (event.key === 'Enter' || event.key === ' ')) return;
 		const list = items();
-		const index = list.indexOf(current);
-		const expandable = current.hasAttribute('aria-expanded');
-		const expanded = current.getAttribute('aria-expanded') === 'true';
+		const index = list.indexOf(item);
+		const expandable = item.hasAttribute('aria-expanded');
+		const expanded = item.getAttribute('aria-expanded') === 'true';
 		let next = null;
 		switch (event.key) {
 		case 'ArrowDown': next = list[index + 1]; break;
@@ -64,27 +99,27 @@ export function createRoving(root, { selectFollowsFocus = false } = {}) {
 		case 'Home': next = list[0]; break;
 		case 'End': next = list.at(-1); break;
 		case 'ArrowRight':
-			if (current.getAttribute('role') !== 'treeitem' || !expandable) return;
-			if (!expanded) setExpanded(current, true);
+			if (item.getAttribute('role') !== 'treeitem' || !expandable) return;
+			if (!expanded) setExpanded(item, true);
 			else next = items()[index + 1];
 			break;
 		case 'ArrowLeft': {
-			if (current.getAttribute('role') !== 'treeitem') return;
-			if (expandable && expanded) setExpanded(current, false);
-			else next = current.parentElement?.closest(ITEMS);
+			if (item.getAttribute('role') !== 'treeitem') return;
+			if (expandable && expanded) setExpanded(item, false);
+			else next = item.parentElement?.closest(ITEMS);
 			break;
 		}
 		case 'Enter':
 		case ' ':
-			dispatch('gldn-activate', current);
-			current.querySelector('a[href]')?.click();
+			dispatch('gldn-activate', item);
+			item.querySelector(`:scope > a[href], ${ROW} a[href]`)?.click();
 			break;
 		default:
 			if (event.key.length !== 1 || event.key === ' ') return;
 			typed = Date.now() - typedAt > TYPEAHEAD_RESET ? event.key : typed + event.key;
 			typedAt = Date.now();
 			next = list.slice(index + 1).concat(list.slice(0, index + 1))
-				.find((item) => item.textContent.trim().toLowerCase().startsWith(typed.toLowerCase()));
+				.find((candidate) => candidate.textContent.trim().toLowerCase().startsWith(typed.toLowerCase()));
 		}
 		event.preventDefault();
 		if (next && root.contains(next)) focus(next);
@@ -92,20 +127,44 @@ export function createRoving(root, { selectFollowsFocus = false } = {}) {
 
 	function clicked(event) {
 		const item = event.target.closest(ITEMS);
-		if (item && root.contains(item)) focus(item);
+		if (!item || !root.contains(item)) return;
+		const toggle = event.target.closest('.gldn-tree-toggle');
+		if (toggle && owner(toggle) === item && item.hasAttribute('aria-expanded')) {
+			event.preventDefault();
+			setExpanded(item, item.getAttribute('aria-expanded') !== 'true');
+		}
+		// A control keeps the focus it took; a click elsewhere on the row focuses the item.
+		const control = event.target.closest(CONTROLS);
+		if (control && control !== item && item.contains(control)) {
+			current = item;
+			settle();
+		} else {
+			focus(item);
+		}
 	}
 
-	const initial = items().find((item) => item.getAttribute('aria-selected') === 'true'
-		|| item.hasAttribute('aria-current')) || items()[0];
-	for (const item of root.querySelectorAll(ITEMS)) item.tabIndex = item === initial ? 0 : -1;
+	// Focus the application moves to an item makes it current too.
+	function focused(event) {
+		if (event.target !== current && event.target.matches(ITEMS) && root.contains(event.target)) {
+			current = event.target;
+			settle();
+		}
+	}
+
+	const observer = new MutationObserver(settle);
+	settle();
+	observer.observe(root, { childList: true, subtree: true });
 	root.addEventListener('keydown', keydown);
 	root.addEventListener('click', clicked);
+	root.addEventListener('focusin', focused);
 	return {
 		items,
 		focus,
 		destroy() {
+			observer.disconnect();
 			root.removeEventListener('keydown', keydown);
 			root.removeEventListener('click', clicked);
+			root.removeEventListener('focusin', focused);
 		}
 	};
 }

@@ -121,6 +121,36 @@ export async function testComponents(browser, test, root) {
 		}
 	});
 
+	// A pointer opens and closes an item by its marker; Tab reaches only the current row's control.
+	const center = (selector) => value(`(() => { const box = document.querySelector('${selector}').getBoundingClientRect();
+		return [box.left + box.width / 2, box.top + box.height / 2]; })()`);
+	await browser.click(...await center('#science > .gldn-tree-row > .gldn-tree-toggle'));
+	const markerOpen = await value(`({ expanded: document.getElementById('science').getAttribute('aria-expanded'),
+		focus: document.activeElement.id, group: getComputedStyle(document.querySelector('#science > [role="group"]')).display })`);
+	await browser.click(...await center('#science > .gldn-tree-row > .gldn-tree-toggle'));
+	const reclosed = await value(`document.getElementById('science').getAttribute('aria-expanded')`);
+	await value(`document.getElementById('selection').focus()`);
+	const order = [];
+	for (let step = 0; step < 2; step++) {
+		await browser.press('Tab');
+		order.push(await value(`document.activeElement.getAttribute('aria-label') || document.activeElement.id
+			|| document.activeElement.tagName`));
+	}
+	await value(`document.querySelector('[aria-label="Mark Selection by meaning"]').focus()`);
+	await browser.press('Enter');
+	const pressed = await value(`({ pressed: document.querySelector('[aria-label="Mark Selection by meaning"]').getAttribute('aria-pressed'),
+		hash: location.hash, stops: [...document.querySelectorAll('#tree a, #tree button')].filter((control) => control.tabIndex >= 0)
+			.map((control) => control.getAttribute('aria-label') || control.textContent) })`);
+
+	test('a click on the marker opens or closes an item, and Tab reaches only the current row\'s control', () => {
+		if (markerOpen.expanded !== 'true' || markerOpen.focus !== 'science' || markerOpen.group === 'none'
+			|| reclosed !== 'false' || order[0] !== 'Mark Selection by meaning' || order[1].startsWith('Mark')
+			|| order.some((stop) => stop === 'A') || pressed.pressed !== 'true' || pressed.hash !== ''
+			|| pressed.stops.join() !== 'Mark Selection by meaning') {
+			throw new Error(JSON.stringify({ markerOpen, reclosed, order, pressed }));
+		}
+	});
+
 	/* C-05 */
 	await open('results.html');
 	await value(`(() => { const input = document.getElementById('filter-text'); input.value = 'nothing like this';
@@ -146,11 +176,15 @@ export async function testComponents(browser, test, root) {
 	await browser.press('Enter');
 	const chips = await value(`({ labels: [...document.querySelectorAll('#chips .gldn-chip')].map((chip) => chip.firstChild.textContent),
 		focus: document.activeElement.getAttribute('aria-label') })`);
+	const removeLetter = await value(`(() => { const box = document.querySelector('[aria-label="Remove Letter"]').getBoundingClientRect();
+		return [box.left + box.width / 2, box.top + box.height / 2]; })()`);
+	await browser.click(...removeLetter);
+	const clicked = await value(`[...document.querySelectorAll('#chips .gldn-chip')].map((chip) => chip.firstChild.textContent)`);
 
-	test('facets apply only on submit, and removing a chip moves focus to the next one', () => {
+	test('facets apply only on submit, and removing a chip by key or click moves focus to the next one', () => {
 		if (before.join() !== 'Book,Letter' || unchanged !== 2 || chips.labels.join() !== 'Photograph,Letter'
-			|| chips.focus !== 'Remove Photograph') {
-			throw new Error(JSON.stringify({ before, unchanged, chips }));
+			|| chips.focus !== 'Remove Photograph' || clicked.join() !== 'Photograph') {
+			throw new Error(JSON.stringify({ before, unchanged, chips, clicked }));
 		}
 	});
 
@@ -197,22 +231,97 @@ export async function testComponents(browser, test, root) {
 	});
 
 	/* C-11 */
-	await open('shell.html', 320);
-	const narrow = await value(`({ toggle: getComputedStyle(document.getElementById('toggle')).display,
-		nav: getComputedStyle(document.getElementById('shell-nav')).display })`);
-	await value(`document.getElementById('toggle').click()`);
-	const opened = await value(`getComputedStyle(document.getElementById('shell-nav')).display`);
+	const shellState = () => value(`(() => {
+		const display = (id) => getComputedStyle(document.getElementById(id)).display;
+		return { toggle: display('toggle'), nav: display('shell-nav'), searchToggle: display('search-toggle'),
+			search: display('search'), close: display('close'),
+			navTop: document.getElementById('shell-nav').getBoundingClientRect().top,
+			mainTop: document.getElementById('content').getBoundingClientRect().top,
+			overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth };
+	})()`);
+	await open('shell.html', 375);
+	const narrow = await shellState();
+	await value(`document.getElementById('toggle').click(); document.getElementById('search-toggle').click()`);
+	const opened = await shellState();
 	await open('shell.html', 1200);
 	const wide = await value(`({ toggle: getComputedStyle(document.getElementById('toggle')).display,
 		nav: getComputedStyle(document.getElementById('shell-nav')).display,
+		search: getComputedStyle(document.getElementById('search')).display,
+		navWidth: document.getElementById('shell-nav').getBoundingClientRect().width,
+		mainWidth: document.getElementById('content').getBoundingClientRect().width,
 		reserve: parseFloat(getComputedStyle(document.body).paddingBottom),
 		dock: document.querySelector('[data-gldn-dock]').getBoundingClientRect().height })`);
+	await value(`document.getElementById('close').click()`);
+	const closed = await value(`({ toggle: getComputedStyle(document.getElementById('toggle')).display,
+		nav: getComputedStyle(document.getElementById('shell-nav')).display, focus: document.activeElement.id,
+		fill: document.getElementById('content').getBoundingClientRect().width
+			/ document.querySelector('.gldn-workspace').clientWidth })`);
+	await value(`document.getElementById('toggle').click()`);
+	const reopened = await value(`({ toggle: getComputedStyle(document.getElementById('toggle')).display,
+		nav: getComputedStyle(document.getElementById('shell-nav')).display })`);
 
-	test('the shell folds its navigation behind a toggle on narrow screens and reserves the dock', () => {
-		if (narrow.toggle === 'none' || narrow.nav !== 'none' || opened === 'none' || wide.toggle !== 'none'
-			|| wide.nav === 'none' || Math.abs(wide.reserve - wide.dock) > 1) {
-			throw new Error(JSON.stringify({ narrow, opened, wide }));
+	test('the shell folds its search and navigation behind toggles at 375px, above the content in order', () => {
+		if (narrow.toggle === 'none' || narrow.searchToggle === 'none' || narrow.nav !== 'none'
+			|| narrow.search !== 'none' || opened.nav === 'none' || opened.search === 'none' || opened.close !== 'none'
+			|| opened.navTop >= opened.mainTop || narrow.overflow > 0 || opened.overflow > 0) {
+			throw new Error(JSON.stringify({ narrow, opened }));
 		}
+	});
+
+	test('the wide shell sets navigation beside the larger content, closes it to widen the content, reopens it, and reserves the dock', () => {
+		if (wide.toggle !== 'none' || wide.nav === 'none' || wide.search === 'none' || wide.mainWidth <= wide.navWidth
+			|| Math.abs(wide.reserve - wide.dock) > 1 || closed.nav !== 'none' || closed.toggle === 'none'
+			|| closed.focus !== 'toggle' || closed.fill < 0.9 || reopened.nav === 'none' || reopened.toggle !== 'none') {
+			throw new Error(JSON.stringify({ wide, closed, reopened }));
+		}
+	});
+
+	// Text in the tree, the chips and the shell bar keeps AA contrast on what lies behind it.
+	const contrastExpression = (selector) => `(() => {
+		const channels = (color) => color.match(/[\\d.]+/g).map(Number);
+		const over = (top, bottom) => {
+			const [r, g, b, a = 1] = channels(top);
+			const [R, G, B] = channels(bottom);
+			return 'rgb(' + (r * a + R * (1 - a)) + ', ' + (g * a + G * (1 - a)) + ', ' + (b * a + B * (1 - a)) + ')';
+		};
+		const luminance = (color) => {
+			const [r, g, b] = channels(color).slice(0, 3).map((value) => {
+				value /= 255;
+				return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+			});
+			return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+		};
+		const contrast = (a, b) => {
+			const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+			return (light + 0.05) / (dark + 0.05);
+		};
+		const behind = (element) => {
+			const layers = [];
+			for (let node = element; node; node = node.parentElement) layers.push(getComputedStyle(node).backgroundColor);
+			return layers.reverse().reduce((below, layer) => over(layer, below), 'rgb(255, 255, 255)');
+		};
+		return [...document.querySelectorAll(${JSON.stringify(selector)})]
+			.filter((element) => element.textContent.trim() && element.getClientRects().length)
+			.map((element) => ({ text: element.textContent.trim().slice(0, 24),
+				ratio: contrast(getComputedStyle(element).color, behind(element)) }));
+	})()`;
+	const ratios = [];
+	for (const scheme of ['light', 'dark']) {
+		await browser.media([{ name: 'prefers-color-scheme', value: scheme }]);
+		await open('tree.html');
+		await value(`document.querySelector('#tree [aria-pressed]').click()`);
+		ratios.push(...(await value(contrastExpression('#tree a, #tree button'))).map((row) => ({ scheme, ...row })));
+		await open('chips.html');
+		ratios.push(...(await value(contrastExpression('#chips .gldn-chip, #chips button'))).map((row) => ({ scheme, ...row })));
+		await open('shell.html');
+		ratios.push(...(await value(contrastExpression('.gldn-shell-bar strong, .gldn-shell-bar label, .gldn-shell-bar a, .gldn-shell-bar button, #tree a')))
+			.map((row) => ({ scheme, ...row })));
+	}
+	await browser.media([]);
+
+	test('tree rows, chips and the shell bar keep AA text contrast in both schemes', () => {
+		const low = ratios.filter((row) => row.ratio < 4.5);
+		if (ratios.length < 20 || low.length) throw new Error(JSON.stringify(low.length ? low : ratios));
 	});
 
 	/* C-12 */

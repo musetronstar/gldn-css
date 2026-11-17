@@ -75,15 +75,19 @@ export async function testModules(browser, test, root) {
 	await ready();
 	await browser.evaluate(`document.getElementById('opener').focus()`);
 	await browser.press('Enter');
-	const shown = { open: await browser.evaluate(`document.getElementById('dialog').open`), focus: await active() };
+	// A person clicks the backdrop once the dialog has risen into place, centered.
+	await browser.evaluate(`Promise.all(document.getElementById('dialog').getAnimations().map((animation) => animation.finished))`);
+	const shown = { open: await browser.evaluate(`document.getElementById('dialog').open`), focus: await active(),
+		offset: await browser.evaluate(`(() => { const box = document.getElementById('dialog').getBoundingClientRect();
+			return [box.left + box.width / 2 - innerWidth / 2, box.top + box.height / 2 - innerHeight / 2]; })()`) };
 	await browser.click(5, 5);
 	const dismissed = await browser.evaluate(`({ open: document.getElementById('dialog').open, closes: window.closes, focus: document.activeElement.id })`);
 	await browser.press('Enter');
 	await browser.press('Enter');
 	const confirmed = await browser.evaluate(`({ open: document.getElementById('dialog').open, closes: window.closes, focus: document.activeElement.id })`);
 
-	test('a dialog focuses its autofocus control, closes on a backdrop click and returns focus', () => {
-		if (!shown.open || shown.focus !== 'confirm' || dismissed.open || dismissed.focus !== 'opener'
+	test('a centered dialog focuses its autofocus control, closes on a backdrop click and returns focus', () => {
+		if (!shown.open || shown.focus !== 'confirm' || shown.offset.some((axis) => Math.abs(axis) > 1) || dismissed.open || dismissed.focus !== 'opener'
 			|| dismissed.closes.join() !== 'cancel' || confirmed.open || confirmed.closes.join() !== 'cancel,confirm'
 			|| confirmed.focus !== 'opener') {
 			throw new Error(JSON.stringify({ shown, dismissed, confirmed }));

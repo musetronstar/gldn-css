@@ -26,6 +26,7 @@ const STATE_CLASSES = ['gldn-btn-icon', 'gldn-btn-group', 'gldn-icon', 'gldn-dis
 const PRIMITIVES = ['gldn-cluster', 'gldn-grid', 'gldn-switcher', 'gldn-frame', 'gldn-frame-portrait'];
 
 let passed = 0;
+let failed = 0;
 
 function test(name, fn) {
 	try {
@@ -35,6 +36,7 @@ function test(name, fn) {
 	} catch (err) {
 		console.error(`FAIL - ${name}`);
 		console.error(err.message);
+		failed++;
 		process.exitCode = 1;
 	}
 }
@@ -206,8 +208,10 @@ const LENGTH_ALLOWLIST = [
 	{ selector: /\.gldn-visually-hidden/, literals: ['1px', '-1px'],
 		reason: 'a one-pixel box that screen readers still read' },
 	{ property: /^font-size$/, literals: ['1em'], reason: 'inline code keeps the size of its text' },
-	{ selector: /\.gldn-icon|aria-busy|\.gldn-tree-row|role="switch"/, literals: ['1em'], reason: 'icons, markers, switches and the busy ring take the size of their text' },
-	{ property: /^--gldn-control-height$/, literals: ['1lh'], reason: 'a control is one line of its own text tall' }
+	{ selector: /\.gldn-icon|aria-busy|\.gldn-tree-(?:row|toggle)|role="switch"/, literals: ['1em'], reason: 'icons, markers, switches and the busy ring take the size of their text' },
+	{ property: /^--gldn-control-height$/, literals: ['1lh'], reason: 'a control is one line of its own text tall' },
+	{ selector: /^\.gldn-(?:sidebar|main)$/, property: /^flex$/, literals: ['1px'],
+		reason: 'the workspace stacks at --gldn-bp-sm itself, as max-width: 48rem includes it' }
 ];
 
 const LENGTH = /(?<![\w.#-])-?\d*\.?\d+(?:px|rem|em|ch|ex|lh|vh|vw|dvh|svh|lvh|vmin|vmax|cm|mm|in|pt|pc)\b/g;
@@ -871,4 +875,4 @@ test('unterminated comments fail the build loudly', () => {
 	assert.throws(() => stripComments('a { color: red } /* oops'), /unterminated/);
 });
 
-console.log(`\n${passed} contract tests passed`);
+console.log(`\n${passed} contract tests passed${failed ? `, ${failed} failed` : ''}`);

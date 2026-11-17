@@ -20,30 +20,30 @@
 	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
 		<section class="gldn-stack">
 			<h1 class="gldn-title-1">Navigation tree</h1>
-			<p class="gldn-lede">Nested items with one Tab stop. Arrow keys move, Right opens an item and Left closes it; an item that loads its children shows a busy ring while it does.</p>
+			<p class="gldn-lede">Nested items with one Tab stop. Arrow keys move, Right opens an item and Left closes it, and a click on its marker does either; an item that loads its children shows a busy ring while it does. Tab reaches the current item's Mark button, and Enter follows its link.</p>
 		</section>
 
 		<nav class="gldn-card" aria-label="Essay sections">
 			<ul class="gldn-tree" role="tree" aria-label="Essay sections" id="tree">
 				<li role="treeitem" id="science" aria-expanded="true">
-						<span class="gldn-tree-row"><a href="#science">Science after the war</a></span>
+						<span class="gldn-tree-row"><span class="gldn-tree-toggle"></span><a href="#science">Science after the war</a></span>
 					<ul role="group">
 					<li role="treeitem" id="specialization">
-						<span class="gldn-tree-row"><a href="#specialization">Specialization</a></span>
+						<span class="gldn-tree-row"><span class="gldn-tree-toggle"></span><a href="#specialization">Specialization</a></span>
 					</li>
 					<li role="treeitem" id="instruments">
-						<span class="gldn-tree-row"><a href="#instruments">New instruments</a></span>
+						<span class="gldn-tree-row"><span class="gldn-tree-toggle"></span><a href="#instruments">New instruments</a></span>
 					</li>
 					</ul>
 					</li>
 				<li role="treeitem" id="photography" aria-expanded="false" data-gldn-lazy>
-						<span class="gldn-tree-row"><a href="#photography">Photography and storage</a></span>
+						<span class="gldn-tree-row"><span class="gldn-tree-toggle"></span><a href="#photography">Photography and storage</a></span>
 					</li>
 				<li role="treeitem" id="selection" aria-selected="true">
-						<span class="gldn-tree-row"><a href="#selection">Selection by meaning</a></span>
+						<span class="gldn-tree-row"><span class="gldn-tree-toggle"></span><a href="#selection">Selection by meaning</a></span>
 					</li>
 				<li role="treeitem" id="device">
-						<span class="gldn-tree-row"><a href="#device">A device for individual use</a></span>
+						<span class="gldn-tree-row"><span class="gldn-tree-toggle"></span><a href="#device">A device for individual use</a></span>
 					</li>
 			</ul>
 		</nav>
@@ -58,6 +58,22 @@
 
 		import { createRoving } from '../gldn-roving.js';
 		const tree = document.getElementById('tree');
+		// Each row holds a control; only the current item's control is in the Tab order.
+		function addMark(row) {
+			const mark = document.createElement('button');
+			mark.type = 'button';
+			mark.className = 'gldn-btn gldn-btn-quiet gldn-btn-icon';
+			mark.textContent = '☆';
+			mark.setAttribute('aria-label', 'Mark ' + row.querySelector('a').textContent);
+			mark.setAttribute('aria-pressed', 'false');
+			mark.addEventListener('click', () => {
+				const pressed = mark.getAttribute('aria-pressed') !== 'true';
+				mark.setAttribute('aria-pressed', String(pressed));
+				mark.textContent = pressed ? '★' : '☆';
+			});
+			row.append(mark);
+		}
+		tree.querySelectorAll('.gldn-tree-row').forEach(addMark);
 		createRoving(tree);
 		tree.querySelector('#selection a').setAttribute('aria-current', 'page');
 		// The application loads children when an item first opens.
@@ -73,13 +89,15 @@
 					const child = document.createElement('li');
 					child.setAttribute('role', 'treeitem');
 					child.id = id;
-					child.tabIndex = -1;
 					const row = document.createElement('span');
 					row.className = 'gldn-tree-row';
+					const toggle = document.createElement('span');
+					toggle.className = 'gldn-tree-toggle';
 					const link = document.createElement('a');
 					link.href = '#' + id;
 					link.textContent = label;
-					row.append(link);
+					row.append(toggle, link);
+					addMark(row);
 					child.append(row);
 					group.append(child);
 				}

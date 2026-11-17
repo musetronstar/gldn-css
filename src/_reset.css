@@ -653,7 +653,12 @@
 	}
 
 	/* Dialogs and popovers: a surface over the page, in the page's scheme. The backdrop
-	 * dims the page behind a modal dialog. */
+	 * dims the page behind a modal dialog. The reset's zero margin would pin a dialog to
+	 * the corner; auto margins center it again, as browsers do. */
+	dialog {
+		margin: auto;
+	}
+
 	dialog,
 	[popover] {
 		max-inline-size: min(calc(100% - 2 * var(--gldn-space-md)), var(--gldn-measure));

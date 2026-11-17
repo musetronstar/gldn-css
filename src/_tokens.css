@@ -169,6 +169,10 @@
 		 * through this token, never by setting gap directly. */
 		--gldn-gutter: var(--gldn-space-lg);
 
+		/* The workspace's padding. Its columns stack when the workspace, padding
+		 * included, is no wider than --gldn-bp-sm, so they read it too. */
+		--gldn-workspace-padding: var(--gldn-space-lg);
+
 		/* Type advances by half phi steps. */
 		--gldn-text-xs: calc(var(--gldn-text-base) * pow(var(--gldn-phi), -1));
 		--gldn-text-sm: calc(var(--gldn-text-base) * pow(var(--gldn-phi), -0.5));

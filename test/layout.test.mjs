@@ -42,6 +42,7 @@ const SCALE_WIDTHS = [320, 768, 1200];
 const FONTS = [16, 20];
 
 let passed = 0;
+let failed = 0;
 
 function test(name, fn) {
 	try {
@@ -51,6 +52,7 @@ function test(name, fn) {
 	} catch (err) {
 		console.error(`FAIL - ${name}`);
 		console.error(err.message);
+		failed++;
 		process.exitCode = 1;
 	}
 }
@@ -606,4 +608,4 @@ try {
 	await browser.close();
 }
 
-console.log(`\n${passed} layout tests passed`);
+console.log(`\n${passed} layout tests passed${failed ? `, ${failed} failed` : ''}`);

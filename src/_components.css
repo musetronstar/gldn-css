@@ -18,13 +18,14 @@
 	}
 
 	/* The workspace fills the viewport and splits into golden columns. It
-	 * stacks when it is narrower than --gldn-bp-sm, by the same max() basis
-	 * as the golden row primitives. */
+	 * stacks when it is no wider than --gldn-bp-sm, padding included, by the
+	 * same max() basis as the golden row primitives; a page-wide workspace
+	 * therefore stacks exactly where the small-screen media query begins. */
 	.gldn-workspace {
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--gldn-gutter);
-		padding: var(--gldn-space-lg);
+		padding: var(--gldn-workspace-padding);
 		min-height: 100vh;
 		min-height: 100dvh;
 	}
@@ -34,14 +35,14 @@
 	 * panels split their container in exactly the golden ratio. */
 	.gldn-sidebar {
 		flex: 0 0 max(calc(var(--gldn-minor) - var(--gldn-gutter) / var(--gldn-phi) / var(--gldn-phi)),
-			calc((var(--gldn-bp-sm) - 100%) * 999));
+			calc((var(--gldn-bp-sm) + 1px - 2 * var(--gldn-workspace-padding) - 100%) * 999));
 		min-width: 0;
 		max-width: 100%;
 	}
 
 	.gldn-main {
 		flex: 0 0 max(calc(var(--gldn-major) - var(--gldn-gutter) / var(--gldn-phi)),
-			calc((var(--gldn-bp-sm) - 100%) * 999));
+			calc((var(--gldn-bp-sm) + 1px - 2 * var(--gldn-workspace-padding) - 100%) * 999));
 		min-width: 0;
 		max-width: 100%;
 	}
@@ -714,6 +715,33 @@
 		rotate: 90deg;
 	}
 
+	/* A row may hold its marker as a gldn-tree-toggle, which a pointer clicks to open or
+	 * close the item; keys do the same on the item itself. */
+	.gldn-tree-row:has(> .gldn-tree-toggle)::before {
+		content: none;
+	}
+
+	.gldn-tree-toggle {
+		display: inline-flex;
+		flex: none;
+		align-items: center;
+		justify-content: center;
+		align-self: stretch;
+		inline-size: 1em;
+	}
+
+	[aria-expanded] > .gldn-tree-row > .gldn-tree-toggle {
+		cursor: pointer;
+	}
+
+	[aria-expanded] > .gldn-tree-row > .gldn-tree-toggle::before {
+		content: "▸" / "";
+	}
+
+	[aria-expanded="true"] > .gldn-tree-row > .gldn-tree-toggle::before {
+		rotate: 90deg;
+	}
+
 	.gldn-tree [role="treeitem"]:focus-visible {
 		outline: none;
 	}
@@ -728,8 +756,15 @@
 		box-shadow: inset var(--gldn-edge-width) 0 0 var(--gldn-color-primary);
 	}
 
+	/* On the selected tint a link takes the text color, which keeps AA contrast. */
+	.gldn-tree [aria-selected="true"] > .gldn-tree-row a,
+	.gldn-results > :is([aria-selected="true"], [aria-current]:not([aria-current="false"])) a {
+		color: var(--gldn-color-text);
+	}
+
 	@media (prefers-reduced-motion: no-preference) {
-		.gldn-tree-row::before {
+		.gldn-tree-row::before,
+		.gldn-tree-toggle::before {
 			transition: rotate var(--gldn-motion-duration) ease-out;
 		}
 	}
@@ -982,6 +1017,21 @@
 
 	.gldn-shell-toggle {
 		display: none;
+	}
+
+	/* A gldn-shell-close button closes the navigation at every width. The application sets
+	 * data-gldn-closed on the navigation and on its toggle, which then shows to reopen it. */
+	.gldn-shell-nav[data-gldn-closed] {
+		display: none;
+	}
+
+	.gldn-shell-toggle[data-gldn-closed] {
+		display: inline-flex;
+	}
+
+	/* While the navigation is closed, the main column fills the workspace. */
+	.gldn-workspace:has(> .gldn-shell-nav[data-gldn-closed]) > .gldn-main {
+		flex-basis: 100%;
 	}
 
 	/* ------------------------------------------------------------------

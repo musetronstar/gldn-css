@@ -180,6 +180,8 @@ export async function testStates(browser, test, root) {
 		const tab = document.querySelector('.gldn-tab').getBoundingClientRect();
 		return [tab.width, tab.height];
 	})()`;
+	// At 375px a control is about 40px tall, so only the coarse-pointer rule reaches 44px.
+	await browser.viewport(375);
 	await browser.navigate(dockUrl, 16);
 	const fineTab = await browser.evaluate(tabSize);
 	await browser.touch(true);
@@ -187,13 +189,31 @@ export async function testStates(browser, test, root) {
 	const coarse = await browser.evaluate(sizes);
 	await browser.navigate(dockUrl, 16);
 	const coarseTab = await browser.evaluate(tabSize);
+	await browser.navigate('file://' + path.join(root, 'docs', 'components', 'tree.html'), 16);
+	const coarseTree = await browser.evaluate(`(() => {
+		const box = (selector) => document.querySelector(selector).getBoundingClientRect();
+		return { row: box('#science > .gldn-tree-row').height,
+			toggle: [box('#science > .gldn-tree-row > .gldn-tree-toggle').width, box('#science > .gldn-tree-row > .gldn-tree-toggle').height] };
+	})()`);
+	await browser.navigate('file://' + path.join(root, 'docs', 'components', 'chips.html'), 16);
+	const coarseChip = await browser.evaluate(`(() => {
+		const box = document.querySelector('#chips button').getBoundingClientRect();
+		return [box.width, box.height];
+	})()`);
 	await browser.touch(false);
+	await browser.viewport(1200);
 
 	test('coarse pointers get 44px controls while the dock keeps its sizes', () => {
 		if (!coarse.coarse || coarse.button < 44 || coarse.field < 44
 			|| coarse.icon.some((side) => side < 44)
 			|| Math.abs(coarseTab[0] - fineTab[0]) > 0.5 || Math.abs(coarseTab[1] - fineTab[1]) > 0.5) {
 			throw new Error(JSON.stringify({ coarse, fineTab, coarseTab }));
+		}
+	});
+
+	test('coarse pointers get 44px tree rows, tree markers and chip Remove buttons', () => {
+		if (coarseTree.row < 44 || coarseTree.toggle.some((side) => side < 44) || coarseChip.some((side) => side < 44)) {
+			throw new Error(JSON.stringify({ coarseTree, coarseChip }));
 		}
 	});
 }

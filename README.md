@@ -218,7 +218,9 @@ form the single source of truth:
   multiplies lengths by numbers; type and space share the result
 * *Spacing:* `--gldn-space-xs` through `--gldn-space-2xl`, with whole phi powers
   computed by `pow()`, plus `--gldn-gutter`, the single gutter between golden
-  split columns
+  split columns, and `--gldn-workspace-padding`, which the workspace's columns
+  read so that they stack when the workspace, padding included, is no wider than
+  `--gldn-bp-sm`
 * *Typography:* `--gldn-text-xs` through `--gldn-text-3xl`, advancing by half
   phi powers from the fluid base; `--gldn-leading` is phi for prose,
   `--gldn-leading-heading` is `1 + phi^-3`, and `--gldn-measure` is `100ch / phi`.
@@ -364,7 +366,9 @@ Semantic classes (`src/_components.css`) compose tokens and primitives:
 * `gldn-search` a `role="search"` form: query, optional controls, and a Search button
   that wrap on narrow screens without hiding any of them
 * `gldn-tree` a nested `role="tree"`: each item's `gldn-tree-row` carries the marker,
-  the focus ring, and the selected state; a closed item hides its group
+  the focus ring, and the selected state; a closed item hides its group. A row may hold
+  its marker as a `gldn-tree-toggle`, which a pointer clicks to open or close the item,
+  and its own controls, such as an Add button
 * `gldn-results` a list of results, each with a link, a `gldn-result-meta` line (kind
   and identity), and a snippet; `aria-current` or `aria-selected` marks one
 * `gldn-chip` a filter label with its own Remove button; `gldn-facets` a fieldset of
@@ -378,8 +382,12 @@ Semantic classes (`src/_components.css`) compose tokens and primitives:
   text to one line and keeps its full content for assistive technology
 * `gldn-dropzone` a `<label>` around a file input, its count, and its
   `[data-gldn-files]` pending list; it turns solid while files are dragged over it
-* `gldn-shell` an application page: a `gldn-shell-bar` above a workspace, whose
-  `gldn-shell-nav` folds behind a `gldn-shell-toggle` below 48rem
+* `gldn-shell` an application page: a `gldn-shell-bar` above a workspace. Below 48rem
+  its `gldn-shell-nav`, and a `gldn-search` in the bar, fold behind `gldn-shell-toggle`
+  buttons while they carry `data-gldn-collapsed`, and an unfolded region sits above
+  the content. A `gldn-shell-close` button closes the navigation at any width: set
+  `data-gldn-closed` on the navigation and its toggle, which then shows to reopen it,
+  and the `gldn-main` beside it fills the workspace
 * `gldn-hints` keyboard shortcuts beside what they do
 * `gldn-media` framed images, native players, pages, and cues
 * `gldn-timeline` the message log with a filter bar; `[data-gldn-messages-older]` asks
@@ -485,7 +493,10 @@ markup works without it.
 * `gldn-roving.js`: `createRoving(root)` gives a listbox, menu, or tree one Tab stop,
   the arrow, Home, and End keys, and typeahead. In a tree, Right opens an item
   (`gldn-expand`, so the application can load its children) and Left closes it or
-  moves to its parent; Enter or Space dispatch `gldn-activate`
+  moves to its parent; a click on a `gldn-tree-toggle` does either. Enter or Space
+  dispatch `gldn-activate` and follow the item's link. Links in items leave the Tab
+  order, and the current item's other row controls follow it. Items added later, such
+  as loaded children, join the widget
 * `gldn-form.js`: `enhanceForm(form)` shows each field's constraint message in its
   `[data-gldn-error-for]` element, focuses the first invalid field, marks the form and
   its submit button busy, and dispatches `gldn-submit` with the form data. A second
@@ -514,7 +525,8 @@ floor to stack below 48rem. At that width the responsive layer only tightens the
 padding of `gldn-workspace` and `gldn-hero`. The dock starts as a one-line tab
 strip and opens panels as bottom sheets. Type and space need no breakpoint
 override because their shared base interpolates smoothly. On coarse pointers
-every control, except the dock's own, is at least a 44px target.
+every control, except the dock's own, is at least a 44px target, and so are tree
+rows, tree markers, and chip Remove buttons.
 
 **Building and testing**
 

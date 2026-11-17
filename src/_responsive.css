@@ -14,30 +14,38 @@
 	 * is, and keeps its own sizes. */
 	@media (pointer: coarse) {
 		:is(button, select, textarea, .gldn-btn,
-			input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"]))
-			:not(.gldn-tab, .gldn-dock-control, .gldn-popin-dismiss) {
+			input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"])):not(
+			.gldn-tab, .gldn-dock-control, .gldn-popin-dismiss) {
 			min-block-size: var(--gldn-touch-target);
 		}
 
-		.gldn-btn-icon {
+		.gldn-btn-icon,
+		.gldn-chip > button,
+		[aria-expanded] > .gldn-tree-row > .gldn-tree-toggle {
 			min-inline-size: var(--gldn-touch-target);
+		}
+
+		.gldn-tree-row {
+			min-block-size: var(--gldn-touch-target);
 		}
 	}
 
 	/* Small screens: the workspace and the hero tighten their padding, and the
-	 * shell's navigation folds behind its toggle. */
+	 * shell's navigation and its bar's search fold behind their toggles. */
 	@media (max-width: 48rem) {
 		.gldn-shell-toggle {
 			display: inline-flex;
 		}
 
-		.gldn-shell-nav[data-gldn-collapsed] {
+		.gldn-shell-nav[data-gldn-collapsed],
+		.gldn-shell-bar .gldn-search[data-gldn-collapsed],
+		.gldn-shell-close {
 			display: none;
 		}
 
 		.gldn-workspace {
+			--gldn-workspace-padding: var(--gldn-space-sm);
 			gap: var(--gldn-space-md);
-			padding: var(--gldn-space-sm);
 		}
 
 		.gldn-hero {
