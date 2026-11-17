@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css font pairings</title>
+	<link rel="stylesheet" href="gldn.min.css">
+	<link rel="stylesheet" href="gldn-fonts.css">
+	<style>
+		/* Pairing C's fonts are specimen-only; specimen/fonts/LICENSE.txt covers them. */
+		@font-face {
+			font-family: 'gldn Atkinson Hyperlegible Next';
+			src: url('./specimen/fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2') format('woff2');
+			font-style: normal;
+			font-weight: 200 800;
+			font-display: swap;
+		}
+
+		@font-face {
+			font-family: 'gldn Atkinson Hyperlegible Next';
+			src: url('./specimen/fonts/atkinson-hyperlegible-next-latin-wght-italic.woff2') format('woff2');
+			font-style: italic;
+			font-weight: 200 800;
+			font-display: swap;
+		}
+
+		@font-face {
+			font-family: 'gldn Newsreader';
+			src: url('./specimen/fonts/newsreader-latin-opsz-normal.woff2') format('woff2');
+			font-style: normal;
+			font-weight: 200 800;
+			font-display: swap;
+		}
+
+		@font-face {
+			font-family: 'gldn Newsreader';
+			src: url('./specimen/fonts/newsreader-latin-opsz-italic.woff2') format('woff2');
+			font-style: italic;
+			font-weight: 200 800;
+			font-display: swap;
+		}
+
+		.theme-set {
+			display: grid;
+			gap: var(--gldn-space-lg);
+		}
+
+		/* Each card sets every stack: tokens resolve where they are declared. */
+		[data-pairing] {
+			font-family: var(--gldn-font-sans);
+			--gldn-font-display: var(--gldn-font-sans);
+		}
+
+		.pairing-a {
+			--gldn-font-sans: system-ui, -apple-system, 'Segoe UI', Cantarell, Ubuntu, sans-serif;
+			--gldn-font-serif: Palatino, 'Palatino Linotype', P052, 'URW Palladio L', Georgia, serif;
+			--gldn-font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
+		}
+
+		.pairing-c {
+			--gldn-font-sans: 'gldn Atkinson Hyperlegible Next', system-ui, sans-serif;
+			--gldn-font-serif: 'gldn Newsreader', Palatino, 'Palatino Linotype', Georgia, serif;
+		}
+
+		.serif,
+		.serif-display {
+			font-family: var(--gldn-font-serif);
+		}
+	</style>
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav">
+			<strong>gldn-css</strong>
+			<a href="index.html#typography">type and space</a>
+			<a href="index.html#plain-html">plain HTML</a>
+		</nav>
+	</header>
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">Three font pairings</h1>
+			<p class="gldn-lede">
+				Each pairing sets sans, serif and mono on the same golden scale. Headings use
+				the sans by default; each card also shows a serif heading.
+			</p>
+			<p class="gldn-text">Choice: pending user review. No pairing is selected by default.</p>
+		</section>
+
+		<section class="gldn-stack" data-theme="light">
+			<h2 class="gldn-title-2">Light theme</h2>
+			<div class="theme-set">
+				<article class="gldn-card pairing-a" data-pairing="A">
+					<h1>A. System fonts</h1>
+					<p>The default: fonts that ship with each operating system, so nothing downloads. The serif is Palatino where the system has it.</p>
+					<h2>Sans for interface and prose</h2>
+					<p>A memex keeps <em>trails</em> of associations, and <strong>every tag</strong> has its place in one tree. Its ID reads as <em>inline <code>mammal</code> code</em> too.</p>
+					<h2 class="serif-display">Serif for long reading</h2>
+					<p class="serif">Consider a future device for individual use, which is a sort of mechanized private file and library. <em>It needs a name.</em></p>
+					<blockquote>Wholly new forms of encyclopedias will appear.</blockquote>
+					<pre><code>size = base × pow(φ, step)</code></pre>
+					<table><thead><tr><th>role</th><th>font</th></tr></thead><tbody><tr><td>sans</td><td>system-ui</td></tr><tr><td>serif</td><td>Palatino</td></tr><tr><td>mono</td><td>ui-monospace</td></tr></tbody></table>
+				</article>
+				<article class="gldn-card pairing-b" data-pairing="B">
+					<h1>B. Inter, Literata and JetBrains Mono</h1>
+					<p>The bundled set in <code>gldn-fonts.css</code>. Literata adjusts its letterforms to the size it is set at.</p>
+					<h2>Sans for interface and prose</h2>
+					<p>A memex keeps <em>trails</em> of associations, and <strong>every tag</strong> has its place in one tree. Its ID reads as <em>inline <code>mammal</code> code</em> too.</p>
+					<h2 class="serif-display">Serif for long reading</h2>
+					<p class="serif">Consider a future device for individual use, which is a sort of mechanized private file and library. <em>It needs a name.</em></p>
+					<blockquote>Wholly new forms of encyclopedias will appear.</blockquote>
+					<pre><code>size = base × pow(φ, step)</code></pre>
+					<table><thead><tr><th>role</th><th>font</th></tr></thead><tbody><tr><td>sans</td><td>Inter</td></tr><tr><td>serif</td><td>Literata</td></tr><tr><td>mono</td><td>JetBrains Mono</td></tr></tbody></table>
+				</article>
+				<article class="gldn-card pairing-c" data-pairing="C">
+					<h1>C. Atkinson Hyperlegible Next, Newsreader and JetBrains Mono</h1>
+					<p>An alternative, loaded by this page only. Atkinson Hyperlegible Next tells similar letters apart; Newsreader is a text face for long reading.</p>
+					<h2>Sans for interface and prose</h2>
+					<p>A memex keeps <em>trails</em> of associations, and <strong>every tag</strong> has its place in one tree. Its ID reads as <em>inline <code>mammal</code> code</em> too.</p>
+					<h2 class="serif-display">Serif for long reading</h2>
+					<p class="serif">Consider a future device for individual use, which is a sort of mechanized private file and library. <em>It needs a name.</em></p>
+					<blockquote>Wholly new forms of encyclopedias will appear.</blockquote>
+					<pre><code>size = base × pow(φ, step)</code></pre>
+					<table><thead><tr><th>role</th><th>font</th></tr></thead><tbody><tr><td>sans</td><td>Atkinson Hyperlegible Next</td></tr><tr><td>serif</td><td>Newsreader</td></tr><tr><td>mono</td><td>JetBrains Mono</td></tr></tbody></table>
+				</article>
+			</div>
+		</section>
+
+		<section class="gldn-stack" data-theme="dark">
+			<h2 class="gldn-title-2">Dark theme</h2>
+			<div class="theme-set">
+				<article class="gldn-card gldn-theme-dark pairing-a" data-pairing="A">
+					<h1>A. System fonts</h1>
+					<p>The default: fonts that ship with each operating system, so nothing downloads. The serif is Palatino where the system has it.</p>
+					<h2>Sans for interface and prose</h2>
+					<p>A memex keeps <em>trails</em> of associations, and <strong>every tag</strong> has its place in one tree. Its ID reads as <em>inline <code>mammal</code> code</em> too.</p>
+					<h2 class="serif-display">Serif for long reading</h2>
+					<p class="serif">Consider a future device for individual use, which is a sort of mechanized private file and library. <em>It needs a name.</em></p>
+					<blockquote>Wholly new forms of encyclopedias will appear.</blockquote>
+					<pre><code>size = base × pow(φ, step)</code></pre>
+					<table><thead><tr><th>role</th><th>font</th></tr></thead><tbody><tr><td>sans</td><td>system-ui</td></tr><tr><td>serif</td><td>Palatino</td></tr><tr><td>mono</td><td>ui-monospace</td></tr></tbody></table>
+				</article>
+				<article class="gldn-card gldn-theme-dark pairing-b" data-pairing="B">
+					<h1>B. Inter, Literata and JetBrains Mono</h1>
+					<p>The bundled set in <code>gldn-fonts.css</code>. Literata adjusts its letterforms to the size it is set at.</p>
+					<h2>Sans for interface and prose</h2>
+					<p>A memex keeps <em>trails</em> of associations, and <strong>every tag</strong> has its place in one tree. Its ID reads as <em>inline <code>mammal</code> code</em> too.</p>
+					<h2 class="serif-display">Serif for long reading</h2>
+					<p class="serif">Consider a future device for individual use, which is a sort of mechanized private file and library. <em>It needs a name.</em></p>
+					<blockquote>Wholly new forms of encyclopedias will appear.</blockquote>
+					<pre><code>size = base × pow(φ, step)</code></pre>
+					<table><thead><tr><th>role</th><th>font</th></tr></thead><tbody><tr><td>sans</td><td>Inter</td></tr><tr><td>serif</td><td>Literata</td></tr><tr><td>mono</td><td>JetBrains Mono</td></tr></tbody></table>
+				</article>
+				<article class="gldn-card gldn-theme-dark pairing-c" data-pairing="C">
+					<h1>C. Atkinson Hyperlegible Next, Newsreader and JetBrains Mono</h1>
+					<p>An alternative, loaded by this page only. Atkinson Hyperlegible Next tells similar letters apart; Newsreader is a text face for long reading.</p>
+					<h2>Sans for interface and prose</h2>
+					<p>A memex keeps <em>trails</em> of associations, and <strong>every tag</strong> has its place in one tree. Its ID reads as <em>inline <code>mammal</code> code</em> too.</p>
+					<h2 class="serif-display">Serif for long reading</h2>
+					<p class="serif">Consider a future device for individual use, which is a sort of mechanized private file and library. <em>It needs a name.</em></p>
+					<blockquote>Wholly new forms of encyclopedias will appear.</blockquote>
+					<pre><code>size = base × pow(φ, step)</code></pre>
+					<table><thead><tr><th>role</th><th>font</th></tr></thead><tbody><tr><td>sans</td><td>Atkinson Hyperlegible Next</td></tr><tr><td>serif</td><td>Newsreader</td></tr><tr><td>mono</td><td>JetBrains Mono</td></tr></tbody></table>
+				</article>
+			</div>
+		</section>
+	</main>
+</body>
+</html>

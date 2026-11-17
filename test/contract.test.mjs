@@ -7,7 +7,7 @@
  * committed dist bundle is in sync with src/. Run: node test/contract.test.mjs
  */
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build, collapse, stripComments } from '../scripts/build.mjs';
@@ -53,6 +53,13 @@ test('src partials and entry point exist', () => {
 	}
 	assert.ok(existsSync(path.join(root, 'docs', 'components', 'dock.html')),
 		'missing dock example');
+	assert.ok(existsSync(path.join(root, 'docs', 'fonts.html')), 'missing font specimen');
+	for (const directory of ['src', 'dist', 'docs']) {
+		assert.ok(existsSync(path.join(root, directory, 'gldn-fonts.css')),
+			`missing ${directory}/gldn-fonts.css`);
+		assert.ok(existsSync(path.join(root, directory, 'fonts', 'LICENSE.txt')),
+			`missing ${directory}/fonts/LICENSE.txt`);
+	}
 });
 
 /* --------------------------------------------------------------------------
@@ -132,6 +139,7 @@ const tokens = src('_tokens.css');
 const layout = src('_layout.css');
 const components = src('_components.css');
 const responsive = src('_responsive.css');
+const fonts = src('gldn-fonts.css');
 
 // Names defined in the tokens layer: the single source of truth that
 // var() references and responsive overrides resolve against.
@@ -158,13 +166,104 @@ test('golden division cascade phi^-1 .. phi^-10 is defined', () => {
 		'--gldn-phi-1 must derive from the phi constant');
 });
 
-test('spacing and typography scales are defined', () => {
-	for (const name of ['base', 'xs', 'sm', 'md', 'lg', 'xl', '2xl']) {
-		assert.match(tokens, new RegExp(`--gldn-space-${name}:`), `missing --gldn-space-${name}`);
+test('one clamped fluid base feeds the type and space scales', () => {
+	// The endpoints are numbers, so no step divides one length by another.
+	assert.match(tokens, /--gldn-base-min:\s*1;/);
+	assert.match(tokens, /--gldn-base-max:\s*1\.125;/);
+	assert.match(tokens, /--gldn-viewport-min:\s*20;/);
+	assert.match(tokens, /--gldn-viewport-max:\s*75;/);
+	const fluid = tokens.match(/--gldn-fluid-base:\s*clamp\(([\s\S]*?)\);/);
+	assert.ok(fluid, 'missing --gldn-fluid-base');
+	assert.match(fluid[1], /\(100vw - var\(--gldn-viewport-min\) \* 1rem\) \* var\(--gldn-fluid-slope\)/,
+		'fluid interpolation must multiply a length by the token-derived numeric slope');
+	const slope = tokens.match(/--gldn-fluid-slope:\s*calc\(([\s\S]*?)\);/);
+	assert.ok(slope && !/rem|px|vw/.test(slope[1]), 'the slope must be computed from numbers');
+	assert.match(tokens, /--gldn-space-base:\s*var\(--gldn-fluid-base\)/);
+	assert.match(tokens, /--gldn-text-base:\s*var\(--gldn-fluid-base\)/);
+});
+
+test('every type and space step uses its declared power of phi', () => {
+	const typePowers = { xs: -1, sm: -0.5, md: 0.5, lg: 1, xl: 1.5, '2xl': 2, '3xl': 2.5 };
+	const spacePowers = { xs: -2, sm: -1, lg: 1, xl: 2, '2xl': 3 };
+	for (const [name, power] of Object.entries(typePowers)) {
+		assert.match(tokens, new RegExp(`--gldn-text-${name}:\\s*calc\\(var\\(--gldn-text-base\\) \\* pow\\(var\\(--gldn-phi\\), ${power}\\)\\)`),
+			`text-${name} must use pow(phi, ${power})`);
 	}
-	for (const name of ['base', 'sm', 'md', 'lg', 'xl']) {
-		assert.match(tokens, new RegExp(`--gldn-text-${name}:`), `missing --gldn-text-${name}`);
+	for (const [name, power] of Object.entries(spacePowers)) {
+		assert.match(tokens, new RegExp(`--gldn-space-${name}:\\s*calc\\(var\\(--gldn-space-base\\) \\* pow\\(var\\(--gldn-phi\\), ${power}\\)\\)`),
+			`space-${name} must use pow(phi, ${power})`);
 	}
+	assert.match(tokens, /--gldn-space-md:\s*var\(--gldn-space-base\)/);
+	assert.match(tokens, /--gldn-leading-heading:\s*calc\(1 \+ pow\(var\(--gldn-phi\), -3\)\)/);
+	assert.match(tokens, /--gldn-measure:\s*calc\(100ch \/ var\(--gldn-phi\)\)/);
+});
+
+test('responsive rules do not override the base or type scale', () => {
+	assert.doesNotMatch(responsive, /--gldn-(?:space|text)-base\s*:/);
+	assert.doesNotMatch(responsive, /font-size:\s*var\(--gldn-text-/);
+});
+
+test('system font stacks and the display stack are defined', () => {
+	for (const name of ['sans', 'serif', 'mono', 'display']) {
+		assert.match(tokens, new RegExp(`--gldn-font-${name}:`), `missing --gldn-font-${name}`);
+	}
+	assert.match(tokens, /--gldn-font-serif:\s*Palatino, 'Palatino Linotype', P052, 'URW Palladio L', Georgia, serif/);
+	assert.match(tokens, /--gldn-font-display:\s*var\(--gldn-font-sans\)/,
+		'headings use the sans stack until a project chooses otherwise');
+	assert.doesNotMatch(tokens, /Times New Roman|Roboto/);
+});
+
+/*
+ * Every bundled font is a woff2 file with a normal and an italic face, and one
+ * LICENSE.txt per directory names each file beside the full SIL OFL text.
+ */
+function checkFontDirectory(directory, faceCss) {
+	const names = readdirSync(directory);
+	const woff2 = names.filter((name) => name.endsWith('.woff2'));
+	assert.deepEqual(names.filter((name) => !name.endsWith('.woff2')), ['LICENSE.txt'],
+		`${directory} holds only woff2 files and LICENSE.txt`);
+	const license = readFileSync(path.join(directory, 'LICENSE.txt'), 'utf8');
+	assert.match(license, /SIL OPEN FONT LICENSE Version 1\.1/);
+	assert.match(license, /PREAMBLE[\s\S]*PERMISSION & CONDITIONS[\s\S]*TERMINATION[\s\S]*DISCLAIMER/,
+		'LICENSE.txt must carry the full license text');
+	// The OFL defines reserved names; the notices before it must not reserve one,
+	// because a subset is a modified version and may not carry a reserved name.
+	const notices = license.slice(0, license.indexOf('SIL OPEN FONT LICENSE'));
+	assert.doesNotMatch(notices, /Reserved Font Name/i, 'subset fonts must not reserve their names');
+	const urls = [...faceCss.matchAll(/url\('\.\/(?:specimen\/)?fonts\/([\w-]+\.woff2)'\) format\('woff2'\)/g)]
+		.map((match) => match[1]);
+	for (const name of woff2) {
+		assert.ok(license.includes(name), `LICENSE.txt must name ${name}`);
+		assert.ok(urls.includes(name), `no @font-face uses ${name}`);
+	}
+	for (const url of urls) {
+		assert.ok(woff2.includes(url), `@font-face names missing file ${url}`);
+	}
+	const entries = license.split(/\n\n/).filter((entry) => /\n  Files: /.test(entry));
+	assert.ok(entries.length > 0, 'LICENSE.txt must list its fonts');
+	for (const entry of entries) {
+		assert.match(entry, /\n  Copyright /);
+		assert.match(entry, /\n  Upstream: https:\/\//);
+		assert.match(entry, /\n  Subset: @fontsource-variable\/[\w-]+ \d+\.\d+\.\d+/);
+	}
+	const families = new Map();
+	for (const face of faceCss.matchAll(/@font-face\s*\{([^}]*)\}/g)) {
+		const family = face[1].match(/font-family:\s*'([^']+)'/)[1];
+		const style = face[1].match(/font-style:\s*(\w+)/)[1];
+		assert.match(face[1], /font-weight:\s*\d+ \d+/, `${family} must declare its weight range`);
+		families.set(family, [...(families.get(family) || []), style]);
+	}
+	for (const [family, styles] of families) {
+		assert.deepEqual(styles.sort(), ['italic', 'normal'], `${family} needs normal and italic faces`);
+	}
+}
+
+test('the opt-in font sheet declares licensed woff2 fonts and redefines every stack', () => {
+	for (const name of ['sans', 'serif', 'mono', 'display']) {
+		assert.match(fonts, new RegExp(`--gldn-font-${name}:`));
+	}
+	assert.doesNotMatch(allSrc, /@font-face|gldn-fonts\.css/, 'the main bundle must not load fonts');
+	checkFontDirectory(path.join(root, 'src', 'fonts'), fonts);
 });
 
 test('surface, color, radius, and shadow tokens are defined', () => {
@@ -263,14 +362,40 @@ test('responsive layer stacks golden splits to full width at the breakpoint', ()
 
 const htmlPath = path.join(root, 'docs', 'index.html');
 const html = existsSync(htmlPath) ? readFileSync(htmlPath, 'utf8') : '';
+const fontHtmlPath = path.join(root, 'docs', 'fonts.html');
+const fontHtml = existsSync(fontHtmlPath) ? readFileSync(fontHtmlPath, 'utf8') : '';
 
 test('example links the docs bundle and the example script', () => {
 	assert.match(html, /<link rel="stylesheet" href="gldn\.min\.css">/);
 	assert.match(html, /<script src="gldn\.js"><\/script>/);
 });
 
+test('the tour shows both full scales, fluid endpoints, and plain HTML in both themes', () => {
+	for (const name of ['xs', 'sm', 'base', 'md', 'lg', 'xl', '2xl', '3xl']) {
+		assert.match(html, new RegExp(`id="scale-text-${name}"`));
+	}
+	for (const name of ['xs', 'sm', 'md', 'lg', 'xl', '2xl']) {
+		assert.match(html, new RegExp(`id="scale-space-${name}"`));
+	}
+	assert.match(html, /id="fluid-base"/);
+	assert.match(html, /320px/);
+	assert.match(html, /1200px/);
+	assert.match(html, /id="plain-light"/);
+	assert.match(html, /id="plain-dark"/);
+});
+
+test('the font specimen opts in and offers three pairings in both themes', () => {
+	assert.match(fontHtml, /<link rel="stylesheet" href="gldn-fonts\.css">/);
+	assert.equal((fontHtml.match(/data-pairing=/g) || []).length, 6);
+	assert.equal((fontHtml.match(/data-theme="light"/g) || []).length, 1);
+	assert.equal((fontHtml.match(/data-theme="dark"/g) || []).length, 1);
+	assert.match(fontHtml, /Choice:\s*pending user review/);
+	const specimenFaces = (fontHtml.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || '';
+	checkFontDirectory(path.join(root, 'docs', 'specimen', 'fonts'), specimenFaces);
+});
+
 test('every gldn- class used in the examples exists in src', () => {
-	const examples = [html, readFileSync(
+	const examples = [html, fontHtml, readFileSync(
 		path.join(root, 'docs', 'components', 'dock.html'), 'utf8')];
 	const used = new Set(examples.flatMap((example) =>
 		[...example.matchAll(/class="([^"]*)"/g)]
@@ -327,6 +452,21 @@ test('dist and docs modules match src', () => {
 		for (const directory of ['dist', 'docs']) {
 			const committed = readFileSync(path.join(root, directory, name), 'utf8');
 			assert.equal(committed, source, `${directory}/${name} is stale; run node scripts/build.mjs`);
+		}
+	}
+});
+
+test('dist and docs font assets match src', () => {
+	for (const directory of ['dist', 'docs']) {
+		assert.equal(readFileSync(path.join(root, directory, 'gldn-fonts.css'), 'utf8'), fonts,
+			`${directory}/gldn-fonts.css is stale; run node scripts/build.mjs`);
+		const sources = readdirSync(path.join(root, 'src', 'fonts')).sort();
+		assert.deepEqual(readdirSync(path.join(root, directory, 'fonts')).sort(), sources,
+			`${directory}/fonts is stale; run node scripts/build.mjs`);
+		for (const name of sources) {
+			assert.deepEqual(readFileSync(path.join(root, directory, 'fonts', name)),
+				readFileSync(path.join(root, 'src', 'fonts', name)),
+				`${directory}/fonts/${name} is stale; run node scripts/build.mjs`);
 		}
 	}
 });

@@ -10,6 +10,7 @@
 	.gldn-main,
 	.gldn-card {
 		background-color: var(--gldn-color-surface);
+		color: var(--gldn-color-text);
 		border-radius: var(--gldn-radius-md);
 		box-shadow: var(--gldn-shadow);
 		padding: var(--gldn-space-lg);
@@ -68,6 +69,7 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--gldn-space-md);
+		padding-inline-start: 0;
 		list-style: none;
 	}
 
@@ -75,45 +77,38 @@
 	 * weight, so they render the same on any element. Display sizes use
 	 * tighter leading than the phi leading reserved for prose. Long words
 	 * must wrap rather than clip: narrow screens are a fact of life. */
-	.gldn-title-hero {
-		font-size: var(--gldn-text-xl);
-		font-weight: 700;
-		line-height: 1.2;
-		overflow-wrap: break-word;
-		color: var(--gldn-color-text);
-	}
-
-	.gldn-title-1 {
-		font-size: var(--gldn-text-lg);
-		font-weight: 700;
-		line-height: 1.2;
-		overflow-wrap: break-word;
-		color: var(--gldn-color-text);
-	}
-
-	.gldn-title-2 {
-		font-size: var(--gldn-text-md);
-		font-weight: 700;
-		line-height: 1.2;
-		overflow-wrap: break-word;
-		color: var(--gldn-color-text);
-	}
-
+	.gldn-title-hero,
+	.gldn-title-1,
+	.gldn-title-2,
 	.gldn-title-3 {
-		font-size: var(--gldn-text-base);
-		font-weight: 600;
+		font-family: var(--gldn-font-display);
+		font-weight: 700;
+		line-height: var(--gldn-leading-heading);
+		overflow-wrap: break-word;
+		text-wrap: balance;
 		color: var(--gldn-color-text);
+	}
+
+	.gldn-title-hero { font-size: var(--gldn-text-3xl); }
+	.gldn-title-1 { font-size: var(--gldn-text-2xl); }
+	.gldn-title-2 { font-size: var(--gldn-text-xl); }
+	.gldn-title-3 {
+		font-size: var(--gldn-text-lg);
+		font-weight: 600;
 	}
 
 	.gldn-lede {
+		max-width: var(--gldn-measure);
 		font-size: var(--gldn-text-md);
 		color: var(--gldn-color-muted);
+		text-wrap: pretty;
 	}
 
 	.gldn-text {
 		font-size: var(--gldn-text-base);
 		color: var(--gldn-color-muted);
-		max-width: 65ch;
+		max-width: var(--gldn-measure);
+		text-wrap: pretty;
 	}
 
 	.gldn-btn {

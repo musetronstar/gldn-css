@@ -1,0 +1,60 @@
+/*
+ * Opt-in self-hosted variable fonts: Inter, Literata and JetBrains Mono.
+ * Link this file after gldn.min.css. fonts/LICENSE.txt holds their copyright
+ * notices, the SIL Open Font License and their upstream sources.
+ */
+
+@font-face {
+	font-family: 'gldn Inter';
+	src: url('./fonts/inter-latin-wght-normal.woff2') format('woff2');
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'gldn Inter';
+	src: url('./fonts/inter-latin-wght-italic.woff2') format('woff2');
+	font-style: italic;
+	font-weight: 100 900;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'gldn Literata';
+	src: url('./fonts/literata-latin-opsz-normal.woff2') format('woff2');
+	font-style: normal;
+	font-weight: 200 900;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'gldn Literata';
+	src: url('./fonts/literata-latin-opsz-italic.woff2') format('woff2');
+	font-style: italic;
+	font-weight: 200 900;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'gldn JetBrains Mono';
+	src: url('./fonts/jetbrains-mono-latin-wght-normal.woff2') format('woff2');
+	font-style: normal;
+	font-weight: 100 800;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'gldn JetBrains Mono';
+	src: url('./fonts/jetbrains-mono-latin-wght-italic.woff2') format('woff2');
+	font-style: italic;
+	font-weight: 100 800;
+	font-display: swap;
+}
+
+:root {
+	--gldn-font-sans: 'gldn Inter', system-ui, -apple-system, 'Segoe UI', Cantarell, Ubuntu, sans-serif;
+	--gldn-font-serif: 'gldn Literata', Palatino, 'Palatino Linotype', P052, 'URW Palladio L', Georgia, serif;
+	--gldn-font-mono: 'gldn JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
+	--gldn-font-display: var(--gldn-font-sans);
+}

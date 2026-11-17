@@ -1,7 +1,9 @@
 # gldn-css - The Divine Proportional Semantic CSS System (DPS-CSS)
 
 **gldn-css** is a lightweight **Utility-First CSS** framework with a
-**Semantic Composition** established by **Golden Ratio** principles.
+**Semantic Composition** established by **Golden Ratio** principles. Its typography and
+composition draw on Robert Bringhurst, Tim Brown's modular scales, Utopia, Every Layout,
+CUBE CSS, Open Props, and Pico CSS.
 
 Whereas other Utility-First CSS frameworks run counter to **separation of concerns**
 (separating presentation, markup and content), and purely semantic CSS classes
@@ -32,16 +34,20 @@ the best of both worlds in a beautiful and harmonious system:
 ```text
 gldn-css/
 ├── src/
-│   ├── _tokens.css      # --gldn-phi constant and spacing scales; hosts the reset layer
+│   ├── _tokens.css      # Fluid golden scales and system fonts; hosts the reset layer
 │   ├── _layout.css      # Global layout wrappers and flex/grid primitives
 │   ├── _components.css  # Semantic component classes (.gldn-sidebar, etc.)
 │   ├── _responsive.css  # @layer responsive media queries
 │   ├── gldn.css         # Main entry point declaring the layer order
+│   ├── gldn-fonts.css   # Opt-in variable font stacks
+│   ├── fonts/           # woff2 files and one LICENSE.txt with notices and sources
 │   ├── gldn-tabs.js     # Optional WAI-ARIA tabs and marks module
 │   ├── gldn-messages.js # Optional message pane and pop-in module
 │   └── gldn-dock.js     # Optional fixed dock and visual-viewport module
 ├── dist/
 │   ├── gldn.min.css     # Production-ready compiled bundle
+│   ├── gldn-fonts.css   # Generated copy of the opt-in font sheet
+│   ├── fonts/           # Generated copies of the font files and license
 │   └── gldn-*.js        # Generated copies of optional behavior modules
 ├── scripts/
 │   └── build.mjs        # zero-dependency inliner and minifier
@@ -49,10 +55,14 @@ gldn-css/
 │   ├── contract.test.mjs  # source-level contract suite
 │   └── layout.test.mjs    # rendered layout regression suite (headless Chrome)
 ├── docs/
-│   ├── index.html       # Feature tour and GitHub Pages entry point
+│   ├── index.html       # Feature tour, full scales, and plain HTML specimens
+│   ├── fonts.html       # Three font pairings in both themes
+│   ├── specimen/fonts/  # Fonts used only by fonts.html, with their LICENSE.txt
 │   ├── components/      # One working example page per component
 │   ├── gldn.js          # JavaScript examples used in conjunction with `index.html`
 │   ├── gldn.min.css     # Generated copy of the production bundle
+│   ├── gldn-fonts.css   # Generated copy of the opt-in font sheet
+│   ├── fonts/           # Generated copies of the font files and license
 │   ├── gldn-*.js        # Generated copies of optional behavior modules
 │   ├── .nojekyll        # Publish as plain static files
 │   └── fibonacci-spiral.svg  # hero artwork by nbpetersen via OpenClipart,
@@ -74,8 +84,16 @@ Link the compiled bundle and write semantic markup; the golden math stays in CSS
 ```
 
 Open `docs/index.html` in a browser for a guided tour of the foundation,
-including live measurement of the rendered golden ratio. The tour links
-working component examples under `docs/components/`.
+including the full scales, plain HTML in both themes, and live measurement of
+the rendered golden ratio. The tour links working component examples under
+`docs/components/`.
+
+The default stacks use fonts shipped with macOS, Windows, and Linux. To opt in
+to the bundled Inter, Literata, and JetBrains Mono variable fonts, link
+`gldn-fonts.css` after the main bundle. Nothing downloads until that sheet is
+linked. Each font is the Latin subset of an SIL Open Font License font with a
+roman and an italic face; `fonts/LICENSE.txt` holds their copyright notices,
+sources, and the license. See `docs/fonts.html` for three pairings in both themes.
 
 **Cascade layers**
 
@@ -84,14 +102,15 @@ responsive` and imports each partial; every partial assigns its own rules to
 a layer, so `src/` and `dist/` build the same layer tree. Layer order is the
 framework's specificity contract: responsive overrides always win without
 `!important`, and unlayered author styles can still override everything.
-The global reset rides in the first layer, physically hosted by
-`_tokens.css`. It is not scoped to `gldn-` classes: it sets
-`box-sizing: border-box` and zeroes margin and padding on every element and
-pseudo-element, gives the body at least the viewport's height, makes media
-elements block-level with a maximum width, and sets page typography, body
-background and text colors, link colors, inherited form fonts, and golden
-padding for text controls. Host projects can override or discard the reset by
-layer without touching the design tokens.
+The global reset rides in the first layer, physically hosted by `_tokens.css`.
+It is not scoped to `gldn-` classes: it normalizes box sizing and media, then
+styles bare headings, prose, lists, blockquotes, code, preformatted blocks, and
+tables on the golden scale. Headings use balanced wrapping and tighter leading;
+paragraphs, list items, definitions, and quotations use golden leading, pretty
+wrapping, and a readable measure, while lists, preformatted blocks, and tables
+span their container. Inline code keeps the size of the text around it on a tint
+of the text color. Host projects can override or discard the reset by layer
+without touching the design tokens.
 
 **Design tokens**
 
@@ -104,11 +123,19 @@ form the single source of truth:
 * *Golden division cascade:* `--gldn-phi-1` through `--gldn-phi-10`,
   the percentages phi^-1 .. phi^-10, each term dividing the previous one
   by phi (the first two summing to exactly 100%)
-* *Spacing:* `--gldn-space-xs` through `--gldn-space-2xl`, every step multiplying
-  or dividing the base by phi, plus `--gldn-gutter`, the single gutter between
-  golden split columns
-* *Typography:* `--gldn-text-sm` through `--gldn-text-xl` on the same scale,
-  with `--gldn-leading` set to phi for prose
+* *Fluid base:* `--gldn-fluid-base` uses `clamp()` to grow from 1rem at a 20rem
+  viewport to 1.125rem at 75rem. The endpoints `--gldn-base-min/max` and
+  `--gldn-viewport-min/max` are numbers in rem, so the interpolation only
+  multiplies lengths by numbers; type and space share the result
+* *Spacing:* `--gldn-space-xs` through `--gldn-space-2xl`, with whole phi powers
+  computed by `pow()`, plus `--gldn-gutter`, the single gutter between golden
+  split columns
+* *Typography:* `--gldn-text-xs` through `--gldn-text-3xl`, advancing by half
+  phi powers from the fluid base; `--gldn-leading` is phi for prose,
+  `--gldn-leading-heading` is `1 + phi^-3`, and `--gldn-measure` is `100ch / phi`
+* *Fonts:* `--gldn-font-sans`, `--gldn-font-serif`, and `--gldn-font-mono` name
+  platform fonts, and `--gldn-font-display`, the heading stack, is the sans stack;
+  the opt-in font sheet redefines them
 * *Surfaces:* `--gldn-color-bg/surface/text/muted/primary/primary-hover/primary-fg/link/border`,
               `--gldn-radius-sm/md`,
               `--gldn-shadow`
@@ -160,10 +187,10 @@ Semantic classes (`src/_components.css`) compose tokens and primitives:
 * `gldn-hero` centered display section with the largest padding
 * `gldn-card` the shared panel surface: background, radius, shadow, golden padding
 * `gldn-nav` horizontal list with golden gaps
-* `gldn-title-hero` display heading at the largest type step
-* `gldn-title-1` section heading one golden step down
-* `gldn-title-2` subsection heading, one more step down
-* `gldn-title-3` small heading at the base type size, semibold
+* `gldn-title-hero` display heading at `--gldn-text-3xl`
+* `gldn-title-1` section heading at `--gldn-text-2xl`
+* `gldn-title-2` subsection heading at `--gldn-text-xl`
+* `gldn-title-3` small heading at `--gldn-text-lg`, semibold
 * `gldn-lede` section introduction at the larger type size, muted
 * `gldn-text` body copy at the base type size, muted, readable measure
 * `gldn-btn` primary-colored action surface for `<button>` and `<a>`
@@ -256,13 +283,13 @@ dock.tabs.mark('messages', { error: true });
 
 Below 48rem the responsive layer stacks `gldn-workspace`, `gldn-row`, and every
 golden split into full-width columns with tighter gaps. The dock starts as a
-one-line tab strip and opens panels as bottom sheets. At 75rem and above it grows
-`--gldn-space-base` to 1.125rem so the entire spacing scale breathes on wide screens.
+one-line tab strip and opens panels as bottom sheets. Type and space need no
+breakpoint override because their shared base interpolates smoothly.
 
 **Building and testing**
 
-The build and tests are zero-dependency Node scripts. CSS is compiled and
-JavaScript modules are copied without transformation:
+The build and tests are zero-dependency Node scripts. CSS is compiled, and the
+opt-in font assets and JavaScript modules are copied without transformation:
 
 ```sh
 node scripts/build.mjs        # rebuild dist/ and docs/ assets from src/
@@ -272,12 +299,10 @@ node test/layout.test.mjs     # render the framework in headless Chrome and
 ```
 
 The contract suite pins the file layout, cascade layer order, `gldn-` namespace
-purity, golden token math, cross-file reference integrity, and that the
-committed bundles and modules match `src/`. The layout suite uses computed styles
-and browser layer data to assert zero horizontal overflow, both splits within 0.01%
-of phi, wide content unable to disturb a split, full-width mobile stacking and
-workspace filling, AA text contrast, native color schemes, dock and message lifecycle,
-tab accessibility, and identical top-level cascade layers in `src/` and `dist/`.
+purity, fluid golden token math, opt-in font records, cross-file reference
+integrity, and that the committed bundles and modules match `src/`. The layout
+suite measures every type and space token at 320, 768, and 1200px, checks plain
+HTML and font loading, and exercises the existing layout and component contracts.
 
 ## GitHub Pages
 

@@ -4,8 +4,8 @@
  * Single source of truth for proportions, spacing, typography, and surfaces.
  * Every other layer composes these properties; none may define new ones.
  * This file hosts two layers: the golden tokens and, in its own reset
- * layer, the minimal global normalization, so integrators can override or
- * drop the reset independently of the design tokens.
+ * layer, the global normalization and plain-HTML rhythm, so integrators can
+ * override or drop the reset independently of the design tokens.
  */
 @layer tokens {
 
@@ -42,15 +42,34 @@
 		--gldn-phi-10: calc(var(--gldn-phi-9) / var(--gldn-phi));
 
 		/* ------------------------------------------------------------------
-		 * 3. Spacing scale: each step multiplies or divides by phi.
+		 * 3. One fluid base for type and space. The endpoints are plain numbers
+		 *    in rem, so every step multiplies a length by a number: the base
+		 *    grows from 1rem at a 20rem viewport to 1.125rem at 75rem. These
+		 *    four numbers are the only measurements of the scale.
 		 * ---------------------------------------------------------------- */
-		--gldn-space-base: 1rem;
-		--gldn-space-xs: calc(var(--gldn-space-base) / var(--gldn-phi) / var(--gldn-phi));
-		--gldn-space-sm: calc(var(--gldn-space-base) / var(--gldn-phi));
+		--gldn-base-min: 1;
+		--gldn-base-max: 1.125;
+		--gldn-viewport-min: 20;
+		--gldn-viewport-max: 75;
+		--gldn-fluid-slope: calc(
+			(var(--gldn-base-max) - var(--gldn-base-min)) /
+			(var(--gldn-viewport-max) - var(--gldn-viewport-min))
+		);
+		--gldn-fluid-base: clamp(
+			var(--gldn-base-min) * 1rem,
+			var(--gldn-base-min) * 1rem +
+				(100vw - var(--gldn-viewport-min) * 1rem) * var(--gldn-fluid-slope),
+			var(--gldn-base-max) * 1rem
+		);
+
+		/* Spacing keeps whole phi steps. */
+		--gldn-space-base: var(--gldn-fluid-base);
+		--gldn-space-xs: calc(var(--gldn-space-base) * pow(var(--gldn-phi), -2));
+		--gldn-space-sm: calc(var(--gldn-space-base) * pow(var(--gldn-phi), -1));
 		--gldn-space-md: var(--gldn-space-base);
-		--gldn-space-lg: calc(var(--gldn-space-base) * var(--gldn-phi));
-		--gldn-space-xl: calc(var(--gldn-space-lg) * var(--gldn-phi));
-		--gldn-space-2xl: calc(var(--gldn-space-xl) * var(--gldn-phi));
+		--gldn-space-lg: calc(var(--gldn-space-base) * pow(var(--gldn-phi), 1));
+		--gldn-space-xl: calc(var(--gldn-space-base) * pow(var(--gldn-phi), 2));
+		--gldn-space-2xl: calc(var(--gldn-space-base) * pow(var(--gldn-phi), 3));
 
 		/* The single gutter between golden split columns. Each column deducts
 		 * its golden share of it from its basis (1/phi + 1/phi^2 = 1, so the
@@ -59,14 +78,20 @@
 		--gldn-gutter: var(--gldn-space-lg);
 
 		/* ------------------------------------------------------------------
-		 * 4. Typography scale and golden leading.
+		 * 4. Type advances by half phi steps. Headings tighten their leading
+		 *    by phi^-3; prose keeps golden leading and a 100ch / phi measure.
 		 * ---------------------------------------------------------------- */
-		--gldn-text-base: 1rem;
-		--gldn-text-sm: calc(var(--gldn-text-base) / var(--gldn-phi));
-		--gldn-text-md: calc(var(--gldn-text-base) * var(--gldn-phi));
-		--gldn-text-lg: calc(var(--gldn-text-md) * var(--gldn-phi));
-		--gldn-text-xl: calc(var(--gldn-text-lg) * var(--gldn-phi));
+		--gldn-text-base: var(--gldn-fluid-base);
+		--gldn-text-xs: calc(var(--gldn-text-base) * pow(var(--gldn-phi), -1));
+		--gldn-text-sm: calc(var(--gldn-text-base) * pow(var(--gldn-phi), -0.5));
+		--gldn-text-md: calc(var(--gldn-text-base) * pow(var(--gldn-phi), 0.5));
+		--gldn-text-lg: calc(var(--gldn-text-base) * pow(var(--gldn-phi), 1));
+		--gldn-text-xl: calc(var(--gldn-text-base) * pow(var(--gldn-phi), 1.5));
+		--gldn-text-2xl: calc(var(--gldn-text-base) * pow(var(--gldn-phi), 2));
+		--gldn-text-3xl: calc(var(--gldn-text-base) * pow(var(--gldn-phi), 2.5));
 		--gldn-leading: var(--gldn-phi);
+		--gldn-leading-heading: calc(1 + pow(var(--gldn-phi), -3));
+		--gldn-measure: calc(100ch / var(--gldn-phi));
 
 		/* ------------------------------------------------------------------
 		 * 5. Surfaces, colors, radii, shadow.
@@ -107,9 +132,10 @@
 		--gldn-dock-expanded-height: 50vh;
 		--gldn-dock-reserve: var(--gldn-dock-height);
 
-		--gldn-font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-		--gldn-font-serif: Georgia, 'Times New Roman', serif;
-		--gldn-font-mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+		--gldn-font-sans: system-ui, -apple-system, 'Segoe UI', Cantarell, Ubuntu, sans-serif;
+		--gldn-font-serif: Palatino, 'Palatino Linotype', P052, 'URW Palladio L', Georgia, serif;
+		--gldn-font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
+		--gldn-font-display: var(--gldn-font-sans);
 
 		/* ------------------------------------------------------------------
 		 * 6. Breakpoint reference values. Media query conditions cannot read
@@ -149,7 +175,7 @@
 
 }
 
-/* Minimal reset: cross-browser normalization, nothing opinionated.
+/* The reset composes plain HTML with the same scale as the components.
  * Kept in its own top-level layer so host projects can override or discard it
  * without touching the design tokens above. */
 @layer reset {
@@ -174,6 +200,134 @@
 		min-height: 100dvh;
 		background-color: var(--gldn-color-bg);
 		color: var(--gldn-color-text);
+		font-size: var(--gldn-text-base);
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		margin-block: var(--gldn-space-lg) var(--gldn-space-md);
+		font-family: var(--gldn-font-display);
+		font-weight: 700;
+		line-height: var(--gldn-leading-heading);
+		overflow-wrap: break-word;
+		text-wrap: balance;
+	}
+
+	:is(h1, h2, h3, h4, h5, h6):first-child {
+		margin-block-start: 0;
+	}
+
+	h1 { font-size: var(--gldn-text-2xl); }
+	h2 { font-size: var(--gldn-text-xl); }
+	h3 { font-size: var(--gldn-text-lg); }
+	h4 { font-size: var(--gldn-text-md); }
+	h5 { font-size: var(--gldn-text-base); }
+	h6 { font-size: var(--gldn-text-sm); }
+
+	p,
+	ul,
+	ol,
+	dl,
+	blockquote,
+	pre,
+	table {
+		margin-block-end: var(--gldn-space-md);
+	}
+
+	/* The measure belongs to running text. Lists, code and tables span their
+	 * container, so navigation, trees and data keep the width they are given. */
+	p,
+	li,
+	dd,
+	blockquote {
+		max-width: var(--gldn-measure);
+	}
+
+	p {
+		text-wrap: pretty;
+	}
+
+	ul,
+	ol {
+		padding-inline-start: var(--gldn-space-lg);
+	}
+
+	li + li {
+		margin-block-start: var(--gldn-space-xs);
+	}
+
+	blockquote {
+		padding-inline-start: var(--gldn-space-md);
+		border-inline-start: var(--gldn-space-xs) solid var(--gldn-color-border);
+		color: var(--gldn-color-muted);
+		font-family: var(--gldn-font-serif);
+		font-size: var(--gldn-text-md);
+	}
+
+	code,
+	kbd,
+	samp,
+	pre {
+		font-family: var(--gldn-font-mono);
+	}
+
+	/* Inline code keeps the size of the text around it, in headings and tables
+	 * alike: the mono stacks have x-heights close to those of the text stacks. */
+	code,
+	kbd,
+	samp {
+		font-size: 1em;
+	}
+
+	pre {
+		font-size: var(--gldn-text-sm);
+	}
+
+	/* Code sits on a tint of the text color, resolved where it is used, so it
+	 * shows on the page, on cards and in both themes. */
+	code,
+	pre {
+		background-color: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-6), transparent);
+	}
+
+	code {
+		padding-inline: var(--gldn-space-xs);
+		border-radius: var(--gldn-radius-sm);
+	}
+
+	pre {
+		padding: var(--gldn-space-md);
+		overflow-x: auto;
+		border-radius: var(--gldn-radius-md);
+	}
+
+	pre code {
+		padding: 0;
+		background-color: transparent;
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: var(--gldn-text-sm);
+	}
+
+	th,
+	td {
+		padding: var(--gldn-space-xs) var(--gldn-space-sm);
+		border-bottom: calc(var(--gldn-space-base) * pow(var(--gldn-phi), -5)) solid var(--gldn-color-border);
+		text-align: start;
+		vertical-align: top;
+		overflow-wrap: anywhere;
+	}
+
+	th {
+		background-color: var(--gldn-color-surface);
+		font-weight: 600;
 	}
 
 	a {

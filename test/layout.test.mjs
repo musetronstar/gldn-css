@@ -28,8 +28,10 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const exampleUrl = 'file://' + path.join(root, 'docs', 'index.html');
+const fontExampleUrl = 'file://' + path.join(root, 'docs', 'fonts.html');
 const PHI = 1.61803398875;
-const EXAMPLE_WIDTHS = [320, 390, 768, 1100, 1465, 1905];
+const EXAMPLE_WIDTHS = [320, 375, 390, 768, 1100, 1200, 1465, 1905];
+const SCALE_WIDTHS = [320, 768, 1200];
 const FONTS = [16, 20];
 
 let passed = 0;
@@ -184,6 +186,24 @@ const pageState = `(() => {
 	};
 })()`;
 
+const scaleState = `(() => {
+	const probe = document.createElement('div');
+	probe.style.position = 'absolute';
+	probe.style.visibility = 'hidden';
+	document.body.appendChild(probe);
+	const values = {};
+	for (const name of ['xs', 'sm', 'base', 'md', 'lg', 'xl', '2xl', '3xl']) {
+		probe.style.fontSize = 'var(--gldn-text-' + name + ')';
+		values['text-' + name] = parseFloat(getComputedStyle(probe).fontSize);
+	}
+	for (const name of ['xs', 'sm', 'md', 'lg', 'xl', '2xl']) {
+		probe.style.width = 'var(--gldn-space-' + name + ')';
+		values['space-' + name] = parseFloat(getComputedStyle(probe).width);
+	}
+	probe.remove();
+	return values;
+})()`;
+
 const colorState = `(() => {
 	const channel = (value) => {
 		value /= 255;
@@ -219,7 +239,7 @@ writeFileSync(wideHarness, `<!DOCTYPE html><html><head>
 <link rel="stylesheet" href="file://${path.join(root, 'dist', 'gldn.min.css')}">
 </head><body>
 <div class="gldn-row" id="row" style="width: 700px; margin: 1rem">
-	<div class="gldn-minor" id="hmin"><pre style="white-space: pre">${'x'.repeat(120)}</pre></div>
+	<div class="gldn-minor" id="hmin"><div style="white-space: nowrap">${'x'.repeat(120)}</div></div>
 	<div class="gldn-major" id="hmaj"><p>content</p></div>
 </div>
 </body></html>`);
@@ -269,6 +289,100 @@ try {
 		const bad = states.filter(({ state }) => state.scrollOverflow > 1);
 		if (bad.length) {
 			throw new Error(`overflow at ${bad.map((b) => `${b.width}px/${b.font}px`).join(', ')}`);
+		}
+	});
+
+	const scales = [];
+	for (const width of SCALE_WIDTHS) {
+		await browser.viewport(width);
+		await browser.navigate(exampleUrl, 16);
+		scales.push({ width, values: await browser.evaluate(scaleState) });
+	}
+
+	test('fluid type and space scales equal base times their powers of phi', () => {
+		const typePowers = { xs: -1, sm: -0.5, base: 0, md: 0.5, lg: 1, xl: 1.5, '2xl': 2, '3xl': 2.5 };
+		const spacePowers = { xs: -2, sm: -1, md: 0, lg: 1, xl: 2, '2xl': 3 };
+		for (const { width, values } of scales) {
+			const base = 16 + Math.max(0, Math.min(880, width - 320)) * 2 / 880;
+			for (const [group, powers] of [['text', typePowers], ['space', spacePowers]]) {
+				for (const [name, power] of Object.entries(powers)) {
+					const token = `${group}-${name}`;
+					const expected = base * PHI ** power;
+					if (Math.abs(values[token] - expected) > 0.5) {
+						throw new Error(`${width}px ${token}: ${values[token]} vs ${expected}`);
+					}
+				}
+			}
+		}
+	});
+
+	test('no type step is below 12px except text-xs', () => {
+		for (const { width, values } of scales) {
+			for (const [name, size] of Object.entries(values)) {
+				if (name.startsWith('text-') && name !== 'text-xs' && size < 12) {
+					throw new Error(`${width}px ${name}: ${size}px`);
+				}
+			}
+		}
+	});
+
+	const plainSpecimens = await browser.evaluate(`['plain-light', 'plain-dark'].map((id) => {
+		const specimen = document.getElementById(id);
+		const size = (selector) => parseFloat(getComputedStyle(specimen.querySelector(selector)).fontSize);
+		const heading = document.createElement('h2');
+		heading.innerHTML = 'heading <code>code</code>';
+		specimen.appendChild(heading);
+		const headingCode = parseFloat(getComputedStyle(heading.querySelector('code')).fontSize)
+			/ parseFloat(getComputedStyle(heading).fontSize);
+		heading.remove();
+		const width = (selector) => specimen.querySelector(selector).getBoundingClientRect().width;
+		const content = specimen.clientWidth - parseFloat(getComputedStyle(specimen).paddingLeft)
+			- parseFloat(getComputedStyle(specimen).paddingRight);
+		return {
+			id,
+			h1: size('h1'),
+			p: size('p'),
+			code: size('p code'),
+			pre: size('pre'),
+			table: size('table'),
+			headingCode,
+			pMeasure: getComputedStyle(specimen.querySelector('p')).maxWidth,
+			listFill: width('ul') / content,
+			tableFill: width('table') / content,
+			headingWrap: getComputedStyle(specimen.querySelector('h1')).textWrap,
+			proseWrap: getComputedStyle(specimen.querySelector('p')).textWrap
+		};
+	})`);
+
+	test('plain HTML uses the scale, text wrapping and a prose-only measure in both themes', () => {
+		const wide = scales.find(({ width }) => width === 1200).values;
+		for (const specimen of plainSpecimens) {
+			if (Math.abs(specimen.h1 - wide['text-2xl']) > 0.5
+				|| Math.abs(specimen.p - wide['text-base']) > 0.5
+				|| Math.abs(specimen.code - specimen.p) > 0.5
+				|| Math.abs(specimen.headingCode - 1) > 0.01
+				|| Math.abs(specimen.pre - wide['text-sm']) > 0.5
+				|| Math.abs(specimen.table - wide['text-sm']) > 0.5
+				|| specimen.pMeasure === 'none'
+				|| Math.abs(specimen.listFill - 1) > 0.01 || Math.abs(specimen.tableFill - 1) > 0.01
+				|| specimen.headingWrap !== 'balance' || specimen.proseWrap !== 'pretty') {
+				throw new Error(JSON.stringify(specimen));
+			}
+		}
+	});
+
+	const mainFontFaces = await browser.evaluate('document.fonts.size');
+	await browser.navigate(fontExampleUrl, 16);
+	await browser.evaluate('document.fonts.ready.then(() => true)');
+	const fontPageState = await browser.evaluate(`({
+		faces: [...document.fonts].map((face) => ({ family: face.family, style: face.style, status: face.status }))
+	})`);
+
+	// Three bundled and two specimen-only families, each with a normal and an italic face.
+	test('only the opt-in font specimen declares and loads the bundled fonts', () => {
+		if (mainFontFaces !== 0 || fontPageState.faces.length !== 10
+			|| fontPageState.faces.some((face) => face.status !== 'loaded')) {
+			throw new Error(JSON.stringify({ mainFontFaces, fontPageState }));
 		}
 	});
 

@@ -33,12 +33,6 @@
 			flex: 1 1 100%;
 		}
 
-		/* One golden step down keeps display type on the scale and inside
-		 * narrow screens. */
-		.gldn-title-hero {
-			font-size: var(--gldn-text-lg);
-		}
-
 		.gldn-hero {
 			padding: var(--gldn-space-xl);
 		}
@@ -82,13 +76,6 @@
 
 		.gldn-dock[data-gldn-expanded="false"] .gldn-dock-popin {
 			bottom: 100%;
-		}
-	}
-
-	/* Wide screens: grow the spacing base so the whole scale breathes. */
-	@media (min-width: 75rem) {
-		:root {
-			--gldn-space-base: 1.125rem;
 		}
 	}
 }

@@ -55,6 +55,7 @@
 			<a href="#splits">golden splits</a>
 			<a href="#cascade">cascade</a>
 			<a href="#typography">typography</a>
+			<a href="fonts.html">font pairings</a>
 			<a href="components/dock.html">bottom dock</a>
 			<button class="gldn-btn" id="gldn-theme-toggle" type="button" aria-pressed="false">dark theme</button>
 		</nav>
@@ -147,18 +148,85 @@
 		</section>
 
 		<section class="gldn-stack" id="typography">
-			<h2 class="gldn-title-2">typography on the golden scale</h2>
+			<h2 class="gldn-title-2">type and space on the golden scale</h2>
 			<p class="gldn-text">
-				Each size step multiplies or divides by phi, and prose keeps a golden
-				line height of phi itself.
+				Type advances by half steps of phi and space by whole steps. Both use
+				one fluid base, computed in CSS with <code>calc()</code> and <code>pow()</code>.
 			</p>
+			<div class="gldn-card" id="fluid-base">
+				<h3 class="gldn-title-3">one fluid base</h3>
+				<p>
+					The base is 16px at a 320px viewport and 18px at 1200px. It grows
+					smoothly between 20rem and 75rem, with no responsive jump.
+				</p>
+			</div>
+			<table>
+				<caption>type: computed pixels at the narrow and wide endpoints</caption>
+				<thead><tr><th>token</th><th>power</th><th>320px</th><th>1200px</th><th>sample</th></tr></thead>
+				<tbody>
+					<tr><td><code>text-xs</code></td><td>φ^-1</td><td>9.9</td><td>11.1</td><td><span id="scale-text-xs" style="font-size: var(--gldn-text-xs)">Proportion</span></td></tr>
+					<tr><td><code>text-sm</code></td><td>φ^-½</td><td>12.6</td><td>14.2</td><td><span id="scale-text-sm" style="font-size: var(--gldn-text-sm)">Proportion</span></td></tr>
+					<tr><td><code>text-base</code></td><td>1</td><td>16.0</td><td>18.0</td><td><span id="scale-text-base" style="font-size: var(--gldn-text-base)">Proportion</span></td></tr>
+					<tr><td><code>text-md</code></td><td>φ^½</td><td>20.4</td><td>22.9</td><td><span id="scale-text-md" style="font-size: var(--gldn-text-md)">Proportion</span></td></tr>
+					<tr><td><code>text-lg</code></td><td>φ</td><td>25.9</td><td>29.1</td><td><span id="scale-text-lg" style="font-size: var(--gldn-text-lg)">Proportion</span></td></tr>
+					<tr><td><code>text-xl</code></td><td>φ^1½</td><td>32.9</td><td>37.0</td><td><span id="scale-text-xl" style="font-size: var(--gldn-text-xl)">Proportion</span></td></tr>
+					<tr><td><code>text-2xl</code></td><td>φ²</td><td>41.9</td><td>47.1</td><td><span id="scale-text-2xl" style="font-size: var(--gldn-text-2xl)">Proportion</span></td></tr>
+					<tr><td><code>text-3xl</code></td><td>φ^2½</td><td>53.3</td><td>60.0</td><td><span id="scale-text-3xl" style="font-size: var(--gldn-text-3xl)">Proportion</span></td></tr>
+				</tbody>
+			</table>
+			<table>
+				<caption>space: whole golden steps from the same fluid base</caption>
+				<thead><tr><th>token</th><th>power</th><th>320px</th><th>1200px</th><th>sample</th></tr></thead>
+				<tbody>
+					<tr><td><code>space-xs</code></td><td>φ^-2</td><td>6.1</td><td>6.9</td><td><div class="demo-bar" id="scale-space-xs" style="width: var(--gldn-space-xs)"></div></td></tr>
+					<tr><td><code>space-sm</code></td><td>φ^-1</td><td>9.9</td><td>11.1</td><td><div class="demo-bar" id="scale-space-sm" style="width: var(--gldn-space-sm)"></div></td></tr>
+					<tr><td><code>space-md</code></td><td>1</td><td>16.0</td><td>18.0</td><td><div class="demo-bar" id="scale-space-md" style="width: var(--gldn-space-md)"></div></td></tr>
+					<tr><td><code>space-lg</code></td><td>φ</td><td>25.9</td><td>29.1</td><td><div class="demo-bar" id="scale-space-lg" style="width: var(--gldn-space-lg)"></div></td></tr>
+					<tr><td><code>space-xl</code></td><td>φ²</td><td>41.9</td><td>47.1</td><td><div class="demo-bar" id="scale-space-xl" style="width: var(--gldn-space-xl)"></div></td></tr>
+					<tr><td><code>space-2xl</code></td><td>φ³</td><td>67.8</td><td>76.2</td><td><div class="demo-bar" id="scale-space-2xl" style="width: var(--gldn-space-2xl)"></div></td></tr>
+				</tbody>
+			</table>
 			<div class="gldn-card gldn-stack">
-				<p class="gldn-title-hero">gldn-title-hero rides --gldn-text-xl</p>
-				<p class="gldn-title-1">gldn-title-1 rides --gldn-text-lg</p>
-				<p class="gldn-title-2">gldn-title-2 rides --gldn-text-md</p>
-				<p class="gldn-title-3">gldn-title-3 rides --gldn-text-base</p>
+				<p class="gldn-title-hero">gldn-title-hero rides --gldn-text-3xl</p>
+				<p class="gldn-title-1">gldn-title-1 rides --gldn-text-2xl</p>
+				<p class="gldn-title-2">gldn-title-2 rides --gldn-text-xl</p>
+				<p class="gldn-title-3">gldn-title-3 rides --gldn-text-lg</p>
 				<p class="gldn-lede">gldn-lede introduces a section at --gldn-text-md in muted color.</p>
-				<p class="gldn-text">gldn-text is body copy at --gldn-text-base, --gldn-text-sm is available for fine print.</p>
+				<p class="gldn-text">gldn-text is body copy at --gldn-text-base; --gldn-text-sm is available for fine print.</p>
+			</div>
+		</section>
+
+		<section class="gldn-stack" id="plain-html">
+			<h2 class="gldn-title-2">plain HTML, composed in both themes</h2>
+			<p class="gldn-text">
+				Headings, prose, lists, quotations, code and tables use the scale
+				without a typography class. Only the cards and columns are components.
+			</p>
+			<div class="gldn-row">
+				<div class="gldn-minor-fluid">
+					<article class="gldn-card" id="plain-light">
+						<h1>Light specimen</h1>
+						<h2>Proportion and rhythm</h2>
+						<p>Plain prose keeps a golden line height, a readable measure and balanced spacing.</p>
+						<ul><li>Native elements</li><li>Golden intervals</li></ul>
+						<blockquote>One base gives every part its place.</blockquote>
+						<p>Inline <code>proportion</code> shares the monospace stack.</p>
+						<pre><code>base × pow(φ, step)</code></pre>
+						<table><thead><tr><th>part</th><th>step</th></tr></thead><tbody><tr><td>prose</td><td>base</td></tr></tbody></table>
+					</article>
+				</div>
+				<div class="gldn-major-fluid">
+					<article class="gldn-card gldn-theme-dark" id="plain-dark">
+						<h1>Dark specimen</h1>
+						<h2>Proportion and rhythm</h2>
+						<p>Plain prose keeps a golden line height, a readable measure and balanced spacing.</p>
+						<ul><li>Native elements</li><li>Golden intervals</li></ul>
+						<blockquote>One base gives every part its place.</blockquote>
+						<p>Inline <code>proportion</code> shares the monospace stack.</p>
+						<pre><code>base × pow(φ, step)</code></pre>
+						<table><thead><tr><th>part</th><th>step</th></tr></thead><tbody><tr><td>prose</td><td>base</td></tr></tbody></table>
+					</article>
+				</div>
 			</div>
 		</section>
 

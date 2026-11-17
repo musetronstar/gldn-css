@@ -8,7 +8,7 @@
  * whitespace is significant. Malformed input fails the build loudly instead
  * of shipping a broken bundle.
  */
-import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, cpSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -111,9 +111,14 @@ if (invokedDirectly) {
 		const outDir = path.join(root, directory);
 		mkdirSync(outDir, { recursive: true });
 		writeFileSync(path.join(outDir, 'gldn.min.css'), bundle);
+		writeFileSync(path.join(outDir, 'gldn-fonts.css'),
+			readFileSync(path.join(srcDir, 'gldn-fonts.css')));
+		// Replace the whole directory so a renamed or removed font leaves no stale copy.
+		rmSync(path.join(outDir, 'fonts'), { recursive: true, force: true });
+		cpSync(path.join(srcDir, 'fonts'), path.join(outDir, 'fonts'), { recursive: true });
 		for (const name of modules) {
 			writeFileSync(path.join(outDir, name), readFileSync(path.join(srcDir, name)));
 		}
 	}
-	console.log('built CSS bundles and JavaScript modules in dist/ and docs/');
+	console.log('built CSS bundles, font assets, and JavaScript modules in dist/ and docs/');
 }
