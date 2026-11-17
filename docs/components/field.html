@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css form fields</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>form fields</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">Form fields</h1>
+			<p class="gldn-lede">A label, an optional hint, the control, and a message the form module links to it. Nothing is sent until the form is submitted, and a field keeps what was typed when it fails.</p>
+		</section>
+
+		<form class="gldn-card gldn-stack" id="form" style="max-inline-size: var(--gldn-measure)">
+			<div class="gldn-field">
+				<label for="title">Title</label>
+				<input id="title" name="title" required aria-describedby="title-hint">
+				<small class="gldn-hint" id="title-hint">A short name for the entry.</small>
+				<small class="gldn-error" data-gldn-error-for="title" hidden></small>
+			</div>
+			<div class="gldn-field">
+				<label for="kind">Kind</label>
+				<select id="kind" name="kind" required>
+					<option value="">Choose a kind</option><option>Book</option><option>Photograph</option><option>Letter</option>
+				</select>
+				<small class="gldn-error" data-gldn-error-for="kind" hidden></small>
+			</div>
+			<div class="gldn-field">
+				<label for="note">Note</label>
+				<textarea id="note" name="note" rows="3" maxlength="200"></textarea>
+			</div>
+			<label><input type="checkbox" name="public"> Show to others</label>
+			<p class="gldn-cluster">
+				<button class="gldn-btn" id="save" type="submit">Save</button>
+				<button class="gldn-btn gldn-btn-secondary" id="cancel" type="button">Cancel</button>
+			</p>
+			<p id="status" role="status"></p>
+		</form>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+
+		import { enhanceForm } from '../gldn-form.js';
+		const form = document.getElementById('form');
+		const status = document.getElementById('status');
+		window.form = enhanceForm(form);
+		form.addEventListener('gldn-submit', (event) => {
+			status.textContent = 'Saving…';
+			setTimeout(() => {
+				if (event.detail.data.get('title') === 'taken') {
+					window.form.fail({ title: 'An entry with this title exists.' });
+					status.textContent = '';
+				} else {
+					window.form.done();
+					status.textContent = 'Saved ' + event.detail.data.get('title') + '.';
+				}
+			}, 300);
+		});
+		form.addEventListener('gldn-cancel', () => { status.textContent = 'Cancelled.'; });
+		document.getElementById('cancel').addEventListener('click', () => window.form.cancel());
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

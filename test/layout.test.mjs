@@ -18,7 +18,11 @@
  *  10. the dock, tabs, and message pane meet their interaction contracts;
  *  11. plain HTML controls, focus and panel edges meet the reset's contract;
  *  12. the layout primitives and scopes meet their contracts;
- *  13. golden splits use their intrinsic threshold and default phone floor.
+ *  13. golden splits use their intrinsic threshold and default phone floor;
+ *  14. states, icons, notices, schemes, forced colors and coarse pointers;
+ *  15. the optional behavior modules, driven by real keys and clicks;
+ *  16. every component example, at two widths and in both schemes;
+ *  17. class-less semantic HTML, composed by the stylesheet alone.
  *
  * Run: node test/layout.test.mjs
  * Skips with a notice when no Chrome/Chromium binary is available.
@@ -130,6 +134,12 @@ async function launch(browserPath) {
 			await send('Emulation.setDeviceMetricsOverride',
 				{ width, height: 900, deviceScaleFactor: 1, mobile: false });
 		},
+		media: async (features) => {
+			await send('Emulation.setEmulatedMedia', { features });
+		},
+		touch: async (enabled) => {
+			await send('Emulation.setTouchEmulationEnabled', { enabled, maxTouchPoints: enabled ? 5 : 1 });
+		},
 		reducedMotion: async (reduce) => {
 			await send('Emulation.setEmulatedMedia', {
 				features: [{ name: 'prefers-reduced-motion', value: reduce ? 'reduce' : 'no-preference' }]
@@ -156,11 +166,25 @@ async function launch(browserPath) {
 			for (const child of rootLayer.subLayers || []) visit(child);
 			return names;
 		},
-		press: async (key) => {
-			const code = { Tab: 9 }[key];
+		// Sends a real key press; modifiers lists 'Alt', 'Ctrl', 'Meta' or 'Shift'.
+		press: async (key, modifiers = []) => {
+			const codes = { Tab: 9, Enter: 13, Escape: 27, ' ': 32, End: 35, Home: 36,
+				ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40 };
+			const code = codes[key] ?? key.toUpperCase().charCodeAt(0);
+			const mask = modifiers.reduce((sum, name) => sum | { Alt: 1, Ctrl: 2, Meta: 4, Shift: 8 }[name], 0);
+			const text = { Enter: '\r', ' ': ' ' }[key] ?? (key.length === 1 && mask === 0 ? key : undefined);
 			for (const type of ['keyDown', 'keyUp']) {
-				await send('Input.dispatchKeyEvent',
-					{ type, key, code: key, windowsVirtualKeyCode: code, nativeVirtualKeyCode: code });
+				await send('Input.dispatchKeyEvent', {
+					type: type === 'keyDown' && text ? 'keyDown' : type, key, code: key.length === 1 ? `Key${key.toUpperCase()}` : key,
+					windowsVirtualKeyCode: code, nativeVirtualKeyCode: code, modifiers: mask,
+					...(type === 'keyDown' && text ? { text } : {})
+				});
+			}
+			await settle();
+		},
+		click: async (x, y) => {
+			for (const type of ['mousePressed', 'mouseReleased']) {
+				await send('Input.dispatchMouseEvent', { type, x, y, button: 'left', clickCount: 1 });
 			}
 			await settle();
 		},
@@ -514,7 +538,7 @@ try {
 				throw new Error(`${theme} link contrast is ${colors.linkContrast.toFixed(2)}:1`);
 			}
 		}
-		if (lightColors.colorScheme !== 'light' || darkColors.colorScheme !== 'dark') {
+		if (lightColors.colorScheme !== 'light dark' || darkColors.colorScheme !== 'dark') {
 			throw new Error(`color schemes: ${lightColors.colorScheme}, ${darkColors.colorScheme}`);
 		}
 	});
@@ -566,6 +590,18 @@ try {
 
 	const { testSplits } = await import('./splits.test.mjs');
 	await testSplits(browser, test, root);
+
+	const { testStates } = await import('./states.test.mjs');
+	await testStates(browser, test, root);
+
+	const { testModules } = await import('./modules.test.mjs');
+	await testModules(browser, test, root);
+
+	const { testComponents } = await import('./components.test.mjs');
+	await testComponents(browser, test, root);
+
+	const { testSemantic } = await import('./semantic.test.mjs');
+	await testSemantic(browser, test, root);
 } finally {
 	await browser.close();
 }

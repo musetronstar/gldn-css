@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css metadata and badges</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>metadata and badges</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">Metadata and badges</h1>
+			<p class="gldn-lede">A key-value list, badges, and an identity cut to one line that keeps its full text for assistive technology.</p>
+		</section>
+
+		<article class="gldn-card gldn-stack" style="max-inline-size: var(--gldn-measure)">
+			<dl class="gldn-meta" id="meta">
+				<dt>Title</dt><dd>As We May Think</dd>
+				<dt>Author</dt><dd>Vannevar Bush</dd>
+				<dt>Published</dt><dd><time datetime="1945-07">July 1945</time>, <cite>The Atlantic Monthly</cite></dd>
+				<dt>Identity</dt><dd><span class="gldn-truncate" id="identity" title="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/</span></dd>
+				<dt>Kinds</dt><dd><span class="gldn-badge">Essay</span> <span class="gldn-badge">1945</span></dd>
+			</dl>
+			<blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
+					<p>Consider a future device for individual use, which is a sort of mechanized private file and library. It needs a name, and, to coin one at random, "memex" will do.</p>
+					<footer><cite>Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945</cite></footer>
+				</blockquote>
+		</article>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

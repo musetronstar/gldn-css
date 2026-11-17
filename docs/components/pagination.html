@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css pagination</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>pagination</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">Pagination</h1>
+			<p class="gldn-lede">Links to pages with the current one marked and the unavailable end shown as text, and a Load more button that keeps focus while it appends.</p>
+		</section>
+
+		<nav class="gldn-pagination" aria-label="Result pages">
+			<ul>
+				<li><span aria-disabled="true">Previous</span></li>
+				<li><a href="#page-1" aria-current="page">1</a></li>
+				<li><a href="#page-2">2</a></li>
+				<li><a href="#page-3">3</a></li>
+				<li><a href="#page-2" rel="next">Next</a></li>
+			</ul>
+		</nav>
+		<div class="gldn-card gldn-stack">
+			<ol class="gldn-results" id="list">
+				<li>Science after the war</li><li>Specialization</li><li>New instruments</li>
+			</ol>
+			<p><button class="gldn-btn gldn-btn-secondary" id="more" type="button">Load more</button></p>
+		</div>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+
+		const more = document.getElementById('more');
+		const list = document.getElementById('list');
+		const pending = [['Photography and storage', 'Dry photography', 'Microfilm'], ['Selection by meaning', 'A device for individual use']];
+		more.addEventListener('click', () => {
+			if (more.getAttribute('aria-busy') === 'true') return;
+			more.setAttribute('aria-busy', 'true');
+			setTimeout(() => {
+				for (const label of pending.shift() || []) {
+					const item = document.createElement('li');
+					item.textContent = label;
+					list.append(item);
+				}
+				more.removeAttribute('aria-busy');
+				if (pending.length === 0) more.disabled = true;
+			}, 300);
+		});
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

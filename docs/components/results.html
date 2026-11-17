@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css result list</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>result list</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">Result list</h1>
+			<p class="gldn-lede">Ordinary links with a kind, an identity and a snippet; the entry being viewed is marked, long identities wrap, and an empty search says so.</p>
+		</section>
+
+		<form class="gldn-search" role="search" id="filter">
+			<label class="gldn-visually-hidden" for="filter-text">Filter results</label>
+			<input id="filter-text" type="search" placeholder="Filter results">
+		</form>
+		<div class="gldn-card">
+			<ol class="gldn-results" id="results">
+				<li id="r1" aria-current="true">
+					<a href="#r1">A device for individual use</a>
+					<p class="gldn-result-meta"><span class="gldn-badge">Passage</span><code>https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/#section-6</code></p>
+					<p><q cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">Consider a future device for individual use, which is a sort of <mark>mechanized</mark> private file and library. It needs a name, and, to coin one at random, "memex" will do.</q></p>
+				</li>
+				<li id="r2">
+					<a href="#r2">The record</a>
+					<p class="gldn-result-meta"><span class="gldn-badge">Passage</span><code>section-2/paragraph-1</code></p>
+					<p><q cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">A record if it is to be useful to science, must be continuously extended, it must be stored, and above all it must be <mark>consulted</mark>.</q></p>
+				</li>
+				<li id="r3">
+					<a href="#r3">Selection</a>
+					<p class="gldn-result-meta"><span class="gldn-badge">Passage</span><code>section-6/paragraph-3</code></p>
+					<p><q cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">Selection by association, rather than indexing, may yet be mechanized.</q></p>
+				</li>
+			</ol>
+			<p class="gldn-empty" id="empty" hidden>No results match this filter.</p>
+		</div>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+
+		const results = [...document.querySelectorAll('#results > li')];
+		const empty = document.getElementById('empty');
+		document.getElementById('filter-text').addEventListener('input', (event) => {
+			const text = event.target.value.toLowerCase();
+			for (const result of results) result.hidden = !result.textContent.toLowerCase().includes(text);
+			empty.hidden = results.some((result) => !result.hidden);
+		});
+		document.getElementById('filter').addEventListener('submit', (event) => event.preventDefault());
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

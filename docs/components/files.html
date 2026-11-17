@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css file drop zone</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>file drop zone</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">File drop zone</h1>
+			<p class="gldn-lede">Choose files or drop them on the zone. They stay in the pending list, each removable, until the form is submitted; nothing uploads on selection.</p>
+		</section>
+
+		<form class="gldn-card gldn-stack" id="form">
+			<label class="gldn-dropzone" id="zone">
+				<span>Choose files or drop them here</span>
+				<input id="input" type="file" name="files" multiple>
+				<output data-gldn-file-count aria-live="polite">0 files</output>
+				<ul data-gldn-files aria-label="Pending files"></ul>
+			</label>
+			<p class="gldn-hint" id="state">Not submitted. Selected files are not yet sent.</p>
+			<p><button class="gldn-btn" type="submit">Submit</button></p>
+		</form>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+
+		import { createFileDrop } from '../gldn-files.js';
+		window.files = createFileDrop(document.getElementById('zone'));
+		document.getElementById('form').addEventListener('submit', (event) => {
+			event.preventDefault();
+			document.getElementById('state').textContent = window.files.files.length + ' files would be submitted.';
+		});
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

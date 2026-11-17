@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Semantic HTML with no classes, composed by gldn-css alone.">
+	<title>gldn-css semantic HTML</title>
+	<link rel="stylesheet" href="gldn.min.css">
+</head>
+<body>
+
+	<!-- The document header: a heading group and the primary navigation. -->
+	<header>
+		<hgroup>
+			<h1>As We May Think</h1>
+			<p>Semantic HTML with no classes, composed by gldn-css alone.</p>
+		</hgroup>
+		<nav aria-label="Primary">
+			<ul>
+				<li><a href="#essay" aria-current="page">Essay</a></li>
+				<li><a href="#data">Figures and data</a></li>
+				<li><a href="#interactive">Interactive</a></li>
+				<li><a href="#form">Forms</a></li>
+			</ul>
+			<ul>
+				<li><select id="theme" aria-label="Theme">
+					<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+				</select></li>
+				<li><a href="index.html">feature tour</a></li>
+			</ul>
+		</nav>
+	</header>
+
+	<main>
+
+		<!-- An article is self-contained content; unclassed, it is a card. -->
+		<article id="essay">
+			<header>
+				<h2>A record that can be consulted</h2>
+				<p>Quoted from <cite>The Atlantic Monthly</cite>, <time datetime="1945-07">July 1945</time>.</p>
+			</header>
+
+			<section>
+				<h3>Quotations</h3>
+				<blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
+					<p>A record if it is to be useful to science, must be continuously extended, it must be stored, and above all it must be consulted.</p>
+					<footer><cite>Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945</cite></footer>
+				</blockquote>
+				<p>An inline quotation: <q cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">The human mind does not work that way. It operates by association.</q></p>
+			</section>
+
+			<section>
+				<h3>Text-level semantics</h3>
+				<p>
+					<strong>Strong</strong> marks importance and <em>emphasis</em> marks stress.
+					<mark>Mark</mark> highlights a match, <abbr title="Office of Scientific Research and Development">OSRD</abbr>
+					is an abbreviation, and <kbd>Ctrl</kbd> + <kbd>K</kbd> are keys.
+				</p>
+				<p>
+					Inline code reads <code>record.consult()</code>, a variable is <var>x</var> = 42, and an edit shows
+					<del>removed</del> and <ins>inserted</ins> text. Water is H<sub>2</sub>O; a square is x<sup>2</sup>.
+					<small>Small print sits at the smaller size.</small> <s>Struck</s> and <u>underlined</u>.
+				</p>
+				<address>Office of Scientific Research and Development, Washington</address>
+			</section>
+
+			<!-- Figures and structured data. -->
+			<section id="data">
+				<h3>Figures and data</h3>
+				<figure>
+					<svg width="400" height="247" viewBox="0 0 400 247" role="img" aria-label="A golden rectangle divided into a square and a smaller golden rectangle">
+						<rect x="0.5" y="0.5" width="399" height="246" fill="none" stroke="currentColor"/>
+						<line x1="247" y1="0" x2="247" y2="247" stroke="currentColor"/>
+						<line x1="247" y1="152.6" x2="400" y2="152.6" stroke="currentColor"/>
+					</svg>
+					<figcaption>A golden rectangle: removing a square leaves a smaller golden rectangle.</figcaption>
+				</figure>
+				<table border="1">
+					<caption>Recording methods the essay describes</caption>
+					<thead>
+						<tr><th scope="col">Method</th><th scope="col">Medium</th><th scope="col">Development</th></tr>
+					</thead>
+					<tbody>
+						<tr><th scope="row">Photography</th><td>Film</td><td>Wet</td></tr>
+						<tr><th scope="row">Dry photography</th><td>Diazo dye film</td><td>Ammonia gas</td></tr>
+						<tr><th scope="row">Electrical paper</th><td>Impregnated paper</td><td>None</td></tr>
+					</tbody>
+				</table>
+			</section>
+
+			<!-- Native interactive elements. -->
+			<section id="interactive">
+				<h3>Interactive elements</h3>
+				<details>
+					<summary>What does the essay propose?</summary>
+					<blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
+						<p>Consider a future device for individual use, which is a sort of mechanized private file and library. It needs a name, and, to coin one at random, "memex" will do.</p>
+						<footer><cite>Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945</cite></footer>
+					</blockquote>
+				</details>
+				<details open>
+					<summary>How would it select?</summary>
+					<blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
+						<p>Selection by association, rather than indexing, may yet be mechanized.</p>
+						<footer><cite>Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945</cite></footer>
+					</blockquote>
+				</details>
+				<p><label for="reading">Reading</label> <progress id="reading" value="62" max="100">62%</progress></p>
+				<p><label for="storage">Storage used</label>
+					<meter id="storage" value="0.38" min="0" max="1" low="0.3" high="0.8" optimum="0.2">38%</meter></p>
+				<p><button type="button" id="open-dialog">Open a dialog</button></p>
+				<dialog id="dialog">
+					<article>
+						<header><h4>A native dialog</h4></header>
+						<p>It keeps focus inside while open and closes with <kbd>Esc</kbd>.</p>
+						<footer><form method="dialog"><button value="close">Close</button></form></footer>
+					</article>
+				</dialog>
+				<article aria-busy="true" aria-label="Loading"></article>
+				<p><button type="button" aria-busy="true">Please wait</button></p>
+			</section>
+
+			<!-- Forms. -->
+			<section id="form">
+				<h3>Forms</h3>
+				<form action="#" method="post">
+					<fieldset>
+						<legend>An entry</legend>
+						<label for="title">Title</label>
+						<input id="title" name="title" required autocomplete="off" placeholder="As We May Think">
+						<small>A short name for the entry.</small>
+						<label for="kind">Kind</label>
+						<input id="kind" name="kind" list="kinds" placeholder="Type or choose">
+						<datalist id="kinds"><option value="Book"><option value="Photograph"><option value="Letter"></datalist>
+						<label for="section">Section</label>
+						<select id="section" name="section"><option>Selection</option><option>Photography</option></select>
+						<label for="note">Note</label>
+						<textarea id="note" name="note" rows="3"></textarea>
+						<label for="file">File</label>
+						<input id="file" type="file" name="file">
+						<label for="scale">Scale</label>
+						<input id="scale" type="range" min="0" max="100" value="62" name="scale">
+						<label for="date">Date</label>
+						<input id="date" type="date" name="date" value="1945-07-01">
+						<label for="tint">Color</label>
+						<input id="tint" type="color" name="tint" value="#2563eb">
+					</fieldset>
+					<fieldset>
+						<legend>States</legend>
+						<label for="valid">Valid</label>
+						<input id="valid" name="valid" value="consulted" aria-invalid="false">
+						<label for="invalid">Invalid</label>
+						<input id="invalid" name="invalid" value="" aria-invalid="true" aria-describedby="invalid-help">
+						<small id="invalid-help">Enter a value.</small>
+						<label for="disabled">Disabled</label>
+						<input id="disabled" name="disabled" value="stored" disabled>
+					</fieldset>
+					<fieldset>
+						<legend>Choices</legend>
+						<label><input type="checkbox" name="public" checked> Public</label>
+						<label><input type="checkbox" name="draft"> Draft</label>
+						<label><input type="radio" name="speed" value="fast" checked> Fast</label>
+						<label><input type="radio" name="speed" value="slow"> Slow</label>
+						<label><input type="checkbox" role="switch" name="sync" id="switch-on" checked> Synchronize</label>
+						<label><input type="checkbox" role="switch" name="notify" id="switch-off"> Notify</label>
+					</fieldset>
+					<fieldset role="group" id="group">
+						<input type="email" name="email" placeholder="Email address" aria-label="Email address" autocomplete="email">
+						<input type="submit" value="Subscribe">
+					</fieldset>
+					<p><input type="reset" value="Reset"> <button type="submit">Submit</button></p>
+				</form>
+			</section>
+		</article>
+
+		<!-- An aside holds related material. -->
+		<aside aria-label="Quick reference">
+			<h2>Quick reference</h2>
+			<dl>
+				<dt>Landmarks</dt>
+				<dd>Header, main, footer and nav let assistive technology move between regions.</dd>
+				<dt>Headings</dt>
+				<dd>Levels follow the outline; they are not chosen for their size.</dd>
+				<dt>Links and buttons</dt>
+				<dd>A link goes somewhere; a button does something.</dd>
+			</dl>
+		</aside>
+	</main>
+
+	<footer>
+		<small>Set in gldn-css. Quotations from Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945.</small>
+	</footer>
+
+	<script type="module">
+		import { createThemeControl } from './gldn-theme.js';
+		import { createDialog } from './gldn-dialog.js';
+		window.theme = createThemeControl(document.getElementById('theme'));
+		const dialog = createDialog(document.getElementById('dialog'));
+		document.getElementById('open-dialog').addEventListener('click', (event) => dialog.open(event.currentTarget));
+		window.ready = true;
+	</script>
+</body>
+</html>

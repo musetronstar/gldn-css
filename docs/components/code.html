@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css code input and output</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>code input and output</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">Code input and output</h1>
+			<p class="gldn-lede">A monospace editor submitted deliberately, with its Run button or Ctrl+Enter, and a result written as literal text.</p>
+		</section>
+
+		<form class="gldn-card gldn-stack" id="form">
+			<div class="gldn-field">
+				<label for="code">Statement</label>
+				<textarea class="gldn-code-input" id="code" name="code" rows="4" spellcheck="false">record &lt;photograph&gt; "film"</textarea>
+				<small class="gldn-hint">Run with the button or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>.</small>
+			</div>
+			<p><button class="gldn-btn" id="run" type="submit">Run</button></p>
+			<output class="gldn-code-output" id="result" for="code" aria-live="polite"></output>
+		</form>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+
+		import { enhanceForm } from '../gldn-form.js';
+		import { createShortcuts } from '../gldn-keys.js';
+		const form = document.getElementById('form');
+		const result = document.getElementById('result');
+		const api = enhanceForm(form);
+		form.addEventListener('gldn-submit', (event) => {
+			const code = event.detail.data.get('code');
+			result.textContent = 'Received ' + code.length + ' characters:\n' + code;
+			api.done();
+		});
+		const keys = createShortcuts(document);
+		keys.register('Ctrl+Enter', () => api.submit(), { description: 'Run', editable: true });
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

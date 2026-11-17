@@ -16,9 +16,11 @@
 		padding: 0;
 	}
 
+	/* Long words and URLs wrap rather than widen the page. */
 	html {
 		font-family: var(--gldn-font-sans);
 		line-height: var(--gldn-leading);
+		overflow-wrap: break-word;
 		-webkit-text-size-adjust: 100%;
 		text-size-adjust: 100%;
 	}
@@ -59,8 +61,17 @@
 	blockquote,
 	pre,
 	table,
-	details {
+	details,
+	figure,
+	address,
+	fieldset,
+	hgroup {
 		margin-block-end: var(--gldn-space-md);
+	}
+
+	/* Unclassed sections of a document stand a larger step apart. */
+	:is(section, article, aside):not([class]) {
+		margin-block-end: var(--gldn-space-lg);
 	}
 
 	hr {
@@ -75,8 +86,76 @@
 		margin-block-start: 0;
 	}
 
-	:is(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, blockquote, pre, table, details, hr):last-child {
+	:is(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, blockquote, pre, table, details, hr, figure, address,
+		fieldset, hgroup, section, article, aside):last-child {
 		margin-block-end: 0;
+	}
+
+	/* An unclassed page: its top-level header, main and footer are centered columns, and an
+	 * unclassed article is a card. Pages that lay themselves out with classes are untouched. */
+	body > :is(header, main, footer):not([class]) {
+		max-inline-size: var(--gldn-bp-lg);
+		margin-inline: auto;
+		padding: var(--gldn-space-lg) var(--gldn-space-md);
+	}
+
+	body > footer:not([class]) {
+		color: var(--gldn-color-muted);
+	}
+
+	article:not([class]) {
+		padding: var(--gldn-space-lg);
+		border-radius: var(--gldn-radius-md);
+		background-color: var(--gldn-color-surface);
+		box-shadow: var(--gldn-shadow);
+	}
+
+	article:not([class]) > :is(header, footer) {
+		margin-block: 0 var(--gldn-space-md);
+		padding-block-end: var(--gldn-space-sm);
+		border-block-end: var(--gldn-hairline) solid var(--gldn-color-border);
+	}
+
+	article:not([class]) > footer {
+		margin-block: var(--gldn-space-md) 0;
+		padding-block: var(--gldn-space-sm) 0;
+		border-block: var(--gldn-hairline) solid var(--gldn-color-border) 0;
+		color: var(--gldn-color-muted);
+	}
+
+	/* A heading group: the heading, then its subtitle, close together and muted. */
+	hgroup > :is(h1, h2, h3, h4, h5, h6) {
+		margin-block-end: var(--gldn-space-xs);
+	}
+
+	hgroup > :not(:first-child) {
+		margin-block: 0;
+		color: var(--gldn-color-muted);
+	}
+
+	/* A header's navigation is a row of links; navigation elsewhere, such as a tree in a
+	 * sidebar, keeps its lists. */
+	header nav {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--gldn-space-sm) var(--gldn-space-md);
+	}
+
+	header nav ul {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--gldn-space-xs) var(--gldn-space-md);
+		margin: 0;
+		padding-inline-start: 0;
+		list-style: none;
+	}
+
+	header nav li {
+		max-width: none;
+		margin: 0;
 	}
 
 	/* The measure belongs to running text. Lists, code and tables span their
@@ -117,12 +196,100 @@
 		font-size: var(--gldn-text-md);
 	}
 
+	/* A quotation's attribution sits below it, smaller and upright. */
+	blockquote > footer {
+		margin-block-start: var(--gldn-space-xs);
+		font-family: var(--gldn-font-sans);
+		font-size: var(--gldn-text-sm);
+	}
+
+	address {
+		font-style: normal;
+	}
+
+	figcaption {
+		margin-block-start: var(--gldn-space-xs);
+		color: var(--gldn-color-muted);
+		font-size: var(--gldn-text-sm);
+	}
+
+	figure > :is(img, svg, video, picture) {
+		border-radius: var(--gldn-radius-sm);
+	}
+
+	/* Text-level semantics: each keeps a cue beside color. */
+	mark {
+		padding-inline: var(--gldn-hairline);
+		border-radius: var(--gldn-radius-sm);
+		background-color: var(--gldn-color-mark);
+		color: inherit;
+	}
+
+	abbr[title] {
+		text-decoration: underline dotted;
+		text-underline-offset: var(--gldn-hairline);
+		cursor: help;
+	}
+
+	del {
+		color: var(--gldn-color-error);
+		text-decoration: line-through;
+	}
+
+	ins {
+		color: var(--gldn-color-success);
+		text-decoration: underline;
+	}
+
+	var {
+		font-family: var(--gldn-font-serif);
+	}
+
+	/* Superscripts and subscripts step down by the square root of phi and leave the
+	 * line's leading alone. */
+	sub,
+	sup {
+		font-size: calc(1em / sqrt(var(--gldn-phi)));
+		line-height: 0;
+	}
+
 	small {
 		font-size: var(--gldn-text-sm);
 	}
 
 	summary {
 		cursor: pointer;
+	}
+
+	/* An unclassed disclosure reads as one row of an accordion. */
+	details:not([class]) {
+		padding-block: var(--gldn-space-sm);
+		border-block-end: var(--gldn-hairline) solid var(--gldn-color-border);
+	}
+
+	details:not([class]) > summary {
+		font-weight: 600;
+	}
+
+	details:not([class])[open] > summary {
+		margin-block-end: var(--gldn-space-sm);
+	}
+
+	progress,
+	meter {
+		inline-size: 100%;
+		block-size: var(--gldn-space-sm);
+		vertical-align: middle;
+	}
+
+	/* A key reads as a key: a boundary with a heavier lower edge. */
+	kbd {
+		padding-inline: var(--gldn-space-xs);
+		border: var(--gldn-hairline) solid var(--gldn-color-control-border);
+		border-block-end-width: var(--gldn-edge-width);
+		border-radius: var(--gldn-radius-sm);
+		background-color: var(--gldn-color-surface);
+		white-space: nowrap;
 	}
 
 	code,
@@ -148,7 +315,7 @@
 	 * shows on the page, on cards and in both themes. */
 	code,
 	pre {
-		background-color: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-6), transparent);
+		background-color: var(--gldn-color-tint);
 	}
 
 	code {
@@ -167,16 +334,26 @@
 		background-color: transparent;
 	}
 
+	/* A table's border attribute draws nothing; rows are divided by hairlines. */
 	table {
 		width: 100%;
+		border: 0;
 		border-collapse: collapse;
 		font-size: var(--gldn-text-sm);
 		font-variant-numeric: tabular-nums;
 	}
 
+	caption {
+		padding-block-end: var(--gldn-space-xs);
+		color: var(--gldn-color-muted);
+		caption-side: top;
+		text-align: start;
+	}
+
 	th,
 	td {
 		padding: var(--gldn-space-xs) var(--gldn-space-sm);
+		border: 0;
 		border-bottom: var(--gldn-hairline) solid var(--gldn-color-border);
 		text-align: start;
 		vertical-align: top;
@@ -239,20 +416,275 @@
 		cursor: pointer;
 	}
 
-	/* The hover fill is the tint that code sits on, laid over the surface. */
+	/* Hover and press lay the text tints over the button's own fill. */
 	:is(button, input:is([type="button"], [type="submit"], [type="reset"])):hover:not(:disabled) {
-		background-color: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-6), var(--gldn-color-surface));
+		background-image: linear-gradient(var(--gldn-color-tint), var(--gldn-color-tint));
+	}
+
+	:is(button, input:is([type="button"], [type="submit"], [type="reset"])):active:not(:disabled) {
+		background-image: linear-gradient(var(--gldn-color-active), var(--gldn-color-active));
 	}
 
 	/* An explicit text color replaces the browser's disabled color, so the reset restores the cue. */
 	:is(button, input, select, textarea):disabled {
-		opacity: 0.5;
+		opacity: var(--gldn-opacity-disabled);
 		cursor: default;
+	}
+
+	/* Invalid and valid fields: the boundary color and, when invalid, a thicker inline-start
+	 * edge, so the state never rests on color alone. */
+	:is(input, select, textarea)[aria-invalid="true"] {
+		border-color: var(--gldn-color-invalid);
+		border-inline-start-width: var(--gldn-edge-width);
+	}
+
+	:is(input, select, textarea)[aria-invalid="false"] {
+		border-color: var(--gldn-color-valid);
+	}
+
+	/* The current page or item: weight and a heavier underline, not color alone. */
+	a[aria-current]:not([aria-current="false"]) {
+		font-weight: 600;
+		text-decoration-thickness: var(--gldn-edge-width);
+	}
+
+	/* Selected options, rows and cells: a tint and an edge bar. */
+	:is([role="option"], [role="row"], [role="gridcell"])[aria-selected="true"] {
+		background-color: var(--gldn-color-selected);
+		box-shadow: inset var(--gldn-edge-width) 0 0 var(--gldn-color-primary);
+	}
+
+	/* Busy: a ring turns before the content, which stays readable; an empty busy element
+	 * shows the ring alone, centered. The ring is drawn in the text color. */
+	[aria-busy="true"] {
+		cursor: progress;
+	}
+
+	[aria-busy="true"]:not(input, select, textarea, html, body)::before {
+		content: "" / "";
+		display: inline-block;
+		inline-size: 1em;
+		block-size: 1em;
+		margin-inline-end: var(--gldn-space-xs);
+		vertical-align: middle;
+		border: calc(1em * pow(var(--gldn-phi), -4)) solid currentColor;
+		border-inline-end-color: transparent;
+		border-radius: 50%;
+	}
+
+	[aria-busy="true"]:empty {
+		text-align: center;
+	}
+
+	[aria-busy="true"]:empty::before {
+		margin-inline-end: 0;
+	}
+
+	@keyframes gldn-spin {
+		to {
+			rotate: 1turn;
+		}
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		[aria-busy="true"]::before {
+			animation: gldn-spin calc(var(--gldn-motion-duration) * pow(var(--gldn-phi), 4)) linear infinite;
+		}
+	}
+
+	/* Forced colors drop fills and shadows, so selection becomes the system highlight. */
+	@media (forced-colors: active) {
+		:is([role="option"], [role="row"], [role="gridcell"])[aria-selected="true"] {
+			outline: var(--gldn-edge-width) solid Highlight;
+			outline-offset: calc(-1 * var(--gldn-edge-width));
+		}
 	}
 
 	input:is([type="checkbox"], [type="radio"], [type="range"]),
 	progress {
 		accent-color: var(--gldn-color-primary);
+	}
+
+	/* Forms. In an unclassed form, text controls fill their line, as in a column of fields;
+	 * a hint in <small> after a control sits below it. */
+	:where(form:not([class])) :is(
+		input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"],
+			[type="button"], [type="submit"], [type="reset"], [type="image"], [type="hidden"]),
+		select,
+		textarea
+	):not([role="group"] > *) {
+		inline-size: 100%;
+	}
+
+	:where(form:not([class])) :is(input, select, textarea):not([role="group"] > *) {
+		margin-block-end: var(--gldn-space-sm);
+	}
+
+	/* A file picker and a range each take their own line; the range spans it. */
+	:where(form:not([class])) input:is([type="file"], [type="range"]):not([role="group"] > *) {
+		display: block;
+	}
+
+	:where(form:not([class])) input[type="range"]:not([role="group"] > *) {
+		inline-size: 100%;
+	}
+
+	:where(form:not([class])) :is(input, select, textarea) + small {
+		display: block;
+		margin-block: calc(-1 * var(--gldn-space-xs)) var(--gldn-space-sm);
+		color: var(--gldn-color-muted);
+	}
+
+	label:has(> input:is([type="checkbox"], [type="radio"])) {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--gldn-space-xs);
+		margin-inline-end: var(--gldn-space-md);
+		cursor: pointer;
+	}
+
+	label:has(> input:is([type="checkbox"], [type="radio"])) > input {
+		margin: 0;
+	}
+
+	/* A fieldset's default minimum is its content's width; wide controls would widen it. */
+	fieldset {
+		min-inline-size: 0;
+		padding: var(--gldn-space-sm) var(--gldn-space-md) var(--gldn-space-md);
+		border: var(--gldn-hairline) solid var(--gldn-color-border);
+		border-radius: var(--gldn-radius-md);
+	}
+
+	legend {
+		padding-inline: var(--gldn-space-xs);
+		font-weight: 600;
+	}
+
+	/* A group joins its controls into one: a field with its button, say. */
+	fieldset[role="group"] {
+		display: flex;
+		padding: 0;
+		border: 0;
+	}
+
+	fieldset[role="group"] > :is(input:not([type="submit"], [type="button"], [type="reset"]), select) {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+	}
+
+	fieldset[role="group"] > :is(button, input:is([type="submit"], [type="button"], [type="reset"])) {
+		flex: none;
+	}
+
+	fieldset[role="group"] > :not(:first-child) {
+		margin-inline-start: calc(-1 * var(--gldn-hairline));
+		border-start-start-radius: 0;
+		border-end-start-radius: 0;
+	}
+
+	fieldset[role="group"] > :not(:last-child) {
+		border-start-end-radius: 0;
+		border-end-end-radius: 0;
+	}
+
+	fieldset[role="group"] > :focus-visible {
+		position: relative;
+	}
+
+	/* A switch: a checkbox drawn as a track whose knob moves to the end when on. Position,
+	 * not only color, shows the state. */
+	input[type="checkbox"][role="switch"] {
+		appearance: none;
+		inline-size: calc(1em * var(--gldn-phi) * var(--gldn-phi));
+		block-size: 1em;
+		margin: 0;
+		border: var(--gldn-hairline) solid var(--gldn-color-control-border);
+		border-radius: 1em;
+		background: radial-gradient(circle closest-side, var(--gldn-color-surface) 80%, transparent 85%)
+			no-repeat left center / 1em 1em, var(--gldn-color-control-border);
+		vertical-align: middle;
+		cursor: pointer;
+	}
+
+	input[type="checkbox"][role="switch"]:checked {
+		border-color: var(--gldn-color-primary);
+		background-position: right center;
+		background-color: var(--gldn-color-primary);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		input[type="checkbox"][role="switch"] {
+			transition: background-position var(--gldn-motion-duration) ease-out;
+		}
+	}
+
+	/* The file picker's button is a bare button, and the picker fits its container. */
+	input[type="file"] {
+		max-inline-size: 100%;
+	}
+
+	input[type="file"]::file-selector-button {
+		margin-inline-end: var(--gldn-space-sm);
+		padding: var(--gldn-space-xs) var(--gldn-space-sm);
+		border: var(--gldn-hairline) solid var(--gldn-color-control-border);
+		border-radius: var(--gldn-radius-sm);
+		background-color: var(--gldn-color-surface);
+		color: var(--gldn-color-text);
+		font: inherit;
+		cursor: pointer;
+	}
+
+	input[type="color"] {
+		inline-size: var(--gldn-control-height);
+		block-size: var(--gldn-control-height);
+		padding: var(--gldn-hairline);
+		border: var(--gldn-hairline) solid var(--gldn-color-control-border);
+		border-radius: var(--gldn-radius-sm);
+		background-color: var(--gldn-color-surface);
+	}
+
+	/* A dialog holding one article lets the article be its surface. */
+	dialog:has(> article:only-child) {
+		padding: 0;
+	}
+
+	dialog > article:only-child {
+		box-shadow: none;
+	}
+
+	/* Dialogs and popovers: a surface over the page, in the page's scheme. The backdrop
+	 * dims the page behind a modal dialog. */
+	dialog,
+	[popover] {
+		max-inline-size: min(calc(100% - 2 * var(--gldn-space-md)), var(--gldn-measure));
+		padding: var(--gldn-space-lg);
+		border: var(--gldn-hairline) solid var(--gldn-color-border);
+		border-radius: var(--gldn-radius-md);
+		background-color: var(--gldn-color-surface);
+		color: var(--gldn-color-text);
+		box-shadow: var(--gldn-shadow);
+	}
+
+	[popover] {
+		padding: var(--gldn-space-sm) var(--gldn-space-md);
+	}
+
+	dialog::backdrop {
+		background-color: var(--gldn-color-overlay);
+	}
+
+	@keyframes gldn-rise {
+		from {
+			opacity: 0;
+			translate: 0 var(--gldn-space-sm);
+		}
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		dialog[open],
+		[popover]:popover-open {
+			animation: gldn-rise var(--gldn-motion-duration) ease-out;
+		}
 	}
 
 	/* One focus ring for every focusable element, components included. */

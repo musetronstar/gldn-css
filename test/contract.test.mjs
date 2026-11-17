@@ -17,9 +17,12 @@ const src = (name) => readFileSync(path.join(root, 'src', name), 'utf8');
 const srcFile = (name) => path.join(root, 'src', name);
 
 const PARTIALS = ['_reset.css', '_tokens.css', '_layout.css', '_components.css', '_responsive.css'];
-const MODULES = ['gldn-tabs.js', 'gldn-messages.js', 'gldn-dock.js'];
+const MODULES = ['gldn-tabs.js', 'gldn-messages.js', 'gldn-dock.js', 'gldn-popover.js',
+	'gldn-dialog.js', 'gldn-roving.js', 'gldn-form.js', 'gldn-files.js', 'gldn-theme.js',
+	'gldn-keys.js', 'gldn-media.js'];
 const LAYERS = ['reset', 'tokens', 'layout', 'components', 'responsive'];
-const TOKEN_SELECTORS = [':root', '.gldn-theme-dark', '.gldn-scope', '.gldn-compact', '.gldn-spacious'];
+const TOKEN_SELECTORS = [':root', '.gldn-theme-light', '.gldn-theme-dark', '.gldn-scope', '.gldn-compact', '.gldn-spacious'];
+const STATE_CLASSES = ['gldn-btn-icon', 'gldn-btn-group', 'gldn-icon', 'gldn-disclosure', 'gldn-empty', 'gldn-alert', 'gldn-scroll'];
 const PRIMITIVES = ['gldn-cluster', 'gldn-grid', 'gldn-switcher', 'gldn-frame', 'gldn-frame-portrait'];
 
 let passed = 0;
@@ -202,10 +205,12 @@ const LENGTH_ALLOWLIST = [
 	{ property: /^--gldn-shadow$/, literals: ['4px', '6px', '-1px'], reason: 'shadow offset and blur' },
 	{ selector: /\.gldn-visually-hidden/, literals: ['1px', '-1px'],
 		reason: 'a one-pixel box that screen readers still read' },
-	{ property: /^font-size$/, literals: ['1em'], reason: 'inline code keeps the size of its text' }
+	{ property: /^font-size$/, literals: ['1em'], reason: 'inline code keeps the size of its text' },
+	{ selector: /\.gldn-icon|aria-busy|\.gldn-tree-row|role="switch"/, literals: ['1em'], reason: 'icons, markers, switches and the busy ring take the size of their text' },
+	{ property: /^--gldn-control-height$/, literals: ['1lh'], reason: 'a control is one line of its own text tall' }
 ];
 
-const LENGTH = /(?<![\w.#-])-?\d*\.?\d+(?:px|rem|em|ch|ex|vh|vw|dvh|svh|lvh|vmin|vmax|cm|mm|in|pt|pc)\b/g;
+const LENGTH = /(?<![\w.#-])-?\d*\.?\d+(?:px|rem|em|ch|ex|lh|vh|vw|dvh|svh|lvh|vmin|vmax|cm|mm|in|pt|pc)\b/g;
 
 function allowedLength(literal, { headers, property }) {
 	return LENGTH_ALLOWLIST.some((entry) => entry.literals.includes(literal)
@@ -383,8 +388,18 @@ test('surface, color, radius, and shadow tokens are defined', () => {
 		'border', 'control-border', 'primary-fg', 'link']) {
 		assert.match(tokens, new RegExp(`--gldn-color-${name}:`), `missing --gldn-color-${name}`);
 	}
-	assert.match(tokens, /\.gldn-theme-dark\s*\{[^}]*--gldn-color-control-border:/s,
-		'the dark theme must define its control boundary');
+	// Colors follow the scheme: each is a light-dark() pair, except those equal in both.
+	const unpaired = [...tokens.matchAll(/(--gldn-color-[\w-]+):\s*(#[0-9a-f]{3,8});/g)].map((m) => m[1]);
+	assert.deepEqual(unpaired, ['--gldn-color-primary', '--gldn-color-primary-fg']);
+	assert.match(tokens, /:root\s*\{[^}]*color-scheme:\s*light dark/s, 'pages follow the system scheme');
+	assert.match(tokens, /\.gldn-theme-light\s*\{\s*color-scheme:\s*light;\s*\}/);
+	assert.match(tokens, /\.gldn-theme-dark\s*\{\s*color-scheme:\s*dark;\s*\}/);
+	for (const name of ['tint', 'active', 'selected', 'valid', 'invalid', 'overlay']) {
+		assert.match(tokens, new RegExp(`--gldn-color-${name}:`), `missing --gldn-color-${name}`);
+	}
+	for (const name of ['opacity-disabled', 'edge-width', 'control-height']) {
+		assert.match(tokens, new RegExp(`--gldn-${name}:`), `missing --gldn-${name}`);
+	}
 	assert.match(tokens, /--gldn-shadow:/, 'missing --gldn-shadow');
 });
 
@@ -448,8 +463,61 @@ test('buttons share the controls\' size and offer four variants', () => {
 
 test('one reset rule gives every focusable element the focus ring', () => {
 	assert.match(src('_reset.css'), /:focus-visible\s*\{[^}]*outline:\s*var\(--gldn-focus-ring\)/s);
+	// Only the tree repeats the ring: its focused item holds its subtree, so the row carries it.
 	for (const name of PARTIALS.filter((partial) => partial !== '_reset.css')) {
-		assert.doesNotMatch(src(name), /:focus-visible/, `${name} must not repeat the focus ring`);
+		const repeats = walk(src(name)).declarations
+			.filter((d) => d.property === 'outline' && d.value === 'var(--gldn-focus-ring)')
+			.filter((d) => !d.headers.at(-1).startsWith('.gldn-tree [role="treeitem"]:focus-visible'));
+		assert.deepEqual(repeats.map((d) => d.headers.at(-1)), [], `${name} must not repeat the focus ring`);
+	}
+});
+
+test('motion runs only when reduced motion is not requested', () => {
+	for (const name of ['gldn.css', ...PARTIALS]) {
+		const moving = walk(src(name)).declarations
+			.filter((d) => /^(?:animation|animation-name|transition)$/.test(d.property))
+			.filter((d) => !d.headers.some((header) => /prefers-reduced-motion:\s*no-preference/.test(header)));
+		assert.deepEqual(moving.map((d) => `${name}: ${d.headers.at(-1)}`), []);
+	}
+});
+
+test('states carry a cue beside color, also in forced colors', () => {
+	const reset = src('_reset.css');
+	for (const state of ['aria-invalid="true"', 'aria-invalid="false"', 'aria-busy="true"',
+		'aria-current', 'aria-selected="true"']) {
+		assert.ok(reset.includes(`[${state}`), `the reset must style [${state}]`);
+	}
+	assert.match(reset, /\[aria-invalid="true"\]\s*\{[^}]*border-inline-start-width:\s*var\(--gldn-edge-width\)/s);
+	assert.match(reset, /@media \(forced-colors: active\)/);
+	assert.match(components, /@media \(forced-colors: active\)/);
+	for (const cls of STATE_CLASSES) {
+		assert.match(components, new RegExp(`\\.${cls}(?![\\w-])`), `missing .${cls}`);
+	}
+	assert.match(responsive, /@media \(pointer: coarse\)[\s\S]*min-block-size:\s*var\(--gldn-touch-target\)/);
+});
+
+test('icons in the examples are hidden or named, and icon buttons have a name', () => {
+	for (const file of exampleFiles()) {
+		const text = readFileSync(file, 'utf8');
+		for (const [tag] of text.matchAll(/<[^>]*class="[^"]*\bgldn-icon\b[^"]*"[^>]*>/g)) {
+			assert.match(tag, /aria-hidden="true"/, `${path.relative(root, file)}: decorative icon ${tag}`);
+		}
+		for (const [tag] of text.matchAll(/<[^>]*class="[^"]*\bgldn-btn-icon\b[^"]*"[^>]*>/g)) {
+			assert.match(tag, /aria-label="[^"]+"/, `${path.relative(root, file)}: icon button without a name`);
+		}
+	}
+});
+
+test('the semantic example uses no classes or inline styles, and the reset covers its elements', () => {
+	const page = readFileSync(path.join(root, 'docs', 'semantic.html'), 'utf8');
+	assert.doesNotMatch(page, /\sclass="|\sstyle="/, 'the semantic example is class-less');
+	assert.match(page, /<link rel="stylesheet" href="gldn\.min\.css">/);
+	const reset = src('_reset.css');
+	for (const selector of ['hgroup', 'header nav', 'figcaption', 'caption', 'mark', 'abbr[title]', 'del', 'ins',
+		'sub', 'sup', 'kbd', 'var', 'address', 'blockquote > footer', 'details:not([class])', 'progress', 'meter',
+		'fieldset', 'legend', 'fieldset[role="group"]', '[role="switch"]', '::file-selector-button',
+		'input[type="color"]', 'dialog', 'article:not([class])', 'body > :is(header, main, footer):not([class])']) {
+		assert.ok(reset.includes(selector), `the reset must style ${selector}`);
 	}
 });
 
@@ -601,12 +669,14 @@ test('the font specimen records pairing B and still offers three pairings in bot
  * README, and no project-domain copy outside cited quotations. Examples quote their sources
  * verbatim, in <q cite> or <blockquote cite>.
  */
-const exampleFiles = () => [
-	...readdirSync(path.join(root, 'docs')).filter((name) => name.endsWith('.html'))
-		.map((name) => path.join(root, 'docs', name)),
-	...readdirSync(path.join(root, 'docs', 'components')).filter((name) => name.endsWith('.html'))
-		.map((name) => path.join(root, 'docs', 'components', name))
-];
+function exampleFiles() {
+	return [
+		...readdirSync(path.join(root, 'docs')).filter((name) => name.endsWith('.html'))
+			.map((name) => path.join(root, 'docs', name)),
+		...readdirSync(path.join(root, 'docs', 'components')).filter((name) => name.endsWith('.html'))
+			.map((name) => path.join(root, 'docs', 'components', name))
+	];
+}
 const QUOTATION = /<(q|blockquote)\b([^>]*)>([\s\S]*?)<\/\1>/g;
 
 test('sources and examples carry no project names, and project-domain words only in quotations', () => {
@@ -653,7 +723,9 @@ test('every quotation appears verbatim in its source text, when the sources are 
 		console.log('  (skipped: set GLDN_QUOTE_SOURCES to check quotations verbatim)');
 		return;
 	}
-	const normalize = (text) => text.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&')
+	// Inline markup inside a quotation (a <mark>, say) adds no space; block markup ends a line.
+	const normalize = (text) => text.replace(/<\/?(?:mark|em|strong|i|b|a|span|code|q)\b[^>]*>/g, '')
+		.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&')
 		.replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/\s+/g, ' ').trim();
 	const corpus = sources.map((file) => normalize(readFileSync(file, 'utf8'))).join('\n');
 	const missing = [];
@@ -667,8 +739,7 @@ test('every quotation appears verbatim in its source text, when the sources are 
 });
 
 test('every gldn- class used in the examples exists in src', () => {
-	const examples = [html, fontHtml, readFileSync(
-		path.join(root, 'docs', 'components', 'dock.html'), 'utf8')];
+	const examples = exampleFiles().map((file) => readFileSync(file, 'utf8'));
 	const used = new Set(examples.flatMap((example) =>
 		[...example.matchAll(/class="([^"]*)"/g)]
 			.flatMap((m) => m[1].split(/\s+/))
@@ -700,6 +771,24 @@ test('the notification module, rules, and example are removed', () => {
 /* --------------------------------------------------------------------------
  * 8. Pure CSS guarantee: no preprocessor constructs, no external imports
  * ------------------------------------------------------------------------ */
+
+/*
+ * Optional modules have zero dependencies and stay inside their contract: they insert text,
+ * never HTML, do no requests, and only the theme control touches storage.
+ */
+test('modules import only each other, insert text only, and send nothing', () => {
+	for (const name of MODULES) {
+		const code = src(name);
+		for (const [, from] of code.matchAll(/\bfrom\s+'([^']+)'/g)) {
+			assert.match(from, /^\.\/gldn-[\w-]+\.js$/, `${name} imports ${from}`);
+		}
+		assert.doesNotMatch(code, /innerHTML|outerHTML|insertAdjacentHTML|document\.write/, `${name} inserts HTML`);
+		assert.doesNotMatch(code, /\bfetch\(|XMLHttpRequest|WebSocket|sendBeacon/, `${name} sends requests`);
+		if (name !== 'gldn-theme.js') {
+			assert.doesNotMatch(code, /localStorage|sessionStorage|indexedDB/, `${name} uses storage`);
+		}
+	}
+});
 
 test('src is pure CSS', () => {
 	assert.doesNotMatch(allSrc, /\$[\w-]+\s*:/, 'Sass-style variables are not pure CSS');

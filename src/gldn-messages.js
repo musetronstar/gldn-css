@@ -45,13 +45,27 @@ function renderEntry(entry) {
 		const body = document.createElement('pre');
 		body.className = 'gldn-message-body';
 		body.textContent = String(entry.body);
-		article.appendChild(body);
+		if (entry.details) {
+			const details = document.createElement('details');
+			details.className = 'gldn-message-detail';
+			const summary = document.createElement('summary');
+			summary.textContent = 'Details';
+			details.append(summary, body);
+			article.appendChild(details);
+		} else {
+			article.appendChild(body);
+		}
 	}
 	return article;
 }
 
-/** A newest-first message log with optional error pop-in over its dock. */
-export function createMessages(log) {
+/*
+ * A newest-first message log with an optional error pop-in over its dock. With
+ * { details: true }, each body folds into a <details> element. filter() hides entries that do
+ * not match, without removing them; append() adds older entries at the end, which a
+ * [data-gldn-messages-older] control asks for by dispatching gldn-older on the log.
+ */
+export function createMessages(log, { details = false } = {}) {
 	const document = log.ownerDocument;
 	const view = document.defaultView;
 	const panel = log.closest('[data-gldn-panel]');
@@ -60,9 +74,17 @@ export function createMessages(log) {
 	const popinContent = popin?.querySelector('[data-gldn-popin-content]');
 	const expandButton = panel?.querySelector('[data-gldn-messages-expand]');
 	let activePopin = null;
+	let shown = { text: '', kinds: null };
+
+	function applyFilter(element) {
+		const text = shown.text.trim().toLowerCase();
+		element.hidden = Boolean((shown.kinds && !shown.kinds.includes(element.dataset.gldnKind))
+			|| (text && !element.textContent.toLowerCase().includes(text)));
+		return element;
+	}
 
 	function render(entry) {
-		return renderEntry({ ...entry, document });
+		return applyFilter(renderEntry({ ...entry, details, document }));
 	}
 
 	function dismissError() {
@@ -112,6 +134,10 @@ export function createMessages(log) {
 		expandButton.textContent = expanded ? 'Collapse' : 'Expand';
 		dock.dataset.gldnMessagesExpanded = String(expanded);
 	});
+	const timeline = log.closest('.gldn-timeline') || panel;
+	timeline?.querySelector('[data-gldn-messages-older]')?.addEventListener('click', () => {
+		log.dispatchEvent(new CustomEvent('gldn-older', { bubbles: true }));
+	});
 	panel?.querySelector('[data-gldn-messages-clear]')?.addEventListener('click', () => {
 		log.replaceChildren();
 		log.scrollTop = 0;
@@ -132,6 +158,13 @@ export function createMessages(log) {
 		clear() {
 			log.replaceChildren();
 			log.scrollTop = 0;
+		},
+		append(entries) {
+			log.append(...entries.map(render));
+		},
+		filter({ text = '', kinds = null } = {}) {
+			shown = { text, kinds };
+			for (const element of log.querySelectorAll('.gldn-message')) applyFilter(element);
 		},
 		dismissError
 	};

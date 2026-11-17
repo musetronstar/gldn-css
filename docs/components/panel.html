@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css view panels</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>view panels</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">View panels</h1>
+			<p class="gldn-lede">A title, metadata and actions around content, with active, collapsed, empty, loading and error states. A panel knows nothing about what it shows.</p>
+		</section>
+
+		<div class="gldn-grid" style="--gldn-grid-min: 30ch">
+			<article class="gldn-panel" id="active" aria-current="true">
+				<header>
+					<h2 class="gldn-panel-title">Active</h2>
+					<button class="gldn-btn gldn-btn-quiet gldn-disclosure" type="button" aria-expanded="true" aria-controls="active-body">Details</button>
+				</header>
+				<div id="active-body">
+					<blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
+					<p>A memex is a device in which an individual stores all his books, records, and communications, and which is mechanized so that it may be consulted with exceeding speed and flexibility. It is an enlarged intimate supplement to his memory.</p>
+					<footer><cite>Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945</cite></footer>
+				</blockquote>
+				</div>
+				<footer><button class="gldn-btn gldn-btn-secondary" type="button">Compare</button><button class="gldn-btn" type="button">Open</button></footer>
+			</article>
+			<article class="gldn-panel" id="inactive">
+				<header>
+					<h2 class="gldn-panel-title">Inactive</h2>
+					<button class="gldn-btn gldn-btn-quiet gldn-disclosure" type="button" aria-expanded="true" aria-controls="inactive-body">Details</button>
+				</header>
+				<div id="inactive-body">
+					<p><q cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">The human mind does not work that way. It operates by association.</q></p>
+				</div>
+				<footer><button class="gldn-btn gldn-btn-secondary" type="button">Compare</button><button class="gldn-btn" type="button">Open</button></footer>
+			</article>
+			<article class="gldn-panel" id="empty">
+				<header>
+					<h2 class="gldn-panel-title">Empty</h2>
+					<button class="gldn-btn gldn-btn-quiet gldn-disclosure" type="button" aria-expanded="true" aria-controls="empty-body">Details</button>
+				</header>
+				<div id="empty-body">
+					<p class="gldn-empty">Nothing is stored here yet.</p>
+				</div>
+			</article>
+			<article class="gldn-panel" id="loading" aria-busy="true">
+				<header>
+					<h2 class="gldn-panel-title">Loading</h2>
+					<button class="gldn-btn gldn-btn-quiet gldn-disclosure" type="button" aria-expanded="true" aria-controls="loading-body">Details</button>
+				</header>
+				<div id="loading-body">
+					<p>Retrieving the record.</p>
+				</div>
+			</article>
+			<article class="gldn-panel" id="failed">
+				<header>
+					<h2 class="gldn-panel-title">Error</h2>
+					<button class="gldn-btn gldn-btn-quiet gldn-disclosure" type="button" aria-expanded="true" aria-controls="failed-body">Details</button>
+				</header>
+				<div id="failed-body">
+					<p class="gldn-alert" data-gldn-kind="error"><strong>Error:</strong> the record could not be read.</p>
+				</div>
+			</article>
+		</div>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+
+		for (const button of document.querySelectorAll('.gldn-panel .gldn-disclosure')) {
+			button.addEventListener('click', () => {
+				const expanded = button.getAttribute('aria-expanded') !== 'true';
+				button.setAttribute('aria-expanded', String(expanded));
+				document.getElementById(button.getAttribute('aria-controls')).hidden = !expanded;
+			});
+		}
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

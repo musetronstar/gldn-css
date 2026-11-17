@@ -5,10 +5,11 @@
  */
 @layer components {
 
-	/* Shared panel surface: sidebar, main, and cards present identically. */
+	/* Shared panel surface: sidebar, main, cards and view panels present identically. */
 	.gldn-sidebar,
 	.gldn-main,
-	.gldn-card {
+	.gldn-card,
+	.gldn-panel {
 		background-color: var(--gldn-color-surface);
 		color: var(--gldn-color-text);
 		border-radius: var(--gldn-radius-md);
@@ -122,7 +123,10 @@
 	 * radius as a field or a bare button, so controls set side by side align. gldn-btn is the
 	 * primary action; each variant changes only colors. */
 	.gldn-btn {
-		display: inline-block;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--gldn-space-xs);
 		padding: var(--gldn-space-xs) var(--gldn-space-md);
 		border: var(--gldn-hairline) solid var(--gldn-color-primary);
 		border-radius: var(--gldn-radius-sm);
@@ -152,15 +156,23 @@
 		color: var(--gldn-color-text);
 	}
 
-	/* Secondary and quiet buttons hover with the tint that code sits on. */
+	/* Secondary and quiet buttons keep their fill and boundary and take the text tints. */
+	:is(.gldn-btn-secondary, .gldn-btn-quiet):hover:not(:disabled) {
+		background-image: linear-gradient(var(--gldn-color-tint), var(--gldn-color-tint));
+	}
+
+	:is(.gldn-btn-secondary, .gldn-btn-quiet):active:not(:disabled) {
+		background-image: linear-gradient(var(--gldn-color-active), var(--gldn-color-active));
+	}
+
 	.gldn-btn-secondary:hover:not(:disabled) {
 		border-color: var(--gldn-color-control-border);
-		background-color: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-6), var(--gldn-color-surface));
+		background-color: var(--gldn-color-surface);
 	}
 
 	.gldn-btn-quiet:hover:not(:disabled) {
 		border-color: transparent;
-		background-color: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-6), transparent);
+		background-color: transparent;
 	}
 
 	/* Danger: the error color for destructive actions; the label names the action too. */
@@ -178,8 +190,107 @@
 	}
 
 	.gldn-btn:disabled {
-		opacity: 0.5;
+		opacity: var(--gldn-opacity-disabled);
 		cursor: default;
+	}
+
+	/* A square button for one icon; its accessible name comes from aria-label. A flex item
+	 * has no line-height strut, so the block size is set as well as the inline size. */
+	.gldn-btn-icon {
+		inline-size: var(--gldn-control-height);
+		block-size: var(--gldn-control-height);
+		padding-inline: 0;
+	}
+
+	/* Buttons joined into one control: shared boundaries, outer corners only. */
+	.gldn-btn-group {
+		display: inline-flex;
+	}
+
+	.gldn-btn-group > :not(:first-child) {
+		margin-inline-start: calc(-1 * var(--gldn-hairline));
+		border-start-start-radius: 0;
+		border-end-start-radius: 0;
+	}
+
+	.gldn-btn-group > :not(:last-child) {
+		border-start-end-radius: 0;
+		border-end-end-radius: 0;
+	}
+
+	.gldn-btn-group > :focus-visible {
+		position: relative;
+	}
+
+	/* An icon sized to its text: inline SVG drawn in the text color, or one text symbol.
+	 * A decorative icon carries aria-hidden="true"; the text beside it names the action. */
+	.gldn-icon {
+		display: inline-block;
+		flex: none;
+		inline-size: 1em;
+		block-size: 1em;
+		line-height: 1;
+		text-align: center;
+		vertical-align: middle;
+		fill: currentColor;
+	}
+
+	/* A button that shows or hides a region: a marker that turns with aria-expanded. */
+	.gldn-disclosure::before {
+		content: "▸" / "";
+		display: inline-block;
+		margin-inline-end: var(--gldn-space-xs);
+	}
+
+	.gldn-disclosure[aria-expanded="true"]::before {
+		rotate: 90deg;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.gldn-disclosure::before {
+			transition: rotate var(--gldn-motion-duration) ease-out;
+		}
+	}
+
+	/* Nothing to show yet: a dashed frame around a sentence that says so. */
+	.gldn-empty {
+		padding: var(--gldn-space-lg);
+		border: var(--gldn-hairline) dashed var(--gldn-color-control-border);
+		border-radius: var(--gldn-radius-md);
+		color: var(--gldn-color-muted);
+		text-align: center;
+	}
+
+	/* A notice in the flow of a page, by kind; its text names the kind as well. */
+	.gldn-alert {
+		padding: var(--gldn-space-sm) var(--gldn-space-md);
+		border: var(--gldn-hairline) solid var(--gldn-color-info);
+		border-inline-start-width: var(--gldn-edge-width);
+		border-radius: var(--gldn-radius-sm);
+		background-color: var(--gldn-color-info-surface);
+	}
+
+	.gldn-alert[data-gldn-kind="success"] {
+		border-color: var(--gldn-color-success);
+		background-color: var(--gldn-color-success-surface);
+	}
+
+	.gldn-alert[data-gldn-kind="warning"] {
+		border-color: var(--gldn-color-warning);
+		background-color: var(--gldn-color-warning-surface);
+	}
+
+	.gldn-alert[data-gldn-kind="error"] {
+		border-color: var(--gldn-color-error);
+		background-color: var(--gldn-color-error-surface);
+	}
+
+	/* Wide content (tables, code, data) scrolls inside its own region, not the page. Give it
+	 * tabindex="0" and a label, so a keyboard can scroll it. */
+	.gldn-scroll {
+		max-inline-size: 100%;
+		overflow-x: auto;
+		overscroll-behavior-inline: contain;
 	}
 
 	/* The page reserves the measured dock height. On narrow screens the module
@@ -250,7 +361,7 @@
 
 	.gldn-tab[aria-selected="true"] {
 		background-color: var(--gldn-color-info-surface);
-		box-shadow: inset 0 calc(var(--gldn-space-xs) / var(--gldn-phi)) 0 var(--gldn-color-info);
+		box-shadow: inset 0 var(--gldn-edge-width) 0 var(--gldn-color-info);
 		font-weight: 600;
 	}
 
@@ -407,7 +518,9 @@
 		color: var(--gldn-color-error);
 	}
 
+	/* The header is a heading for outlines, set close under its kind and time. */
 	.gldn-message-header {
+		margin-block: var(--gldn-space-xs) 0;
 		overflow: hidden;
 		font-size: var(--gldn-text-base);
 		text-overflow: ellipsis;
@@ -493,6 +606,446 @@
 
 		.gldn-dock-popin-leaving {
 			animation: gldn-dock-popin-exit var(--gldn-motion-duration) ease-in forwards;
+		}
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-01 Field: a label, an optional hint, the control, and a message the
+	 * form module links to it with aria-describedby.
+	 * ---------------------------------------------------------------- */
+	.gldn-field {
+		display: flex;
+		flex-direction: column;
+		gap: var(--gldn-space-xs);
+	}
+
+	.gldn-field > :is(input:not([type="checkbox"], [type="radio"]), select, textarea) {
+		inline-size: 100%;
+	}
+
+	.gldn-hint {
+		color: var(--gldn-color-muted);
+		font-size: var(--gldn-text-sm);
+	}
+
+	.gldn-error {
+		color: var(--gldn-color-invalid);
+		font-size: var(--gldn-text-sm);
+		font-weight: 600;
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-02 Code input and output: a monospace editor and a result shown as
+	 * literal, preformatted text.
+	 * ---------------------------------------------------------------- */
+	.gldn-code-output {
+		display: block;
+		max-block-size: calc(var(--gldn-control-height) * 5);
+		padding: var(--gldn-space-sm) var(--gldn-space-md);
+		overflow: auto;
+		border-radius: var(--gldn-radius-sm);
+		background-color: var(--gldn-color-tint);
+		font-family: var(--gldn-font-mono);
+		font-size: var(--gldn-text-sm);
+		white-space: pre-wrap;
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-03 Search bar: a labelled query, optional controls and an explicit
+	 * Search button, wrapping on narrow screens without hiding anything.
+	 * ---------------------------------------------------------------- */
+	.gldn-search {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--gldn-space-sm);
+	}
+
+	.gldn-search > input {
+		flex: 1 1 var(--gldn-grid-min);
+		min-inline-size: 0;
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-04 Navigation tree: nested role="tree" lists. A closed item hides its
+	 * group; the row's marker turns when the item opens. Focus rests on the
+	 * item, which holds its subtree, so the ring is drawn on its row.
+	 * ---------------------------------------------------------------- */
+	.gldn-tree,
+	.gldn-tree [role="group"] {
+		margin: 0;
+		padding-inline-start: 0;
+		list-style: none;
+	}
+
+	.gldn-tree [role="group"] {
+		padding-inline-start: var(--gldn-space-md);
+	}
+
+	.gldn-tree [role="treeitem"] {
+		max-width: none;
+		margin: 0;
+	}
+
+	.gldn-tree [role="treeitem"][aria-expanded="false"] > [role="group"] {
+		display: none;
+	}
+
+	.gldn-tree-row {
+		display: flex;
+		align-items: center;
+		gap: var(--gldn-space-xs);
+		padding: var(--gldn-space-xs) var(--gldn-space-sm);
+		border-radius: var(--gldn-radius-sm);
+	}
+
+	.gldn-tree-row::before {
+		content: "" / "";
+		flex: none;
+		inline-size: 1em;
+		text-align: center;
+	}
+
+	[aria-expanded] > .gldn-tree-row::before {
+		content: "▸" / "";
+	}
+
+	[aria-expanded="true"] > .gldn-tree-row::before {
+		rotate: 90deg;
+	}
+
+	.gldn-tree [role="treeitem"]:focus-visible {
+		outline: none;
+	}
+
+	.gldn-tree [role="treeitem"]:focus-visible > .gldn-tree-row {
+		outline: var(--gldn-focus-ring);
+		outline-offset: calc(-1 * var(--gldn-edge-width));
+	}
+
+	.gldn-tree [aria-selected="true"] > .gldn-tree-row {
+		background-color: var(--gldn-color-selected);
+		box-shadow: inset var(--gldn-edge-width) 0 0 var(--gldn-color-primary);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.gldn-tree-row::before {
+			transition: rotate var(--gldn-motion-duration) ease-out;
+		}
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-05 Result list: ordinary links with a kind, an identity and a snippet.
+	 * ---------------------------------------------------------------- */
+	.gldn-results {
+		margin: 0;
+		padding-inline-start: 0;
+		list-style: none;
+	}
+
+	.gldn-results > li {
+		max-width: none;
+		margin: 0;
+		padding: var(--gldn-space-sm) var(--gldn-space-md);
+		border-block-end: var(--gldn-hairline) solid var(--gldn-color-border);
+	}
+
+	.gldn-results > [aria-selected="true"],
+	.gldn-results > [aria-current]:not([aria-current="false"]) {
+		background-color: var(--gldn-color-selected);
+		box-shadow: inset var(--gldn-edge-width) 0 0 var(--gldn-color-primary);
+	}
+
+	.gldn-result-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--gldn-space-xs) var(--gldn-space-sm);
+		color: var(--gldn-color-muted);
+		font-size: var(--gldn-text-sm);
+		overflow-wrap: anywhere;
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-06 Chips and facets: a chip labels one filter and may hold its own
+	 * Remove button; facets apply only when submitted.
+	 * ---------------------------------------------------------------- */
+	.gldn-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--gldn-space-xs);
+		padding-inline: var(--gldn-space-sm);
+		border: var(--gldn-hairline) solid var(--gldn-color-control-border);
+		border-radius: var(--gldn-radius-lg);
+		background-color: var(--gldn-color-surface);
+		font-size: var(--gldn-text-sm);
+	}
+
+	.gldn-chip[aria-pressed="true"] {
+		border-color: var(--gldn-color-primary);
+		background-color: var(--gldn-color-selected);
+		font-weight: 600;
+	}
+
+	.gldn-chip > button {
+		padding: 0 var(--gldn-space-xs);
+		border-color: transparent;
+		border-radius: var(--gldn-radius-lg);
+		background-color: transparent;
+		line-height: 1;
+	}
+
+	.gldn-facets {
+		display: flex;
+		flex-direction: column;
+		gap: var(--gldn-space-xs);
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-07 Pagination: links to pages, the current page marked, and the
+	 * unavailable ends shown as text rather than links.
+	 * ---------------------------------------------------------------- */
+	.gldn-pagination ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--gldn-space-xs);
+		margin: 0;
+		padding-inline-start: 0;
+		list-style: none;
+	}
+
+	.gldn-pagination li {
+		margin: 0;
+	}
+
+	.gldn-pagination :is(a, span) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-inline-size: var(--gldn-control-height);
+		min-block-size: var(--gldn-control-height);
+		padding-inline: var(--gldn-space-sm);
+		border: var(--gldn-hairline) solid var(--gldn-color-control-border);
+		border-radius: var(--gldn-radius-sm);
+		text-decoration: none;
+	}
+
+	.gldn-pagination [aria-current="page"] {
+		border-color: var(--gldn-color-primary);
+		background-color: var(--gldn-color-primary);
+		color: var(--gldn-color-primary-fg);
+		font-weight: 600;
+	}
+
+	.gldn-pagination [aria-disabled="true"] {
+		opacity: var(--gldn-opacity-disabled);
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-08 View panel: a header (title, metadata, actions), content and a
+	 * footer. The active panel has an edge; aria-busy, gldn-empty and
+	 * gldn-alert give its loading, empty and error states.
+	 * ---------------------------------------------------------------- */
+	.gldn-panel > header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--gldn-space-sm);
+		margin-block-end: var(--gldn-space-md);
+		padding-block-end: var(--gldn-space-sm);
+		border-block-end: var(--gldn-hairline) solid var(--gldn-color-border);
+	}
+
+	.gldn-panel > footer {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: var(--gldn-space-sm);
+		margin-block-start: var(--gldn-space-md);
+		padding-block-start: var(--gldn-space-sm);
+		border-block-start: var(--gldn-hairline) solid var(--gldn-color-border);
+	}
+
+	.gldn-panel[aria-current="true"] {
+		box-shadow: var(--gldn-shadow), inset var(--gldn-edge-width) 0 0 var(--gldn-color-primary);
+	}
+
+	.gldn-panel-title {
+		margin: 0;
+		font-size: var(--gldn-text-lg);
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-09 Metadata and badges: a key-value list, a badge, and text cut to
+	 * one line that keeps its full content for assistive technology.
+	 * ---------------------------------------------------------------- */
+	.gldn-meta {
+		display: grid;
+		grid-template-columns: max-content minmax(0, 1fr);
+		gap: var(--gldn-space-xs) var(--gldn-space-md);
+		margin: 0;
+	}
+
+	.gldn-meta dt {
+		color: var(--gldn-color-muted);
+		font-size: var(--gldn-text-sm);
+	}
+
+	.gldn-meta dd {
+		margin: 0;
+		overflow-wrap: anywhere;
+	}
+
+	.gldn-badge {
+		display: inline-block;
+		padding-inline: var(--gldn-space-xs);
+		border: var(--gldn-hairline) solid var(--gldn-color-control-border);
+		border-radius: var(--gldn-radius-sm);
+		background-color: var(--gldn-color-tint);
+		font-size: var(--gldn-text-sm);
+		font-weight: 600;
+		white-space: nowrap;
+	}
+
+	.gldn-truncate {
+		display: block;
+		max-inline-size: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-10 File drop zone: the native picker inside a dashed frame that turns
+	 * solid while files are dragged over it, and the pending list below.
+	 * ---------------------------------------------------------------- */
+	.gldn-dropzone {
+		display: flex;
+		flex-direction: column;
+		gap: var(--gldn-space-sm);
+		padding: var(--gldn-space-lg);
+		border: var(--gldn-hairline) dashed var(--gldn-color-control-border);
+		border-radius: var(--gldn-radius-md);
+		text-align: center;
+	}
+
+	.gldn-dropzone[data-gldn-dragging] {
+		border-style: solid;
+		border-color: var(--gldn-color-primary);
+		background-color: var(--gldn-color-selected);
+	}
+
+	.gldn-dropzone [data-gldn-files] {
+		margin: 0;
+		padding-inline-start: 0;
+		list-style: none;
+		text-align: start;
+	}
+
+	.gldn-dropzone [data-gldn-files] > li {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--gldn-space-sm);
+		max-width: none;
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-11 Application shell: a power bar above the workspace, with the
+	 * navigation behind a toggle on narrow screens (see _responsive.css).
+	 * ---------------------------------------------------------------- */
+	.gldn-shell {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+		min-height: 100dvh;
+	}
+
+	.gldn-shell > .gldn-workspace {
+		flex: 1;
+		min-height: 0;
+	}
+
+	.gldn-shell-bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--gldn-space-sm);
+		padding: var(--gldn-space-sm) var(--gldn-space-md);
+		border-block-end: var(--gldn-hairline) solid var(--gldn-color-border);
+		background-color: var(--gldn-color-surface);
+	}
+
+	.gldn-shell-bar > .gldn-search {
+		flex: 1 1 var(--gldn-switch-min);
+	}
+
+	.gldn-shell-toggle {
+		display: none;
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-12 Keyboard hints: shortcut keys beside what they do.
+	 * ---------------------------------------------------------------- */
+	.gldn-hints {
+		display: grid;
+		grid-template-columns: max-content minmax(0, 1fr);
+		gap: var(--gldn-space-xs) var(--gldn-space-md);
+		margin: 0;
+	}
+
+	.gldn-hints dd {
+		margin: 0;
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-13 Media viewer: framed media, native players, pages and cues.
+	 * ---------------------------------------------------------------- */
+	.gldn-media {
+		display: flex;
+		flex-direction: column;
+		gap: var(--gldn-space-sm);
+	}
+
+	.gldn-media :is(audio, video) {
+		inline-size: 100%;
+	}
+
+	.gldn-media [aria-current="time"] {
+		border-color: var(--gldn-color-primary);
+		background-color: var(--gldn-color-selected);
+		font-weight: 600;
+	}
+
+	/* ------------------------------------------------------------------
+	 * C-14 Event timeline: the message log with a filter bar; filtering hides
+	 * entries without removing them from the log.
+	 * ---------------------------------------------------------------- */
+	.gldn-timeline {
+		display: flex;
+		flex-direction: column;
+		gap: var(--gldn-space-sm);
+	}
+
+	.gldn-timeline .gldn-message[hidden] {
+		display: none;
+	}
+
+	.gldn-message-detail > summary {
+		margin-block-start: var(--gldn-space-xs);
+		color: var(--gldn-color-muted);
+		font-size: var(--gldn-text-sm);
+	}
+
+	/* Forced colors drop fills and shadows: the selected tab keeps an edge in the system
+	 * highlight, and quiet buttons keep a boundary. */
+	@media (forced-colors: active) {
+		.gldn-tab[aria-selected="true"] {
+			border-block-start: var(--gldn-edge-width) solid Highlight;
+		}
+
+		.gldn-btn-quiet {
+			border-color: ButtonText;
 		}
 	}
 }

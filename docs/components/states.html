@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css states</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+	<style>
+		.demo-options {
+			padding-inline-start: 0;
+			list-style: none;
+		}
+
+		.demo-options > li {
+			max-width: none;
+			padding: var(--gldn-space-xs) var(--gldn-space-sm);
+		}
+	</style>
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>states</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">States, icons and notices</h1>
+			<p class="gldn-lede">
+				Every state has a cue beside color: weight, an edge, a marker, a ring or words.
+				The page follows the system scheme; each column fixes one. The quotation and the
+				instruments are from Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945.
+			</p>
+		</section>
+		<div class="gldn-grid" style="--gldn-grid-min: 30ch">
+			<article class="gldn-card gldn-stack gldn-theme-light" id="states-light">
+				<h2 class="gldn-title-2">Light</h2>
+
+				<h3 class="gldn-title-3">Current and selected</h3>
+				<nav aria-label="Sections, light">
+					<p class="gldn-cluster"><a href="#">Record</a> <a href="#" aria-current="page">Consult</a> <a href="#">Extend</a></p>
+				</nav>
+				<ul role="listbox" aria-label="Instruments, light" class="demo-options">
+					<li role="option" aria-selected="false">Photocell</li>
+					<li role="option" aria-selected="true" id="light-selected">Thermionic tube</li>
+					<li role="option" aria-selected="false">Cathode ray tube</li>
+				</ul>
+
+				<h3 class="gldn-title-3">Expanded and busy</h3>
+				<p>
+					<button class="gldn-btn gldn-btn-quiet gldn-disclosure" type="button" aria-expanded="true"
+						aria-controls="light-region" id="light-disclosure">Selection</button>
+				</p>
+				<div id="light-region">
+					<p><q cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">Selection by association, rather than indexing, may yet be mechanized.</q></p>
+				</div>
+				<p class="gldn-cluster">
+					<button class="gldn-btn" type="button" aria-busy="true" id="light-busy">Saving</button>
+					<button type="button" disabled>Disabled</button>
+				</p>
+				<div class="gldn-card" aria-busy="true" aria-label="Loading" id="light-busy-panel"></div>
+
+				<h3 class="gldn-title-3">Valid and invalid</h3>
+				<p><label for="light-valid">Valid</label> <input id="light-valid" type="text" value="memory" aria-invalid="false"></p>
+				<p><label for="light-invalid">Invalid</label> <input id="light-invalid" type="text" value="" aria-invalid="true" aria-describedby="light-invalid-note"></p>
+				<p class="gldn-alert" data-gldn-kind="error" id="light-invalid-note"><strong>Error:</strong> enter a value.</p>
+
+				<h3 class="gldn-title-3">Notices and empty states</h3>
+				<p class="gldn-alert" data-gldn-kind="info"><strong>Information:</strong> the record is stored.</p>
+				<p class="gldn-alert" data-gldn-kind="success"><strong>Success:</strong> the record is extended.</p>
+				<p class="gldn-alert" data-gldn-kind="warning"><strong>Warning:</strong> the record is not yet consulted.</p>
+				<p class="gldn-empty" id="light-empty">No entries match this search.</p>
+
+				<h3 class="gldn-title-3">Icons and groups</h3>
+				<p class="gldn-cluster">
+					<button class="gldn-btn" type="button"><svg class="gldn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M7 1h2v6h6v2H9v6H7V9H1V7h6z"/></svg>Add</button>
+					<button class="gldn-btn gldn-btn-secondary gldn-btn-icon" type="button" aria-label="Close" id="light-icon"><span class="gldn-icon" aria-hidden="true">×</span></button>
+					<span class="gldn-btn-group" role="group" aria-label="View, light" id="light-group">
+						<button class="gldn-btn gldn-btn-secondary" type="button" aria-pressed="true">List</button>
+						<button class="gldn-btn gldn-btn-secondary" type="button" aria-pressed="false">Grid</button>
+						<button class="gldn-btn gldn-btn-secondary" type="button" aria-pressed="false">Map</button>
+					</span>
+				</p>
+
+				<h3 class="gldn-title-3">Wide content</h3>
+				<div class="gldn-scroll" tabindex="0" role="region" aria-label="Recording methods, light">
+					<table style="min-inline-size: 40rem">
+						<thead><tr><th>method</th><th>medium</th><th>speed</th><th>grain</th><th>development</th><th>permanence</th></tr></thead>
+						<tbody><tr><td>photography</td><td>film</td><td>fast</td><td>fine</td><td>wet</td><td>long</td></tr>
+						<tr><td>diazo dye</td><td>impregnated film</td><td>slow</td><td>none</td><td>ammonia gas</td><td>long</td></tr></tbody>
+					</table>
+				</div>
+			</article>
+
+			<article class="gldn-card gldn-stack gldn-theme-dark" id="states-dark">
+				<h2 class="gldn-title-2">Dark</h2>
+
+				<h3 class="gldn-title-3">Current and selected</h3>
+				<nav aria-label="Sections, dark">
+					<p class="gldn-cluster"><a href="#">Record</a> <a href="#" aria-current="page">Consult</a> <a href="#">Extend</a></p>
+				</nav>
+				<ul role="listbox" aria-label="Instruments, dark" class="demo-options">
+					<li role="option" aria-selected="false">Photocell</li>
+					<li role="option" aria-selected="true" id="dark-selected">Thermionic tube</li>
+					<li role="option" aria-selected="false">Cathode ray tube</li>
+				</ul>
+
+				<h3 class="gldn-title-3">Expanded and busy</h3>
+				<p>
+					<button class="gldn-btn gldn-btn-quiet gldn-disclosure" type="button" aria-expanded="true"
+						aria-controls="dark-region" id="dark-disclosure">Selection</button>
+				</p>
+				<div id="dark-region">
+					<p><q cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">Selection by association, rather than indexing, may yet be mechanized.</q></p>
+				</div>
+				<p class="gldn-cluster">
+					<button class="gldn-btn" type="button" aria-busy="true" id="dark-busy">Saving</button>
+					<button type="button" disabled>Disabled</button>
+				</p>
+				<div class="gldn-card" aria-busy="true" aria-label="Loading" id="dark-busy-panel"></div>
+
+				<h3 class="gldn-title-3">Valid and invalid</h3>
+				<p><label for="dark-valid">Valid</label> <input id="dark-valid" type="text" value="memory" aria-invalid="false"></p>
+				<p><label for="dark-invalid">Invalid</label> <input id="dark-invalid" type="text" value="" aria-invalid="true" aria-describedby="dark-invalid-note"></p>
+				<p class="gldn-alert" data-gldn-kind="error" id="dark-invalid-note"><strong>Error:</strong> enter a value.</p>
+
+				<h3 class="gldn-title-3">Notices and empty states</h3>
+				<p class="gldn-alert" data-gldn-kind="info"><strong>Information:</strong> the record is stored.</p>
+				<p class="gldn-alert" data-gldn-kind="success"><strong>Success:</strong> the record is extended.</p>
+				<p class="gldn-alert" data-gldn-kind="warning"><strong>Warning:</strong> the record is not yet consulted.</p>
+				<p class="gldn-empty" id="dark-empty">No entries match this search.</p>
+
+				<h3 class="gldn-title-3">Icons and groups</h3>
+				<p class="gldn-cluster">
+					<button class="gldn-btn" type="button"><svg class="gldn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M7 1h2v6h6v2H9v6H7V9H1V7h6z"/></svg>Add</button>
+					<button class="gldn-btn gldn-btn-secondary gldn-btn-icon" type="button" aria-label="Close" id="dark-icon"><span class="gldn-icon" aria-hidden="true">×</span></button>
+					<span class="gldn-btn-group" role="group" aria-label="View, dark" id="dark-group">
+						<button class="gldn-btn gldn-btn-secondary" type="button" aria-pressed="true">List</button>
+						<button class="gldn-btn gldn-btn-secondary" type="button" aria-pressed="false">Grid</button>
+						<button class="gldn-btn gldn-btn-secondary" type="button" aria-pressed="false">Map</button>
+					</span>
+				</p>
+
+				<h3 class="gldn-title-3">Wide content</h3>
+				<div class="gldn-scroll" tabindex="0" role="region" aria-label="Recording methods, dark">
+					<table style="min-inline-size: 40rem">
+						<thead><tr><th>method</th><th>medium</th><th>speed</th><th>grain</th><th>development</th><th>permanence</th></tr></thead>
+						<tbody><tr><td>photography</td><td>film</td><td>fast</td><td>fine</td><td>wet</td><td>long</td></tr>
+						<tr><td>diazo dye</td><td>impregnated film</td><td>slow</td><td>none</td><td>ammonia gas</td><td>long</td></tr></tbody>
+					</table>
+				</div>
+			</article>
+		</div>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

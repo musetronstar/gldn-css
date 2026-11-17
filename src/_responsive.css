@@ -10,8 +10,31 @@
  */
 @layer responsive {
 
-	/* Small screens: the workspace and the hero tighten their padding. */
+	/* Coarse pointers: every control is at least a 44px target. The dock's strip already
+	 * is, and keeps its own sizes. */
+	@media (pointer: coarse) {
+		:is(button, select, textarea, .gldn-btn,
+			input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"]))
+			:not(.gldn-tab, .gldn-dock-control, .gldn-popin-dismiss) {
+			min-block-size: var(--gldn-touch-target);
+		}
+
+		.gldn-btn-icon {
+			min-inline-size: var(--gldn-touch-target);
+		}
+	}
+
+	/* Small screens: the workspace and the hero tighten their padding, and the
+	 * shell's navigation folds behind its toggle. */
 	@media (max-width: 48rem) {
+		.gldn-shell-toggle {
+			display: inline-flex;
+		}
+
+		.gldn-shell-nav[data-gldn-collapsed] {
+			display: none;
+		}
+
 		.gldn-workspace {
 			gap: var(--gldn-space-md);
 			padding: var(--gldn-space-sm);

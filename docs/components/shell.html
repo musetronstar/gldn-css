@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css application shell</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body class="gldn-has-dock">
+	<div class="gldn-shell">
+		<header class="gldn-shell-bar">
+			<strong>Reader</strong>
+			<button class="gldn-btn gldn-btn-secondary gldn-disclosure gldn-shell-toggle" id="toggle" type="button"
+				aria-expanded="false" aria-controls="shell-nav">Sections</button>
+			<form class="gldn-search" role="search" id="search">
+				<label class="gldn-visually-hidden" for="query">Search</label>
+				<input id="query" name="q" type="search" placeholder="Search the record">
+				<button class="gldn-btn" type="submit">Search</button>
+			</form>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+			<a href="../index.html#components">components</a>
+		</header>
+
+		<div class="gldn-workspace">
+			<nav class="gldn-sidebar gldn-shell-nav" id="shell-nav" aria-label="Sections" data-gldn-collapsed>
+				<ul class="gldn-tree" role="tree" aria-label="Sections" id="tree">
+					<li role="treeitem" id="science"><span class="gldn-tree-row"><a href="#science">Science after the war</a></span></li>
+					<li role="treeitem" id="photography"><span class="gldn-tree-row"><a href="#photography">Photography and storage</a></span></li>
+					<li role="treeitem" id="selection" aria-selected="true"><span class="gldn-tree-row"><a href="#selection" aria-current="page">Selection by meaning</a></span></li>
+				</ul>
+			</nav>
+			<main class="gldn-main gldn-stack" id="content">
+				<article class="gldn-panel" aria-current="true">
+					<header><h1 class="gldn-panel-title">Selection by meaning</h1><span class="gldn-badge">Section 6</span></header>
+					<blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
+						<p>The human mind does not work that way. It operates by association.</p>
+						<footer><cite>Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945</cite></footer>
+					</blockquote>
+				</article>
+			</main>
+		</div>
+	</div>
+
+	<div class="gldn-dock" data-gldn-dock data-gldn-expanded="true">
+		<div class="gldn-dock-popin" data-gldn-popin role="alert" aria-atomic="true" hidden>
+			<div class="gldn-dock-popin-content" data-gldn-popin-content></div>
+			<button class="gldn-popin-dismiss" data-gldn-popin-dismiss type="button" aria-label="Dismiss">&times;</button>
+		</div>
+		<div class="gldn-tabs" data-gldn-tabs data-gldn-expanded="true">
+			<div class="gldn-dock-strip">
+				<div class="gldn-tablist" role="tablist" aria-label="Dock panels">
+					<button class="gldn-tab" id="messages-tab" data-gldn-tab="messages" role="tab"
+						aria-selected="true" aria-controls="messages-panel">Messages</button>
+				</div>
+				<button class="gldn-dock-control" data-gldn-tabs-collapse type="button"
+					aria-expanded="true" aria-controls="shell-panels" aria-label="Collapse panels">⌄</button>
+			</div>
+			<div class="gldn-dock-panels" id="shell-panels" data-gldn-dock-panels>
+				<section class="gldn-tabpanel gldn-message-panel" id="messages-panel"
+					data-gldn-panel="messages" role="tabpanel" aria-labelledby="messages-tab">
+					<div class="gldn-messages" id="log" data-gldn-messages role="log"
+						aria-live="polite" aria-relevant="additions"></div>
+				</section>
+			</div>
+		</div>
+	</div>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+		import { createRoving } from '../gldn-roving.js';
+		import { createDock } from '../gldn-dock.js';
+		const toggle = document.getElementById('toggle');
+		const nav = document.getElementById('shell-nav');
+		// The toggle shows below 48rem; on wider screens the navigation is always shown.
+		toggle.addEventListener('click', () => {
+			const expanded = toggle.getAttribute('aria-expanded') !== 'true';
+			toggle.setAttribute('aria-expanded', String(expanded));
+			nav.toggleAttribute('data-gldn-collapsed', !expanded);
+		});
+		createRoving(document.getElementById('tree'));
+		const dock = createDock(document.querySelector('[data-gldn-dock]'));
+		document.getElementById('search').addEventListener('submit', (event) => {
+			event.preventDefault();
+			dock.messages.add({ kind: 'info', time: new Date().toISOString(),
+				header: 'Searched for ' + new FormData(event.currentTarget).get('q') });
+		});
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

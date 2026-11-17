@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css event timeline</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>event timeline</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">Event timeline</h1>
+			<p class="gldn-lede">The message log with a filter bar: filtering hides entries without removing them, details fold away, and older entries load at the end.</p>
+		</section>
+
+		<section class="gldn-timeline gldn-card" aria-label="Events">
+			<form class="gldn-search" id="filters" role="search">
+				<label class="gldn-visually-hidden" for="filter-text">Filter events</label>
+				<input id="filter-text" type="search" placeholder="Filter events">
+				<fieldset class="gldn-cluster" style="border: 0; padding: 0">
+					<legend class="gldn-visually-hidden">Kinds</legend>
+					<label><input type="checkbox" name="kind" value="info" checked> Information</label>
+					<label><input type="checkbox" name="kind" value="success" checked> Success</label>
+					<label><input type="checkbox" name="kind" value="warning" checked> Warning</label>
+					<label><input type="checkbox" name="kind" value="error" checked> Error</label>
+				</fieldset>
+			</form>
+			<div class="gldn-messages" id="log" role="log" aria-live="polite" aria-relevant="additions"></div>
+			<p><button class="gldn-btn gldn-btn-secondary" id="older" data-gldn-messages-older type="button">Load older</button></p>
+		</section>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+
+		import { createMessages } from '../gldn-messages.js';
+		const log = document.getElementById('log');
+		window.timeline = createMessages(log, { details: true });
+		const at = (minutes) => new Date(Date.UTC(1945, 6, 1, 9, minutes)).toISOString();
+		window.timeline.replace([
+			{ kind: 'error', time: at(40), header: 'Photograph could not be stored', body: 'The film was full.\nInsert a new clip.' },
+			{ kind: 'success', time: at(30), header: 'Letter stored', body: 'Stored on microfilm, frame 1 204.' },
+			{ kind: 'warning', time: at(20), header: 'Book is large', body: 'Storing every page takes several minutes.' },
+			{ kind: 'info', time: at(10), header: 'Reading started' }
+		]);
+		const filters = document.getElementById('filters');
+		const apply = () => window.timeline.filter({
+			text: document.getElementById('filter-text').value,
+			kinds: [...filters.querySelectorAll('[name="kind"]:checked')].map((box) => box.value)
+		});
+		filters.addEventListener('input', apply);
+		filters.addEventListener('submit', (event) => event.preventDefault());
+		log.addEventListener('gldn-older', () => {
+			window.timeline.append([{ kind: 'info', time: at(0), header: 'Device switched on' }]);
+			document.getElementById('older').disabled = true;
+		});
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

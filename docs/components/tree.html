@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css navigation tree</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>navigation tree</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">Navigation tree</h1>
+			<p class="gldn-lede">Nested items with one Tab stop. Arrow keys move, Right opens an item and Left closes it; an item that loads its children shows a busy ring while it does.</p>
+		</section>
+
+		<nav class="gldn-card" aria-label="Essay sections">
+			<ul class="gldn-tree" role="tree" aria-label="Essay sections" id="tree">
+				<li role="treeitem" id="science" aria-expanded="true">
+						<span class="gldn-tree-row"><a href="#science">Science after the war</a></span>
+					<ul role="group">
+					<li role="treeitem" id="specialization">
+						<span class="gldn-tree-row"><a href="#specialization">Specialization</a></span>
+					</li>
+					<li role="treeitem" id="instruments">
+						<span class="gldn-tree-row"><a href="#instruments">New instruments</a></span>
+					</li>
+					</ul>
+					</li>
+				<li role="treeitem" id="photography" aria-expanded="false" data-gldn-lazy>
+						<span class="gldn-tree-row"><a href="#photography">Photography and storage</a></span>
+					</li>
+				<li role="treeitem" id="selection" aria-selected="true">
+						<span class="gldn-tree-row"><a href="#selection">Selection by meaning</a></span>
+					</li>
+				<li role="treeitem" id="device">
+						<span class="gldn-tree-row"><a href="#device">A device for individual use</a></span>
+					</li>
+			</ul>
+		</nav>
+		<blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
+					<p>Selection by association, rather than indexing, may yet be mechanized.</p>
+					<footer><cite>Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945</cite></footer>
+				</blockquote>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+
+		import { createRoving } from '../gldn-roving.js';
+		const tree = document.getElementById('tree');
+		createRoving(tree);
+		tree.querySelector('#selection a').setAttribute('aria-current', 'page');
+		// The application loads children when an item first opens.
+		tree.addEventListener('gldn-expand', (event) => {
+			const item = event.detail.item;
+			if (!item.hasAttribute('data-gldn-lazy')) return;
+			item.removeAttribute('data-gldn-lazy');
+			item.setAttribute('aria-busy', 'true');
+			setTimeout(() => {
+				const group = document.createElement('ul');
+				group.setAttribute('role', 'group');
+				for (const [id, label] of [['dry', 'Dry photography'], ['microfilm', 'Microfilm']]) {
+					const child = document.createElement('li');
+					child.setAttribute('role', 'treeitem');
+					child.id = id;
+					child.tabIndex = -1;
+					const row = document.createElement('span');
+					row.className = 'gldn-tree-row';
+					const link = document.createElement('a');
+					link.href = '#' + id;
+					link.textContent = label;
+					row.append(link);
+					child.append(row);
+					group.append(child);
+				}
+				item.append(group);
+				item.removeAttribute('aria-busy');
+			}, 300);
+		});
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css search bar</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>search bar</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">Search bar</h1>
+			<p class="gldn-lede">A labelled query, an optional scope and an explicit Search button. On a narrow screen the controls wrap; none is hidden.</p>
+		</section>
+
+		<form class="gldn-search gldn-card" role="search" id="search" action="#">
+			<label class="gldn-visually-hidden" for="query">Search</label>
+			<input id="query" name="q" type="search" placeholder="Search the record" required>
+			<label class="gldn-visually-hidden" for="scope">Scope</label>
+			<select id="scope" name="scope"><option>All sections</option><option>Photography</option><option>Selection</option></select>
+			<button class="gldn-btn" id="go" type="submit">Search</button>
+		</form>
+		<p id="status" role="status"></p>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+
+		document.getElementById('search').addEventListener('submit', (event) => {
+			event.preventDefault();
+			const data = new FormData(event.currentTarget);
+			document.getElementById('status').textContent = 'Searching ' + data.get('scope') + ' for ' + data.get('q') + '.';
+		});
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

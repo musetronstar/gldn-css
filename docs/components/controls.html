@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css theme and keyboard hints</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>theme and keyboard hints</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">Theme and keyboard hints</h1>
+			<p class="gldn-lede">A native control for the color scheme, and keyboard shortcuts listed beside the buttons that do the same thing. No action is reachable only by a shortcut.</p>
+		</section>
+
+		<div class="gldn-grid">
+			<section class="gldn-card gldn-stack">
+				<h2 class="gldn-title-3">Color scheme</h2>
+				<p>The Theme control in the header is a native select. The page follows the system until you choose; the choice is remembered when storage is available.</p>
+			</section>
+			<section class="gldn-card gldn-stack">
+				<h2 class="gldn-title-3">Shortcuts</h2>
+				<p class="gldn-cluster">
+					<button class="gldn-btn gldn-btn-secondary" id="find" type="button">Find</button>
+					<button class="gldn-btn gldn-btn-secondary" id="next-scheme" type="button">Next scheme</button>
+				</p>
+				<p><label for="find-input">Find</label> <input id="find-input" type="search"></p>
+				<dl class="gldn-hints" id="hints"></dl>
+			</section>
+		</div>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+
+		import { createShortcuts, renderHints } from '../gldn-keys.js';
+		const order = ['system', 'light', 'dark'];
+		const find = () => document.getElementById('find-input').focus();
+		const nextScheme = () => window.theme.set(order[(order.indexOf(window.theme.value) + 1) % order.length]);
+		document.getElementById('find').addEventListener('click', find);
+		document.getElementById('next-scheme').addEventListener('click', nextScheme);
+		const keys = createShortcuts(document);
+		keys.register('Mod+K', find, { description: 'Find' });
+		keys.register('Alt+Shift+S', nextScheme, { description: 'Next color scheme' });
+		renderHints(document.getElementById('hints'), keys.list());
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

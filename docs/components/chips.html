@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css chips and facets</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>chips and facets</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">Chips and facets</h1>
+			<p class="gldn-lede">Facets apply only when submitted; each applied filter is a chip with its own Remove button.</p>
+		</section>
+
+		<form class="gldn-card gldn-stack" id="facets">
+			<fieldset class="gldn-facets">
+				<legend>Kinds</legend>
+				<label><input type="checkbox" name="kind" value="Book" checked> Book</label>
+				<label><input type="checkbox" name="kind" value="Photograph"> Photograph</label>
+				<label><input type="checkbox" name="kind" value="Letter" checked> Letter</label>
+			</fieldset>
+			<p><button class="gldn-btn" id="apply" type="submit">Apply filters</button></p>
+		</form>
+		<section aria-label="Applied filters">
+			<p class="gldn-cluster" id="chips"></p>
+		</section>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+
+		const form = document.getElementById('facets');
+		const chips = document.getElementById('chips');
+		function render() {
+			chips.replaceChildren(...[...form.querySelectorAll('input:checked')].map((box) => {
+				const chip = document.createElement('span');
+				chip.className = 'gldn-chip';
+				chip.append(box.value);
+				const remove = document.createElement('button');
+				remove.type = 'button';
+				remove.textContent = '×';
+				remove.setAttribute('aria-label', 'Remove ' + box.value);
+				remove.addEventListener('click', () => {
+					const buttons = [...chips.querySelectorAll('button')];
+					const next = buttons[buttons.indexOf(remove) + 1] || buttons[buttons.indexOf(remove) - 1];
+					box.checked = false;
+					render();
+					const target = next && chips.querySelector('[aria-label="' + next.getAttribute('aria-label') + '"]');
+					(target || document.getElementById('apply')).focus();
+				});
+				chip.append(remove);
+				return chip;
+			}));
+		}
+		form.addEventListener('submit', (event) => {
+			event.preventDefault();
+			render();
+		});
+		render();
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

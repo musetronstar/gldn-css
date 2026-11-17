@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gldn-css media viewer</title>
+	<link rel="stylesheet" href="../gldn.min.css">
+</head>
+<body>
+	<header class="gldn-header">
+		<nav class="gldn-nav" aria-label="Example">
+			<strong>media viewer</strong>
+			<a href="../index.html#components">components</a>
+			<label>Theme <select data-gldn-theme>
+				<option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+			</select></label>
+		</nav>
+	</header>
+
+	<main class="gldn-container gldn-stack" style="padding-block: var(--gldn-space-lg)">
+		<section class="gldn-stack">
+			<h1 class="gldn-title-1">Media viewer</h1>
+			<p class="gldn-lede">Framed images, paged text and timed media, with navigation and annotation controls that report what the reader asked for; an unsupported kind says so.</p>
+		</section>
+
+		<div class="gldn-grid" style="--gldn-grid-min: 30ch">
+			<figure class="gldn-media gldn-card">
+				<div class="gldn-frame"><img src="../fibonacci-spiral.svg" alt="A Fibonacci spiral"></div>
+				<figcaption>A φ:1 frame crops the image to the golden ratio.</figcaption>
+			</figure>
+			<section class="gldn-media gldn-card" id="paged" aria-label="Paged reader">
+				<div data-gldn-page><blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
+					<p>A record if it is to be useful to science, must be continuously extended, it must be stored, and above all it must be consulted.</p>
+					<footer><cite>Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945</cite></footer>
+				</blockquote></div>
+				<div data-gldn-page hidden><blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
+					<p>Presumably man's spirit should be elevated if he can better review his shady past and analyze more completely and objectively his present problems.</p>
+					<footer><cite>Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945</cite></footer>
+				</blockquote></div>
+				<div data-gldn-page hidden><blockquote cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">
+					<p>There is a new profession of trail blazers, those who find delight in the task of establishing useful trails through the enormous mass of the common record.</p>
+					<footer><cite>Vannevar Bush, “As We May Think,” <i>The Atlantic Monthly</i>, July 1945</cite></footer>
+				</blockquote></div>
+				<p class="gldn-cluster">
+					<button class="gldn-btn gldn-btn-secondary" id="prev" data-gldn-page-prev type="button">Previous</button>
+					<output data-gldn-page-status aria-live="polite"></output>
+					<button class="gldn-btn gldn-btn-secondary" id="next" data-gldn-page-next type="button">Next</button>
+					<button class="gldn-btn gldn-btn-quiet" id="annotate" data-gldn-annotate type="button">Annotate</button>
+				</p>
+			</section>
+			<section class="gldn-media gldn-card" id="timed" aria-label="Timed media">
+				<audio id="audio" controls></audio>
+				<p class="gldn-cluster">
+					<button class="gldn-btn gldn-btn-secondary" data-gldn-time="0" type="button">Opening</button>
+					<button class="gldn-btn gldn-btn-secondary" id="cue-4" data-gldn-time="4" type="button">Four seconds</button>
+					<button class="gldn-btn gldn-btn-secondary" data-gldn-time="8" type="button">Eight seconds</button>
+				</p>
+			</section>
+			<section class="gldn-media gldn-card" aria-label="Unsupported media">
+				<p class="gldn-empty">This kind of file cannot be shown here. <a href="#">Download it</a> instead.</p>
+			</section>
+		</div>
+		<section aria-label="Annotations"><ul id="notes"></ul></section>
+	</main>
+
+	<script type="module">
+		import { createThemeControl } from '../gldn-theme.js';
+
+		import { createMediaNav } from '../gldn-media.js';
+		// Ten seconds of silence, made here so the example needs no media file.
+		const rate = 8000, samples = rate * 10, bytes = new DataView(new ArrayBuffer(44 + samples));
+		const text = (offset, value) => [...value].forEach((ch, i) => bytes.setUint8(offset + i, ch.charCodeAt(0)));
+		text(0, 'RIFF'); bytes.setUint32(4, 36 + samples, true); text(8, 'WAVEfmt ');
+		bytes.setUint32(16, 16, true); bytes.setUint16(20, 1, true); bytes.setUint16(22, 1, true);
+		bytes.setUint32(24, rate, true); bytes.setUint32(28, rate, true); bytes.setUint16(32, 1, true);
+		bytes.setUint16(34, 8, true); text(36, 'data'); bytes.setUint32(40, samples, true);
+		for (let i = 0; i < samples; i++) bytes.setUint8(44 + i, 128);
+		document.getElementById('audio').src = URL.createObjectURL(new Blob([bytes], { type: 'audio/wav' }));
+		createMediaNav(document.getElementById('paged'));
+		createMediaNav(document.getElementById('timed'));
+		document.addEventListener('gldn-annotate', (event) => {
+			const note = document.createElement('li');
+			note.textContent = 'Annotation requested at ' + (event.detail.page ? 'page ' + event.detail.page : event.detail.time.toFixed(1) + ' s');
+			document.getElementById('notes').append(note);
+		});
+		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
+		window.ready = true;
+	</script>
+</body>
+</html>

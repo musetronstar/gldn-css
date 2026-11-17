@@ -14,7 +14,7 @@
 	 *    so the split is exact rather than a rounded literal.
 	 * ------------------------------------------------------------------ */
 	:root {
-		color-scheme: light;
+		color-scheme: light dark;
 		--gldn-phi: 1.61803398875;
 
 		--gldn-major: var(--gldn-phi-1);
@@ -84,30 +84,41 @@
 		/* ------------------------------------------------------------------
 		 * 4. Surfaces, colors, shadow, interaction.
 		 * ---------------------------------------------------------------- */
-		--gldn-color-bg: #f4f5f7;
-		--gldn-color-surface: #ffffff;
-		--gldn-color-text: #111827;
-		--gldn-color-muted: #5f6673;
+		--gldn-color-bg: light-dark(#f4f5f7, #0f172a);
+		--gldn-color-surface: light-dark(#ffffff, #1e293b);
+		--gldn-color-text: light-dark(#111827, #f1f5f9);
+		--gldn-color-muted: light-dark(#5f6673, #94a3b8);
 		--gldn-color-primary: #2563eb;
-		--gldn-color-primary-hover: #1d4ed8;
+		--gldn-color-primary-hover: light-dark(#1d4ed8, #3b82f6);
 		--gldn-color-primary-fg: #ffffff;
-		--gldn-color-link: #2563eb;
-		--gldn-color-border: #e5e7eb;
-		--gldn-color-control-border: #7c8492;
-		--gldn-color-info: #1d4ed8;
-		--gldn-color-info-fg: #ffffff;
-		--gldn-color-info-surface: #eff6ff;
-		--gldn-color-success: #166534;
-		--gldn-color-success-fg: #ffffff;
-		--gldn-color-success-surface: #f0fdf4;
-		--gldn-color-warning: #92400e;
-		--gldn-color-warning-fg: #ffffff;
-		--gldn-color-warning-surface: #fffbeb;
-		--gldn-color-error: #b91c1c;
-		--gldn-color-error-fg: #ffffff;
-		--gldn-color-error-surface: #fef2f2;
+		--gldn-color-link: light-dark(#2563eb, #93c5fd);
+		--gldn-color-border: light-dark(#e5e7eb, #334155);
+		--gldn-color-control-border: light-dark(#7c8492, #71809a);
+		--gldn-color-info: light-dark(#1d4ed8, #60a5fa);
+		--gldn-color-info-fg: light-dark(#ffffff, #0f172a);
+		--gldn-color-info-surface: light-dark(#eff6ff, #172554);
+		--gldn-color-success: light-dark(#166534, #4ade80);
+		--gldn-color-success-fg: light-dark(#ffffff, #0f172a);
+		--gldn-color-success-surface: light-dark(#f0fdf4, #052e16);
+		--gldn-color-warning: light-dark(#92400e, #fbbf24);
+		--gldn-color-warning-fg: light-dark(#ffffff, #0f172a);
+		--gldn-color-warning-surface: light-dark(#fffbeb, #451a03);
+		--gldn-color-error: light-dark(#b91c1c, #f87171);
+		--gldn-color-error-fg: light-dark(#ffffff, #0f172a);
+		--gldn-color-error-surface: light-dark(#fef2f2, #450a0a);
+		--gldn-color-mark: light-dark(#fde68a, #854d0e);
 
-		--gldn-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+		/* State colors. Tints of the text and primary colors are mixed where they are used,
+		 * so they follow the scheme of the element that uses them. */
+		--gldn-color-tint: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-6), transparent);
+		--gldn-color-active: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-5), transparent);
+		--gldn-color-selected: color-mix(in srgb, var(--gldn-color-primary) var(--gldn-phi-4), transparent);
+		--gldn-color-valid: var(--gldn-color-success);
+		--gldn-color-invalid: var(--gldn-color-error);
+		--gldn-color-overlay: light-dark(rgb(15 23 42 / 0.382), rgb(0 0 0 / 0.618));
+		--gldn-opacity-disabled: 0.5;
+
+		--gldn-shadow: 0 4px 6px -1px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.5));
 		--gldn-focus-ring: calc(var(--gldn-space-xs) / var(--gldn-phi) / var(--gldn-phi)) solid var(--gldn-color-link);
 		--gldn-z-popover: 10000;
 		--gldn-z-dock: 11000;
@@ -176,6 +187,13 @@
 
 		/* The thinnest line: rules, separators and control boundaries. */
 		--gldn-hairline: calc(var(--gldn-space-base) * pow(var(--gldn-phi), -5));
+
+		/* The edge that marks a state beside color: a selected tab or row, an invalid field. */
+		--gldn-edge-width: calc(var(--gldn-space-base) * pow(var(--gldn-phi), -3));
+
+		/* A control's height: one line of its own text, its block padding and its boundary.
+		 * 1lh resolves where the token is used, so it follows that control's font. */
+		--gldn-control-height: calc(1lh + 2 * var(--gldn-space-xs) + 2 * var(--gldn-hairline));
 	}
 
 	/* Density: space one phi step below or above the page's base; type keeps its
@@ -189,31 +207,14 @@
 		--gldn-space-base: calc(var(--gldn-fluid-base) * var(--gldn-phi));
 	}
 
-	/* Dark theme: toggling one class re-skins every layer below. */
+	/* Every color is a light-dark() pair, so a page follows the system scheme. One class
+	 * fixes a scheme for a subtree: the whole page on <html>, or a single panel. */
+	.gldn-theme-light {
+		color-scheme: light;
+	}
+
 	.gldn-theme-dark {
 		color-scheme: dark;
-		--gldn-color-bg: #0f172a;
-		--gldn-color-surface: #1e293b;
-		--gldn-color-text: #f1f5f9;
-		--gldn-color-muted: #94a3b8;
-		--gldn-color-primary: #2563eb;
-		--gldn-color-primary-hover: #3b82f6;
-		--gldn-color-link: #93c5fd;
-		--gldn-color-border: #334155;
-		--gldn-color-control-border: #71809a;
-		--gldn-color-info: #60a5fa;
-		--gldn-color-info-fg: #0f172a;
-		--gldn-color-info-surface: #172554;
-		--gldn-color-success: #4ade80;
-		--gldn-color-success-fg: #0f172a;
-		--gldn-color-success-surface: #052e16;
-		--gldn-color-warning: #fbbf24;
-		--gldn-color-warning-fg: #0f172a;
-		--gldn-color-warning-surface: #451a03;
-		--gldn-color-error: #f87171;
-		--gldn-color-error-fg: #0f172a;
-		--gldn-color-error-surface: #450a0a;
-		--gldn-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5);
 	}
 
 }

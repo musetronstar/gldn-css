@@ -65,7 +65,9 @@ gldn-css/
 │   ├── fonts/           # woff2 files and one LICENSE.txt with notices and sources
 │   ├── gldn-tabs.js     # Optional WAI-ARIA tabs and marks module
 │   ├── gldn-messages.js # Optional message pane and pop-in module
-│   └── gldn-dock.js     # Optional fixed dock and visual-viewport module
+│   ├── gldn-dock.js     # Optional fixed dock and visual-viewport module
+│   └── gldn-*.js        # Optional popover, dialog, roving focus, form, file drop,
+│                        #   theme, shortcut, and media modules
 ├── dist/
 │   ├── gldn.min.css     # Production-ready compiled bundle
 │   ├── gldn-tokens.min.css  # The tokens layer alone
@@ -78,7 +80,11 @@ gldn-css/
 │   ├── contract.test.mjs  # source-level contract suite
 │   ├── layout.test.mjs    # rendered layout regression suite (headless Chrome)
 │   ├── dock.test.mjs      # rendered dock, tabs, and message pane suite
-│   └── plain-html.test.mjs  # rendered reset, focus, and tokens bundle suite
+│   ├── plain-html.test.mjs  # rendered reset, focus, and tokens bundle suite
+│   ├── primitives.test.mjs  # rendered layout primitives and scopes suite
+│   ├── splits.test.mjs    # rendered golden split stacking suite
+│   ├── states.test.mjs    # rendered states, schemes, forced colors, and pointers suite
+│   └── modules.test.mjs   # rendered optional module suite
 ├── docs/
 │   ├── index.html       # Feature tour, full scales, and plain HTML specimens
 │   ├── fonts.html       # The bundled pairing and two alternatives in both themes
@@ -166,6 +172,32 @@ primary action. Checkboxes, radios, ranges, and progress bars take the primary
 color as their accent. One `:focus-visible` rule gives every focusable element,
 components included, the focus ring.
 
+Semantic HTML needs no classes. On a page whose top-level `header`, `main`, and
+`footer` carry no class, each is a centered column, and an unclassed `article` is a
+card with its `header` and `footer` set off by hairlines. A `header`'s `nav` lays its
+lists out as rows of links; navigation elsewhere keeps its lists. `hgroup` mutes its
+subtitle. Unclassed sections stand a larger step apart. `mark`, `abbr[title]`, `del`,
+`ins`, `kbd`, `var`, `sub`, `sup`, `figcaption`, `caption`, a quotation's
+`footer`, an unclassed `details` (one row of an accordion), `progress`, and `meter`
+each have a composed look. A table's `border` attribute draws nothing.
+
+In an unclassed `form`, text fields, selects, and text areas fill their line, as a
+column of fields, and a `<small>` after a control is its hint. A label around a
+checkbox or radio sits beside it. `fieldset` and `legend` frame a group;
+`fieldset[role="group"]` joins its controls on one line. A checkbox with
+`role="switch"` is a track whose knob moves to the end when it is on. The file
+picker's button is a bare button. A `dialog` holding one `article` lets the article
+be its surface. `docs/semantic.html` shows all of it with no class or style attribute.
+
+States carry a cue beside color. A link with `aria-current` is heavier, with a
+thicker underline. An option, row, or cell with `aria-selected="true"` takes a
+tint and an edge bar. A field with `aria-invalid="true"` takes the error boundary
+and a thicker inline-start edge, and `aria-invalid="false"` the success boundary.
+An element with `aria-busy="true"` shows a turning ring before its content, or
+alone when it is empty. Disabled controls fade. In forced colors, selection keeps
+an outline in the system highlight. Animation and transitions run only under
+`prefers-reduced-motion: no-preference`. Long words and URLs wrap.
+
 Host projects override the reset by layer without touching the design tokens.
 A page that wants no reset links `gldn-tokens.min.css` in place of `gldn.min.css`.
 
@@ -195,6 +227,9 @@ form the single source of truth:
 * *Fonts:* `--gldn-font-sans`, `--gldn-font-serif`, and `--gldn-font-mono` name
   platform fonts, and `--gldn-font-display`, the heading stack, is the sans stack;
   the opt-in font sheet redefines them
+* *Color schemes:* every color is a `light-dark()` pair and `:root` sets
+  `color-scheme: light dark`, so a page follows the system scheme. `gldn-theme-light`
+  or `gldn-theme-dark` fixes the scheme for a page (on `<html>`) or for one panel
 * *Surfaces:* `--gldn-color-bg/surface/text/muted/primary/primary-hover/primary-fg/link/border`,
   `--gldn-color-control-border` (a control's boundary, 3:1 against `bg` and
   `surface`), and `--gldn-shadow`
@@ -205,6 +240,12 @@ form the single source of truth:
   `radius-sm` children
 * *Status colors:* `--gldn-color-info/success/warning/error`, each with `-fg`
   for text on the base color and `-surface` for a tinted background, in both themes
+* *States:* `--gldn-color-tint` (code and hover) and `--gldn-color-active` (press) are
+  tints of the text color; `--gldn-color-selected` is a tint of the primary color;
+  `--gldn-color-valid`, `--gldn-color-invalid`, `--gldn-color-overlay` (behind a
+  modal), `--gldn-opacity-disabled`, `--gldn-edge-width` (the state edge, base ×
+  phi^-3), and `--gldn-control-height` (one line of text plus a control's padding
+  and boundary)
 * *Interaction:* `--gldn-focus-ring`, `--gldn-z-popover`, `--gldn-z-dock`, and
   `--gldn-motion-duration` (in `ms` or `s`)
 * *Dock:* `--gldn-dock-strip-height`, `--gldn-dock-panel-height`, `--gldn-dock-height`,
@@ -241,7 +282,8 @@ scope element.
   to itself, so the step is taken from the page's base and nested density
   classes do not compound.
 
-Adding `class="gldn-theme-dark"` to `<html>` switches to the built-in dark theme.
+Adding `class="gldn-theme-dark"` or `class="gldn-theme-light"` to `<html>` fixes the
+scheme for the page; without either, the page follows the system.
 
 **Layout primitives**
 
@@ -305,6 +347,43 @@ Semantic classes (`src/_components.css`) compose tokens and primitives:
   surface and control boundary), `gldn-btn-quiet` (no fill or visible boundary),
   or `gldn-btn-danger` (the error color, for destructive actions); a variant changes
   only colors
+* `gldn-btn-icon` a square `gldn-btn` for one icon, named by `aria-label`
+* `gldn-btn-group` buttons joined into one control (`role="group"` with a label)
+* `gldn-icon` inline SVG or a text symbol at the size of its text; decorative icons
+  carry `aria-hidden="true"`
+* `gldn-disclosure` a button whose marker turns with `aria-expanded`
+* `gldn-empty` a dashed frame around a sentence that says nothing is there yet
+* `gldn-alert` a notice in the page flow; `data-gldn-kind` is `info`, `success`,
+  `warning`, or `error`, and its text names the kind as well
+* `gldn-scroll` a region that scrolls wide content inside itself; give it
+  `tabindex="0"`, `role="region"`, and a label
+* `gldn-field` a label, an optional `gldn-hint`, the control, and a `gldn-error`
+  message (`data-gldn-error-for` names the control for the form module)
+* `gldn-code-input` / `gldn-code-output` a monospace editor and a result shown as
+  literal, preformatted text
+* `gldn-search` a `role="search"` form: query, optional controls, and a Search button
+  that wrap on narrow screens without hiding any of them
+* `gldn-tree` a nested `role="tree"`: each item's `gldn-tree-row` carries the marker,
+  the focus ring, and the selected state; a closed item hides its group
+* `gldn-results` a list of results, each with a link, a `gldn-result-meta` line (kind
+  and identity), and a snippet; `aria-current` or `aria-selected` marks one
+* `gldn-chip` a filter label with its own Remove button; `gldn-facets` a fieldset of
+  choices that apply when the form is submitted
+* `gldn-pagination` a `<nav>` of page links: `aria-current="page"` marks the current
+  one, and an unavailable end is a `<span aria-disabled="true">`
+* `gldn-panel` a view panel with a `<header>` (`gldn-panel-title`, metadata,
+  actions), content, and a `<footer>` of actions; `aria-current="true"` marks the
+  active panel, and `aria-busy`, `gldn-empty`, or `gldn-alert` give its states
+* `gldn-meta` a key-value `<dl>`; `gldn-badge` a short label; `gldn-truncate` cuts
+  text to one line and keeps its full content for assistive technology
+* `gldn-dropzone` a `<label>` around a file input, its count, and its
+  `[data-gldn-files]` pending list; it turns solid while files are dragged over it
+* `gldn-shell` an application page: a `gldn-shell-bar` above a workspace, whose
+  `gldn-shell-nav` folds behind a `gldn-shell-toggle` below 48rem
+* `gldn-hints` keyboard shortcuts beside what they do
+* `gldn-media` framed images, native players, pages, and cues
+* `gldn-timeline` the message log with a filter bar; `[data-gldn-messages-older]` asks
+  for older entries
 * `gldn-dock` fixed bottom panel with a tab strip, resizable message log, and error pop-in
 * `gldn-tab` / `gldn-tabpanel` accessible tab controls and their panels
 * `gldn-messages` newest-first, scrollable `role="log"` message pane
@@ -390,6 +469,43 @@ dock.tabs.mark('messages', { error: true });
 * Pop-in animation runs only under `prefers-reduced-motion: no-preference`.
 * See `docs/components/dock.html` for all behavior in both themes and at narrow width.
 
+**Optional modules**
+
+Each module is a zero-dependency ES module in `src/`, copied to `dist/`. It takes the
+element it enhances, reports what the reader asked for through a callback or a
+`gldn-*` event, and leaves requests, storage, and routing to the application. The
+markup works without it.
+
+* `gldn-popover.js`: `anchorPopover(popover, opener)` places a native `[popover]`
+  below its opener, or above it near the bottom of the viewport, and returns focus to
+  the opener when it closes; the browser owns opening, Escape, and light dismiss
+* `gldn-dialog.js`: `createDialog(dialog, { onClose })` opens a native `<dialog>` as
+  a modal, focuses its `autofocus` control, treats a click on the backdrop as cancel,
+  and returns focus to the opener with the dialog's `returnValue`
+* `gldn-roving.js`: `createRoving(root)` gives a listbox, menu, or tree one Tab stop,
+  the arrow, Home, and End keys, and typeahead. In a tree, Right opens an item
+  (`gldn-expand`, so the application can load its children) and Left closes it or
+  moves to its parent; Enter or Space dispatch `gldn-activate`
+* `gldn-form.js`: `enhanceForm(form)` shows each field's constraint message in its
+  `[data-gldn-error-for]` element, focuses the first invalid field, marks the form and
+  its submit button busy, and dispatches `gldn-submit` with the form data. A second
+  submit while busy is ignored; `done()`, `fail({ name: message })`, and `cancel()`
+  (or Escape, dispatching `gldn-cancel`) end the busy state
+* `gldn-files.js`: `createFileDrop(zone)` adds dropped files to the zone's file
+  input and pending list, each with a Remove button; a drop is kept from opening the
+  file only on the zone, and nothing is uploaded
+* `gldn-theme.js`: `createThemeControl(select)` offers system, light, and dark,
+  applies `gldn-theme-light` or `gldn-theme-dark` to `<html>`, and remembers the
+  choice when storage is available
+* `gldn-keys.js`: `createShortcuts()` registers shortcuts that need Ctrl, Alt, or
+  Meta (`Mod` is Meta on Apple systems); keys typed into a field stay with the field
+  unless a shortcut is registered with `{ editable: true }`. `renderHints(dl, list)`
+  writes them as `<kbd>` keys
+* `gldn-media.js`: `createMediaNav(root)` pages through `[data-gldn-page]` content
+  with a status, seeks `<audio>` or `<video>` to `[data-gldn-time]` cues, marks the
+  cue under the playhead with `aria-current="time"`, and dispatches `gldn-annotate`
+  with the time or page
+
 **Responsive behavior**
 
 The workspace and layout primitives respond to their own width, and no media
@@ -397,7 +513,8 @@ query stacks them. Golden rows also use the default `--gldn-split-min` viewport
 floor to stack below 48rem. At that width the responsive layer only tightens the
 padding of `gldn-workspace` and `gldn-hero`. The dock starts as a one-line tab
 strip and opens panels as bottom sheets. Type and space need no breakpoint
-override because their shared base interpolates smoothly.
+override because their shared base interpolates smoothly. On coarse pointers
+every control, except the dock's own, is at least a 44px target.
 
 **Building and testing**
 
