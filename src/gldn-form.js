@@ -6,13 +6,18 @@
  * cancel() (or Escape while busy) dispatches gldn-cancel. The module never sends anything.
  */
 
+const messageNamed = (form, name) => form.querySelector(`[data-gldn-error-for="${CSS.escape(name)}"]`);
+
+// A control's message names its id; a radio or checkbox group's message may name the group.
 function messageFor(control) {
-	return control.id ? control.form.querySelector(`[data-gldn-error-for="${CSS.escape(control.id)}"]`) : null;
+	const own = control.id ? messageNamed(control.form, control.id) : null;
+	if (own || !/^(?:radio|checkbox)$/.test(control.type) || !control.name) return own;
+	return messageNamed(control.form, control.name);
 }
 
 function describe(control, message) {
 	const ids = new Set((control.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
-	ids.add(message.id || (message.id = `${control.id}-error`));
+	ids.add(message.id || (message.id = `${control.id || control.name}-error`));
 	control.setAttribute('aria-describedby', [...ids].join(' '));
 }
 
@@ -21,7 +26,8 @@ function describe(control, message) {
  * @property {(button?: HTMLElement) => void} submit - Submits the form as `button` would.
  * @property {() => void} done - Ends the busy state after a successful request.
  * @property {(errors?: Object<string, string>) => void} fail - Ends the busy state and shows each
- *   message beside the control with that name; focus moves to the first of them.
+ *   message beside the control or the radio or checkbox group with that name. Focus moves to
+ *   the first of them: for a group, its checked member, or else its first enabled one.
  * @property {() => void} cancel - Ends the busy state and dispatches `gldn-cancel`; does nothing
  *   when the form is not busy.
  * @property {boolean} busy - Whether the application is working on a submission; read-only.
@@ -30,8 +36,8 @@ function describe(control, message) {
 
 /**
  * Enhances a form. Each control's message goes in the element whose `data-gldn-error-for` names
- * the control's `id`, linked by `aria-describedby`; after a first attempt, messages update as
- * the reader types. The form and its submit button carry `aria-busy="true"` while busy.
+ * the control's `id`, or, for a same-name radio or checkbox group, the group's `name`; it is
+ * linked by `aria-describedby`. After a first attempt, messages update as the reader types. The form and its submit button carry `aria-busy="true"` while busy.
  * @param {HTMLFormElement} form - The form; the module sets `noValidate` on it.
  * @returns {FormControl} The form's state and controls.
  * @fires gldn-submit - On `form` when every control is valid; `detail.data` is the `FormData`
@@ -63,14 +69,14 @@ export function enhanceForm(form) {
 	}
 
 	function check() {
-		const invalid = [];
+		const results = [];
 		for (const control of form.elements) {
-			if (!control.willValidate) continue;
-			const valid = control.checkValidity();
-			show(control, valid ? '' : control.validationMessage);
-			if (!valid) invalid.push(control);
+			if (control.willValidate) results.push([control, control.checkValidity() ? '' : control.validationMessage]);
 		}
-		return invalid;
+		// Valid controls clear their messages first, so a group's message keeps a member's error.
+		for (const [control, text] of results) if (!text) show(control, '');
+		for (const [control, text] of results) if (text) show(control, text);
+		return results.filter(([, text]) => text).map(([control]) => control);
 	}
 
 	function setBusy(value) {
@@ -127,9 +133,13 @@ export function enhanceForm(form) {
 		fail(errors = {}) {
 			finish();
 			const controls = Object.entries(errors).map(([name, text]) => {
-				const control = form.elements.namedItem(name);
-				if (control) show(control, text);
-				return control;
+				const named = form.elements.namedItem(name);
+				if (!named) return null;
+				// Same-name controls, such as a radio group, arrive as a list without a nodeType.
+				const members = named.nodeType ? [named] : [...named];
+				for (const member of members) show(member, text);
+				return members.find((member) => member.checked && !member.disabled)
+					|| members.find((member) => !member.disabled) || null;
 			}).filter(Boolean);
 			controls[0]?.focus();
 		},

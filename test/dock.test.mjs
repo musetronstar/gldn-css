@@ -257,6 +257,62 @@ export async function testDock(browser, test, root) {
 	await browser.evaluate(`document.querySelector('[data-gldn-popin-dismiss]').click()`);
 	await delay(200);
 
+	// A log filter hides entries in the log, never the error pop-in.
+	const filtered = await browser.evaluate(`(() => {
+		window.demoDock.messages.filter({ kinds: ['info'] });
+		window.demoDock.messages.add({ kind: 'error', time: new Date().toISOString(), header: 'Filtered error' });
+		const popin = document.querySelector('[data-gldn-popin]');
+		const shown = popin.querySelector('.gldn-message');
+		const logged = [...document.querySelectorAll('[data-gldn-messages] .gldn-message')]
+			.find((entry) => entry.textContent.includes('Filtered error'));
+		const result = { popinHidden: popin.hidden, entryHidden: shown?.hidden ?? null,
+			header: shown?.querySelector('.gldn-message-header').textContent, loggedHidden: logged?.hidden };
+		window.demoDock.messages.filter();
+		return result;
+	})()`);
+	await browser.evaluate(`document.querySelector('[data-gldn-popin-dismiss]').click()`);
+	await delay(200);
+
+	test('an error pop-in shows even when the log filter hides its kind', () => {
+		if (filtered.popinHidden || filtered.entryHidden !== false || filtered.header !== 'Filtered error'
+			|| filtered.loggedHidden !== true) {
+			throw new Error(JSON.stringify(filtered));
+		}
+	});
+
+	// Destroying a dock removes every listener its tabs and messages installed, so a dock made
+	// again over the same markup answers each action once; destroy() may be called twice.
+	const reattached = await browser.evaluate(`(async () => {
+		const { createDock } = await import('../gldn-dock.js');
+		const root = document.querySelector('[data-gldn-dock]');
+		const calls = [];
+		window.demoDock.destroy();
+		window.demoDock.destroy();
+		// Four docks in all, so leaked toggles on the Expand button would cancel out.
+		let dock;
+		for (const name of ['first', 'second', 'third']) {
+			dock?.destroy();
+			dock = createDock(root, { onStateChange: () => calls.push(name) });
+		}
+		window.demoDock = dock;
+		calls.length = 0;
+		document.querySelector('[role="tab"][aria-selected="false"]').click();
+		const tabCalls = [...calls];
+		const expand = document.querySelector('[data-gldn-messages-expand]');
+		const before = expand.getAttribute('aria-expanded');
+		expand.click();
+		const after = expand.getAttribute('aria-expanded');
+		expand.click();
+		return { tabCalls, before, after };
+	})()`);
+
+	test('a destroyed dock leaves no listeners, so a new dock answers each action once', () => {
+		if (reattached.tabCalls.join() !== 'third' || reattached.before !== 'false'
+			|| reattached.after !== 'true') {
+			throw new Error(JSON.stringify(reattached));
+		}
+	});
+
 	const contrastProbe = `(() => {
 		const channel = (value) => {
 			value /= 255;

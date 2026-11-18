@@ -29,6 +29,8 @@ function panelName(tab) {
  *   `count` (by default 1) to a tab's mark and, with `error`, shows its error sign; a tab whose
  *   panel shows is not marked.
  * @property {(name: string) => void} clearMark - Clears a tab's mark.
+ * @property {() => void} destroy - Removes the module's listeners; the tabs keep their state.
+ *   Calling it again does nothing.
  */
 
 /**
@@ -57,6 +59,7 @@ export function createTabs(root, options = {}) {
 	const collapseButton = root.querySelector('[data-gldn-tabs-collapse]');
 	const narrow = view.matchMedia('(max-width: 48rem)');
 	const marks = new Map();
+	const removers = [];
 	if (tabs.length === 0) throw new Error('tabs require at least one tab');
 
 	for (const tab of tabs) {
@@ -131,13 +134,19 @@ export function createTabs(root, options = {}) {
 		changed();
 	}
 
+	function listen(target, type, handler) {
+		if (!target) return;
+		target.addEventListener(type, handler);
+		removers.push(() => target.removeEventListener(type, handler));
+	}
+
 	for (const tab of tabs) {
 		const name = panelName(tab);
-		tab.addEventListener('click', () => {
+		listen(tab, 'click', () => {
 			if (narrow.matches && state.expanded && state.active === name) collapse();
 			else select(name);
 		});
-		tab.addEventListener('keydown', (event) => {
+		listen(tab, 'keydown', (event) => {
 			const index = tabs.indexOf(event.currentTarget);
 			let next;
 			if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
@@ -149,7 +158,7 @@ export function createTabs(root, options = {}) {
 			select(panelName(tabs[next]), { focus: true });
 		});
 	}
-	collapseButton?.addEventListener('click', () => {
+	listen(collapseButton, 'click', () => {
 		if (state.expanded) collapse();
 		else select(state.active);
 	});
@@ -166,6 +175,9 @@ export function createTabs(root, options = {}) {
 			marks.set(name, { count: previous.count + count, error: previous.error || error });
 			renderMark(name);
 		},
-		clearMark
+		clearMark,
+		destroy() {
+			removers.splice(0).forEach((remove) => remove());
+		}
 	};
 }

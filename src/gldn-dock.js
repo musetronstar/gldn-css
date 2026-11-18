@@ -16,7 +16,9 @@ import { createMessages } from './gldn-messages.js';
  * @property {import('./gldn-messages.js').Messages} messages - The dock's message log.
  * @property {() => void} updateViewport - Places the dock above the visual viewport's bottom
  *   edge and measures it again.
- * @property {() => void} destroy - Removes the module's listeners and observer.
+ * @property {() => void} destroy - Removes the listeners and observer of the dock, its tabs
+ *   and its messages, so a dock may be created again over the same markup. Calling it again
+ *   does nothing.
  */
 
 /**
@@ -95,6 +97,8 @@ export function createDock(root, options = {}) {
 		messages,
 		updateViewport,
 		destroy() {
+			tabs.destroy();
+			messages.destroy();
 			observer.disconnect();
 			narrow.removeEventListener('change', mediaChanged);
 			view.visualViewport?.removeEventListener('resize', updateViewport);

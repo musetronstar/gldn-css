@@ -27,7 +27,8 @@ function size(bytes) {
 /**
  * Connects a drop zone, its file input and its pending list. Each entry shows the file's name,
  * its size and a Remove button, and `[data-gldn-file-count]` shows the count. An input without
- * `multiple` keeps only the latest file.
+ * `multiple` keeps only the latest file. A reset of the input's form empties the list, unless
+ * the reset is cancelled.
  * @param {HTMLElement} zone - The `gldn-dropzone`, usually a `<label>` around the input.
  * @param {object} [options]
  * @param {HTMLInputElement} [options.input] - The `<input type="file">`; by default the first in
@@ -48,6 +49,8 @@ export function createFileDrop(zone, { input = zone.querySelector('input[type="f
 	list = zone.querySelector('[data-gldn-files]'), onChange } = {}) {
 	if (!input) throw new Error('a file drop zone requires an <input type="file">');
 	const document = zone.ownerDocument;
+	const view = document.defaultView;
+	const form = input.form;
 	let files = [...input.files];
 	let depth = 0;
 
@@ -117,11 +120,24 @@ export function createFileDrop(zone, { input = zone.querySelector('input[type="f
 		add(added);
 	}
 
+	/* A form reset empties the input, so the pending list follows it. The reset event comes
+	 * before the reset and a later listener may cancel it, so the list waits for the task to end. */
+	let resetTimer = 0;
+	function reset(event) {
+		view.clearTimeout(resetTimer);
+		resetTimer = view.setTimeout(() => {
+			if (event.defaultPrevented) return;
+			files = [];
+			sync();
+		});
+	}
+
 	zone.addEventListener('dragenter', enter);
 	zone.addEventListener('dragover', over);
 	zone.addEventListener('dragleave', leave);
 	zone.addEventListener('drop', drop);
 	input.addEventListener('change', picked);
+	form?.addEventListener('reset', reset);
 	render();
 	const api = {
 		get files() {
@@ -141,6 +157,8 @@ export function createFileDrop(zone, { input = zone.querySelector('input[type="f
 			zone.removeEventListener('dragleave', leave);
 			zone.removeEventListener('drop', drop);
 			input.removeEventListener('change', picked);
+			form?.removeEventListener('reset', reset);
+			view.clearTimeout(resetTimer);
 		}
 	};
 	return api;

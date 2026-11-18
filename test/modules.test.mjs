@@ -138,6 +138,14 @@ export async function testModules(browser, test, root) {
 		<form id="form">
 			<p><label for="name">Name</label> <input id="name" name="name" required>
 				<small data-gldn-error-for="name" hidden></small></p>
+			<fieldset><legend>Kind</legend>
+				<label><input id="kind-a" type="radio" name="kind" value="a"> A</label>
+				<label><input id="kind-b" type="radio" name="kind" value="b"> B</label>
+				<small data-gldn-error-for="kind" hidden></small></fieldset>
+			<fieldset><legend>Tags</legend>
+				<label><input id="tag-a" type="checkbox" name="tags" value="a" disabled> A</label>
+				<label><input id="tag-b" type="checkbox" name="tags" value="b"> B</label>
+				<small data-gldn-error-for="tags" hidden></small></fieldset>
 			<p><button id="send" type="submit">Send</button></p>
 		</form>`, `
 		import { enhanceForm } from '${dist('gldn-form.js')}';
@@ -173,6 +181,34 @@ export async function testModules(browser, test, root) {
 		events: window.events
 	})`);
 
+	// A server error for a same-name radio or checkbox group marks the group, shows its message
+	// and focuses an eligible member: the checked one, or else the first that is enabled.
+	const grouped = await browser.evaluate(`(() => {
+		document.getElementById('kind-b').checked = true;
+		document.getElementById('send').click();
+		let thrown = null;
+		try {
+			window.api.fail({ tags: 'Choose fewer tags.', kind: 'That kind is closed.' });
+		} catch (error) {
+			thrown = String(error);
+		}
+		const message = (name) => document.querySelector('[data-gldn-error-for="' + name + '"]');
+		const invalid = (id) => document.getElementById(id).getAttribute('aria-invalid');
+		return { thrown, focus: document.activeElement.id,
+			kind: message('kind').textContent, kindHidden: message('kind').hidden,
+			tags: message('tags').textContent,
+			marked: ['kind-a', 'kind-b', 'tag-a', 'tag-b'].map(invalid),
+			described: document.getElementById('kind-a').getAttribute('aria-describedby') === message('kind').id };
+	})()`);
+
+	test('a server error for a radio or checkbox group marks the group and focuses a member', () => {
+		if (grouped.thrown || grouped.focus !== 'tag-b' || grouped.kind !== 'That kind is closed.'
+			|| grouped.kindHidden || grouped.tags !== 'Choose fewer tags.'
+			|| grouped.marked.join() !== 'true,true,true,true' || !grouped.described) {
+			throw new Error(JSON.stringify(grouped));
+		}
+	});
+
 	test('a form shows each field message beside it, ignores a second submit while busy and can cancel', () => {
 		if (invalid.invalid !== 'true' || invalid.focus !== 'name' || !invalid.message || invalid.hidden
 			|| !invalid.described || pending.form !== 'true' || pending.button !== 'true' || pending.cleared
@@ -185,7 +221,7 @@ export async function testModules(browser, test, root) {
 
 	/* J-05 file selection by drop */
 	await browser.navigate(page('files', `
-		<form><label class="gldn-dropzone" id="zone">Choose or drop files
+		<form id="files-form"><label class="gldn-dropzone" id="zone">Choose or drop files
 			<input id="input" type="file" name="files" multiple>
 			<output data-gldn-file-count>0 files</output>
 			<ul data-gldn-files></ul></label></form>`, `
@@ -213,6 +249,41 @@ export async function testModules(browser, test, root) {
 			afterRemove: [...document.getElementById('input').files].map((file) => file.name),
 			label: zone.querySelector('[data-gldn-files] button').getAttribute('aria-label') };
 	})()`);
+
+	// A cancelled form reset keeps the pending files; an ordinary reset empties the list with the
+	// input, and a later selection does not bring the discarded files back.
+	const reset = await browser.evaluate(`(async () => {
+		const form = document.getElementById('files-form');
+		const input = document.getElementById('input');
+		const zone = document.getElementById('zone');
+		const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+		const state = () => ({ items: zone.querySelectorAll('[data-gldn-files] li').length,
+			input: [...input.files].map((file) => file.name), api: window.api.files.map((file) => file.name),
+			count: zone.querySelector('[data-gldn-file-count]').textContent });
+		form.addEventListener('reset', (event) => { if (window.cancelReset) event.preventDefault(); });
+		window.cancelReset = true;
+		form.reset();
+		await settle();
+		const cancelled = state();
+		window.cancelReset = false;
+		form.reset();
+		await settle();
+		const cleared = state();
+		const transfer = new DataTransfer();
+		transfer.items.add(new File(['new'], 'new.txt', { type: 'text/plain' }));
+		input.files = transfer.files;
+		input.dispatchEvent(new Event('change', { bubbles: true }));
+		return { cancelled, cleared, chosen: state() };
+	})()`);
+
+	test('a form reset empties the pending list with its input, unless the reset is cancelled', () => {
+		if (reset.cancelled.items !== 1 || reset.cancelled.input.join() !== 'notes.txt'
+			|| reset.cleared.items !== 0 || reset.cleared.input.length !== 0 || reset.cleared.api.length !== 0
+			|| reset.cleared.count !== '0 files' || reset.chosen.input.join() !== 'new.txt'
+			|| reset.chosen.api.join() !== 'new.txt' || reset.chosen.items !== 1) {
+			throw new Error(JSON.stringify(reset));
+		}
+	});
 
 	test('dropped files join the pending list and the file input, and each can be removed', () => {
 		if (dropped.dragging !== 'true' || !dropped.prevented || dropped.stillDragging

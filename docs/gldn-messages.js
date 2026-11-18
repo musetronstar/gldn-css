@@ -86,8 +86,11 @@ function renderEntry(entry) {
  * @property {() => void} clear - Empties the log.
  * @property {(entries: MessageEntry[]) => void} append - Adds older entries at the end.
  * @property {(options?: { text?: string, kinds?: string[] | null }) => void} filter - Hides
- *   entries whose kind is not in `kinds` or whose text lacks `text`, without removing them.
+ *   entries whose kind is not in `kinds` or whose text lacks `text`, without removing them. The
+ *   error pop-in is not filtered.
  * @property {() => void} dismissError - Dismisses the error pop-in.
+ * @property {() => void} destroy - Removes the module's listeners and pending timer; the log
+ *   and its entries stay. Calling it again does nothing.
  */
 
 /**
@@ -112,7 +115,15 @@ export function createMessages(log, { details = false } = {}) {
 	const popinContent = popin?.querySelector('[data-gldn-popin-content]');
 	const expandButton = panel?.querySelector('[data-gldn-messages-expand]');
 	let activePopin = null;
+	let finishTimer = 0;
 	let shown = { text: '', kinds: null };
+	const removers = [];
+
+	function listen(target, type, handler, options) {
+		if (!target) return;
+		target.addEventListener(type, handler, options);
+		removers.push(() => target.removeEventListener(type, handler, options));
+	}
 
 	function applyFilter(element) {
 		const text = shown.text.trim().toLowerCase();
@@ -140,43 +151,44 @@ export function createMessages(log, { details = false } = {}) {
 		};
 		const duration = reduced ? 0 : durationToken(popin);
 		if (duration === 0) finish();
-		else view.setTimeout(finish, duration);
+		else finishTimer = view.setTimeout(finish, duration);
 	}
 
 	function showError(entry) {
 		if (!popin || !popinContent) throw new Error('an error pop-in requires dock pop-in markup');
 		activePopin = { dismissed: false };
-		popinContent.replaceChildren(render({ ...entry, kind: 'error' }));
+		// The pop-in shows the error whatever the log's filter hides.
+		popinContent.replaceChildren(renderEntry({ ...entry, kind: 'error', details, document }));
 		popin.classList.remove('gldn-dock-popin-entering', 'gldn-dock-popin-leaving');
 		popin.hidden = false;
 		void popin.offsetWidth;
 		popin.classList.add('gldn-dock-popin-entering');
 	}
 
-	popin?.querySelector('[data-gldn-popin-dismiss]').addEventListener('click', dismissError);
-	popin?.addEventListener('animationend', (event) => {
+	listen(popin?.querySelector('[data-gldn-popin-dismiss]'), 'click', dismissError);
+	listen(popin, 'animationend', (event) => {
 		if (event.animationName === 'gldn-dock-popin-enter') {
 			popin.classList.remove('gldn-dock-popin-entering');
 		}
 	});
-	document.addEventListener('keydown', (event) => {
+	listen(document, 'keydown', (event) => {
 		if (event.key === 'Escape' && !event.defaultPrevented) dismissError();
 	});
-	document.addEventListener('click', (event) => {
+	listen(document, 'click', (event) => {
 		if (activePopin && !popin.contains(event.target)) dismissError();
 	}, { capture: true });
 
-	expandButton?.addEventListener('click', () => {
+	listen(expandButton, 'click', () => {
 		const expanded = expandButton.getAttribute('aria-expanded') !== 'true';
 		expandButton.setAttribute('aria-expanded', String(expanded));
 		expandButton.textContent = expanded ? 'Collapse' : 'Expand';
 		dock.dataset.gldnMessagesExpanded = String(expanded);
 	});
 	const timeline = log.closest('.gldn-timeline') || panel;
-	timeline?.querySelector('[data-gldn-messages-older]')?.addEventListener('click', () => {
+	listen(timeline?.querySelector('[data-gldn-messages-older]'), 'click', () => {
 		log.dispatchEvent(new CustomEvent('gldn-older', { bubbles: true }));
 	});
-	panel?.querySelector('[data-gldn-messages-clear]')?.addEventListener('click', () => {
+	listen(panel?.querySelector('[data-gldn-messages-clear]'), 'click', () => {
 		log.replaceChildren();
 		log.scrollTop = 0;
 	});
@@ -204,6 +216,10 @@ export function createMessages(log, { details = false } = {}) {
 			shown = { text, kinds };
 			for (const element of log.querySelectorAll('.gldn-message')) applyFilter(element);
 		},
-		dismissError
+		dismissError,
+		destroy() {
+			removers.splice(0).forEach((remove) => remove());
+			view.clearTimeout(finishTimer);
+		}
 	};
 }
