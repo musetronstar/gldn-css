@@ -379,7 +379,8 @@
 	Disclosure
 
 	A button that shows or hides a region, with a marker that turns with aria-expanded. The
-	marker turns smoothly only under prefers-reduced-motion: no-preference.
+	marker turns smoothly only under prefers-reduced-motion: no-preference. gldn-disclosure.js
+	toggles the region its aria-controls names.
 
 	[aria-expanded="true"] - The marker points down.
 
@@ -1160,7 +1161,9 @@
 
 	A <nav> of page links, each at least a control's height square. aria-current="page"
 	marks the current page in the primary color, and an unavailable end is a
-	<span aria-disabled="true"> that fades, not a link.
+	<span aria-disabled="true"> that fades, not a link. A page-size <select> in a <form>, or a
+	Load more button that gldn-more.js connects, sits beside the links, and wraps below them
+	when the line is full. A total the application does not know is never required.
 
 	Markup: <nav class="gldn-pagination" aria-label="Pages"><ul><li><span aria-disabled="true">Previous</span></li><li><a href="#" aria-current="page">1</a></li><li><a href="#">2</a></li></ul></nav>
 
@@ -1168,6 +1171,13 @@
 
 	Styleguide Components.Pagination
 	*/
+	.gldn-pagination {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--gldn-space-sm) var(--gldn-space-md);
+	}
+
 	.gldn-pagination ul {
 		display: flex;
 		flex-wrap: wrap;
@@ -1210,7 +1220,9 @@
 	A view panel with the card surface: a <header> with a title, metadata and actions, the
 	content, and a <footer> of actions, each set off by a hairline. aria-current="true" marks
 	the active panel with an edge; aria-busy, a gldn-empty or a gldn-alert give its loading,
-	empty and error states.
+	empty and error states. A gldn-disclosure in the header can collapse the body while the
+	header and its actions stay usable. A panel inside a panel, at any depth, drops the shadow
+	for a hairline boundary and tighter padding; in a gldn-context it can adapt to its width.
 
 	.gldn-panel-title - The panel's heading at --gldn-text-lg.
 
@@ -1248,6 +1260,58 @@
 	.gldn-panel-title {
 		margin: 0;
 		font-size: var(--gldn-text-lg);
+	}
+
+	.gldn-panel .gldn-panel {
+		padding: var(--gldn-space-md);
+		border: var(--gldn-hairline) solid var(--gldn-color-border);
+		box-shadow: none;
+	}
+
+	.gldn-panel .gldn-panel[aria-current="true"] {
+		box-shadow: inset var(--gldn-edge-width) 0 0 var(--gldn-color-primary);
+	}
+
+	/*
+	Menu
+
+	A command menu that a menu button opens: a native popover with role="menu", whose items
+	are buttons for commands or links. gldn-menu.js adds the keys, placement and focus of the
+	WAI-ARIA menu button pattern; without it, the button still opens the popover. Items fill
+	the menu's width, take the text tint under a pointer, and may be unavailable.
+
+	.gldn-menu        - The popover holding the items.
+	[role="menuitem"] - An item: a button or a link.
+	[role="separator"] - A hairline between groups of items.
+
+	Markup: <button popovertarget="actions" type="button">Actions</button><div class="gldn-menu" id="actions" popover role="menu" aria-label="Actions"><button role="menuitem" type="button">Rename</button><button role="menuitem" type="button">Move</button><hr role="separator"><button role="menuitem" type="button" aria-disabled="true">Delete</button></div>
+
+	Example: docs/components/controls.html
+
+	Styleguide Components.Menu
+	*/
+	.gldn-menu {
+		padding: var(--gldn-space-xs);
+	}
+
+	.gldn-menu [role="menuitem"] {
+		display: block;
+		inline-size: 100%;
+		padding: var(--gldn-space-xs) var(--gldn-space-sm);
+		border: 0;
+		border-radius: var(--gldn-radius-sm);
+		background-color: transparent;
+		color: var(--gldn-color-text);
+		text-align: start;
+		text-decoration: none;
+	}
+
+	.gldn-menu a[role="menuitem"]:hover:not([aria-disabled="true"]) {
+		background-image: linear-gradient(var(--gldn-color-tint), var(--gldn-color-tint));
+	}
+
+	.gldn-menu [role="separator"] {
+		margin-block: var(--gldn-space-xs);
 	}
 
 	/*

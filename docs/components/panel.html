@@ -42,8 +42,17 @@
 					<h2 class="gldn-panel-title">Inactive</h2>
 					<button class="gldn-btn gldn-btn-quiet gldn-disclosure" type="button" aria-expanded="true" aria-controls="inactive-body">Details</button>
 				</header>
-				<div id="inactive-body">
+				<div id="inactive-body" class="gldn-stack">
 					<p><q cite="https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/">The human mind does not work that way. It operates by association.</q></p>
+					<section class="gldn-panel" id="nested">
+						<header>
+							<h3 class="gldn-panel-title">Nested</h3>
+							<button class="gldn-btn gldn-btn-quiet gldn-disclosure" type="button" aria-expanded="false" aria-controls="nested-body">Details</button>
+						</header>
+						<div id="nested-body">
+							<p>A panel inside a panel drops the shadow for a hairline and tighter padding.</p>
+						</div>
+					</section>
 				</div>
 				<footer><button class="gldn-btn gldn-btn-secondary" type="button">Compare</button><button class="gldn-btn" type="button">Open</button></footer>
 			</article>
@@ -80,13 +89,9 @@
 	<script type="module">
 		import { createThemeControl } from '../gldn-theme.js';
 
-		for (const button of document.querySelectorAll('.gldn-panel .gldn-disclosure')) {
-			button.addEventListener('click', () => {
-				const expanded = button.getAttribute('aria-expanded') !== 'true';
-				button.setAttribute('aria-expanded', String(expanded));
-				document.getElementById(button.getAttribute('aria-controls')).hidden = !expanded;
-			});
-		}
+		import { createDisclosure } from '../gldn-disclosure.js';
+
+		for (const button of document.querySelectorAll('.gldn-panel .gldn-disclosure')) createDisclosure(button);
 		window.theme = createThemeControl(document.querySelector('[data-gldn-theme]'));
 		window.ready = true;
 	</script>

@@ -206,6 +206,36 @@ export async function testComponents(browser, test, root) {
 		}
 	});
 
+	// Presses during a request wait for it; the last page makes the button unavailable, and a
+	// failure keeps the items shown and offers Retry.
+	await browser.press('Enter');
+	await browser.press('Enter');
+	await delay(400);
+	const ended = await value(`({ items: document.querySelectorAll('#list > li').length,
+		label: document.getElementById('more').textContent, unavailable: document.getElementById('more').getAttribute('aria-disabled'),
+		shown: document.getElementById('shown').textContent, focus: document.activeElement.id })`);
+	await browser.press('Enter');
+	await delay(400);
+	const after = await value(`document.querySelectorAll('#list > li').length`);
+	await open('pagination.html?fail');
+	await value(`document.getElementById('more').click()`);
+	await delay(400);
+	const failed = await value(`({ label: document.getElementById('more').textContent,
+		shown: document.getElementById('shown').textContent, items: document.querySelectorAll('#list > li').length })`);
+	await value(`document.getElementById('more').click()`);
+	await delay(400);
+	const retried = await value(`({ label: document.getElementById('more').textContent.trim(),
+		items: document.querySelectorAll('#list > li').length, shown: document.getElementById('shown').textContent })`);
+
+	test('Load more runs one request at a time, ends unavailable, and retries after a failure', () => {
+		if (ended.items !== 8 || ended.label !== 'All shown' || ended.unavailable !== 'true'
+			|| ended.shown !== '8 shown' || ended.focus !== 'more' || after !== 8
+			|| failed.label !== 'Retry' || failed.shown !== 'Loading failed.' || failed.items !== 3
+			|| retried.label !== 'Load more' || retried.items !== 6 || retried.shown !== '6 shown') {
+			throw new Error(JSON.stringify({ ended, after, failed, retried }));
+		}
+	});
+
 	/* C-08 */
 	await open('panel.html');
 	await value(`document.querySelector('#inactive .gldn-disclosure').click()`);
@@ -213,10 +243,22 @@ export async function testComponents(browser, test, root) {
 		collapsed: document.getElementById('inactive-body').hidden,
 		expanded: document.querySelector('#inactive .gldn-disclosure').getAttribute('aria-expanded'),
 		busy: getComputedStyle(document.getElementById('loading'), '::before').borderTopStyle })`);
+	await value(`document.querySelector('#inactive .gldn-disclosure').click()`);
+	const nested = await value(`(() => { const panel = getComputedStyle(document.getElementById('nested'));
+		return { shadow: panel.boxShadow, border: panel.borderTopStyle, padding: parseFloat(panel.paddingTop),
+			outer: parseFloat(getComputedStyle(document.getElementById('inactive')).paddingTop),
+			startsHidden: document.getElementById('nested-body').hidden }; })()`);
 
 	test('view panels mark the active one, collapse their body, and show loading', () => {
 		if (!panels.active.includes('inset') || !panels.collapsed || panels.expanded !== 'false' || panels.busy !== 'solid') {
 			throw new Error(JSON.stringify(panels));
+		}
+	});
+
+	test('a nested panel has a hairline instead of a shadow, and its body starts as its button says', () => {
+		if (nested.shadow !== 'none' || nested.border !== 'solid' || !(nested.padding < nested.outer)
+			|| !nested.startsHidden) {
+			throw new Error(JSON.stringify(nested));
 		}
 	});
 

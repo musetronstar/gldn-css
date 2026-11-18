@@ -68,9 +68,16 @@ export function enhanceForm(form) {
 		message.hidden = !text;
 	}
 
-	function check() {
+	// The controls that share a message: a same-name radio or checkbox group, or one control.
+	function groupOf(control) {
+		if (!/^(?:radio|checkbox)$/.test(control.type) || !control.name) return [control];
+		const named = form.elements.namedItem(control.name);
+		return named.nodeType ? [named] : [...named];
+	}
+
+	function validate(controls) {
 		const results = [];
-		for (const control of form.elements) {
+		for (const control of controls) {
 			if (control.willValidate) results.push([control, control.checkValidity() ? '' : control.validationMessage]);
 		}
 		// Valid controls clear their messages first, so a group's message keeps a member's error.
@@ -78,6 +85,8 @@ export function enhanceForm(form) {
 		for (const [control, text] of results) if (text) show(control, text);
 		return results.filter(([, text]) => text).map(([control]) => control);
 	}
+
+	const check = () => validate([...form.elements]);
 
 	function setBusy(value) {
 		busy = value;
@@ -110,10 +119,10 @@ export function enhanceForm(form) {
 		}));
 	}
 
-	// After a first attempt, each field updates its message as the reader corrects it.
+	// After a first attempt, each field, or its whole group, updates as the reader corrects it.
 	function input(event) {
 		if (!attempted || !event.target.willValidate) return;
-		show(event.target, event.target.checkValidity() ? '' : event.target.validationMessage);
+		validate(groupOf(event.target));
 	}
 
 	function keydown(event) {
@@ -138,8 +147,9 @@ export function enhanceForm(form) {
 				// Same-name controls, such as a radio group, arrive as a list without a nodeType.
 				const members = named.nodeType ? [named] : [...named];
 				for (const member of members) show(member, text);
-				return members.find((member) => member.checked && !member.disabled)
-					|| members.find((member) => !member.disabled) || null;
+				// :disabled also covers a member inside a disabled fieldset.
+				return members.find((member) => member.checked && !member.matches(':disabled'))
+					|| members.find((member) => !member.matches(':disabled')) || null;
 			}).filter(Boolean);
 			controls[0]?.focus();
 		},

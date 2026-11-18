@@ -46,6 +46,24 @@
 						aria-describedby="delete-reason">Delete</button>
 				</p>
 				<p><small id="delete-reason">Only the record's owner can delete it.</small></p>
+				<p role="status" id="unavailable-status"></p>
+			</section>
+			<section class="gldn-card gldn-stack">
+				<h2 class="gldn-title-3">Menu</h2>
+				<p>A menu button opens a list of commands. Arrow keys move among them, Escape closes the menu, and focus returns to the button.</p>
+				<p>
+					<button class="gldn-btn gldn-btn-secondary" id="actions-button" type="button"
+						popovertarget="actions">Actions</button>
+				</p>
+				<div class="gldn-menu" id="actions" popover role="menu" aria-label="Actions">
+					<button role="menuitem" type="button" id="action-rename">Rename</button>
+					<button role="menuitem" type="button" id="action-copy">Copy</button>
+					<a role="menuitem" href="../index.html#components" id="action-tour">Open the tour</a>
+					<hr role="separator">
+					<button role="menuitem" type="button" id="action-delete" aria-disabled="true"
+						aria-describedby="delete-reason">Delete</button>
+				</div>
+				<p role="status" id="menu-status"></p>
 			</section>
 		</div>
 	</main>
@@ -54,6 +72,13 @@
 		import { createThemeControl } from '../gldn-theme.js';
 
 		import { createShortcuts, renderHints } from '../gldn-keys.js';
+		import { createMenuButton } from '../gldn-menu.js';
+		import { guardUnavailable } from '../gldn-unavailable.js';
+		window.guard = guardUnavailable(document, { status: document.getElementById('unavailable-status') });
+		window.menu = createMenuButton(document.getElementById('actions-button'));
+		document.getElementById('actions').addEventListener('gldn-select', ({ detail }) => {
+			document.getElementById('menu-status').textContent = `Chose ${detail.item.textContent}.`;
+		});
 		const order = ['system', 'light', 'dark'];
 		const find = () => document.getElementById('find-input').focus();
 		const nextScheme = () => window.theme.set(order[(order.indexOf(window.theme.value) + 1) % order.length]);

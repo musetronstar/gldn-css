@@ -306,6 +306,29 @@ export async function testDock(browser, test, root) {
 		return { tabCalls, before, after };
 	})()`);
 
+	// An error pop-in open when its dock is destroyed closes with it, so the next dock never
+	// inherits a pop-in it cannot dismiss; the next dock's own pop-in dismisses as usual.
+	const popinLifecycle = await browser.evaluate(`(async () => {
+		const { createDock } = await import('../gldn-dock.js');
+		const root = document.querySelector('[data-gldn-dock]');
+		const popin = document.querySelector('[data-gldn-popin]');
+		window.demoDock.messages.add({ kind: 'error', time: new Date().toISOString(), header: 'Open at teardown' });
+		const openBefore = !popin.hidden;
+		window.demoDock.destroy();
+		const hiddenAfterDestroy = popin.hidden;
+		window.demoDock = createDock(root);
+		window.demoDock.messages.add({ kind: 'error', time: new Date().toISOString(), header: 'After reattach' });
+		document.querySelector('[data-gldn-popin-dismiss]').click();
+		await new Promise((resolve) => setTimeout(resolve, 400));
+		return { openBefore, hiddenAfterDestroy, dismissed: popin.hidden };
+	})()`);
+
+	test('destroying a dock closes its open pop-in, and the next dock dismisses its own', () => {
+		if (!popinLifecycle.openBefore || !popinLifecycle.hiddenAfterDestroy || !popinLifecycle.dismissed) {
+			throw new Error(JSON.stringify(popinLifecycle));
+		}
+	});
+
 	test('a destroyed dock leaves no listeners, so a new dock answers each action once', () => {
 		if (reattached.tabCalls.join() !== 'third' || reattached.before !== 'false'
 			|| reattached.after !== 'true') {

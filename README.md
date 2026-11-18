@@ -118,8 +118,12 @@ blocks and the modules in JSDoc.
   markup works without them.
   * `gldn-dialog.js`: a native modal dialog's focus and backdrop
   * `gldn-popover.js`: a native popover placed beside its opener
+  * `gldn-menu.js`: a menu button and its command menu
+  * `gldn-disclosure.js`: a button that shows or hides a region, such as a panel's body
   * `gldn-roving.js`: one Tab stop and arrow keys for a listbox, menu, or tree
   * `gldn-form.js`: field messages and a busy state for a deliberate submit
+  * `gldn-unavailable.js`: keeps `aria-disabled` actions from acting and announces why
+  * `gldn-more.js`: Load more, one request at a time, with a count and Retry
   * `gldn-files.js`: a file drop zone and its pending list
   * `gldn-theme.js`: a system, light, or dark choice
   * `gldn-keys.js`: keyboard shortcuts and their hints

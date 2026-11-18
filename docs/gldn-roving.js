@@ -3,8 +3,8 @@
  * order; arrows, Home, End and typeahead move among the visible items. In a tree, Right opens
  * a closed item (dispatching gldn-expand, so the application can load its children) or enters
  * it, and Left closes an open item or moves to its parent; a click on an item's
- * gldn-tree-toggle opens or closes it. Enter or Space dispatch gldn-activate and follow the
- * item's link. Links inside items leave the Tab order; other controls in the current item's
+ * gldn-tree-toggle opens or closes it. Enter or Space dispatch gldn-activate and press the
+ * item, when it is a button or link, or else follow its link. Links inside items leave the Tab order; other controls in the current item's
  * own row follow it, so Tab reaches them and Enter or Space press them. Items added later,
  * such as loaded children, join the widget.
  */
@@ -135,7 +135,8 @@ export function createRoving(root, { selectFollowsFocus = false } = {}) {
 		case 'Enter':
 		case ' ':
 			dispatch('gldn-activate', item);
-			item.querySelector(`:scope > a[href], ${ROW} a[href]`)?.click();
+			// An item that is itself a button or link, as in a menu, presses; otherwise its link.
+			(item.matches('a[href], button') ? item : item.querySelector(`:scope > a[href], ${ROW} a[href]`))?.click();
 			break;
 		default:
 			if (event.key.length !== 1 || event.key === ' ') return;

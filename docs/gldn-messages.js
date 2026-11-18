@@ -89,8 +89,8 @@ function renderEntry(entry) {
  *   entries whose kind is not in `kinds` or whose text lacks `text`, without removing them. The
  *   error pop-in is not filtered.
  * @property {() => void} dismissError - Dismisses the error pop-in.
- * @property {() => void} destroy - Removes the module's listeners and pending timer; the log
- *   and its entries stay. Calling it again does nothing.
+ * @property {() => void} destroy - Removes the module's listeners and pending timer, and hides an
+ *   open error pop-in; the log and its entries stay. Calling it again does nothing.
  */
 
 /**
@@ -220,6 +220,12 @@ export function createMessages(log, { details = false } = {}) {
 		destroy() {
 			removers.splice(0).forEach((remove) => remove());
 			view.clearTimeout(finishTimer);
+			// No controller would be left to dismiss an open pop-in, so it closes with this one.
+			if (activePopin) {
+				popin.hidden = true;
+				popin.classList.remove('gldn-dock-popin-entering', 'gldn-dock-popin-leaving');
+				activePopin = null;
+			}
 		}
 	};
 }

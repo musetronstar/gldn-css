@@ -19,7 +19,8 @@ const srcFile = (name) => path.join(root, 'src', name);
 const PARTIALS = ['_reset.css', '_tokens.css', '_layout.css', '_components.css', '_responsive.css'];
 const MODULES = ['gldn-tabs.js', 'gldn-messages.js', 'gldn-dock.js', 'gldn-popover.js',
 	'gldn-dialog.js', 'gldn-roving.js', 'gldn-form.js', 'gldn-files.js', 'gldn-theme.js',
-	'gldn-keys.js', 'gldn-media.js'];
+	'gldn-keys.js', 'gldn-media.js', 'gldn-menu.js', 'gldn-unavailable.js', 'gldn-more.js',
+	'gldn-disclosure.js'];
 const LAYERS = ['reset', 'tokens', 'layout', 'components', 'responsive'];
 const TOKEN_SELECTORS = [':root', '.gldn-theme-light', '.gldn-theme-dark', '.gldn-scope', '.gldn-compact', '.gldn-spacious'];
 const STATE_CLASSES = ['gldn-btn-icon', 'gldn-btn-group', 'gldn-icon', 'gldn-disclosure', 'gldn-empty', 'gldn-alert', 'gldn-scroll'];
@@ -966,6 +967,19 @@ test('a component example page shows the component it documents', () => {
 	}
 });
 
+// Splits a parameter list on its top-level commas, leaving destructured defaults whole.
+function topLevel(params) {
+	const parts = [''];
+	let depth = 0;
+	for (const ch of params) {
+		if ('{[('.includes(ch)) depth++;
+		else if ('}])'.includes(ch)) depth--;
+		if (ch === ',' && depth === 0) parts.push('');
+		else parts[parts.length - 1] += ch;
+	}
+	return parts.map((part) => part.trim()).filter(Boolean);
+}
+
 test('every module opens with a description, and every export has JSDoc', () => {
 	for (const name of MODULES) {
 		const source = src(name);
@@ -973,7 +987,7 @@ test('every module opens with a description, and every export has JSDoc', () => 
 		for (const match of source.matchAll(/(\/\*\*(?:(?!\*\/)[\s\S])*\*\/)?\nexport function (\w+)\(([^)]*(?:\([^)]*\)[^)]*)*)\) \{\n([\s\S]*?)\n\}/g)) {
 			const [, doc, fn, params, body] = match;
 			assert.ok(doc, `${name}: ${fn} has no JSDoc`);
-			for (const param of params.split(/,(?![^{]*\})/).map((p) => p.trim()).filter(Boolean)) {
+			for (const param of topLevel(params)) {
 				const id = param.startsWith('{') ? 'options' : param.split('=')[0].trim();
 				assert.match(doc, new RegExp(`@param \\{[^}]+\\} \\[?${id}\\b`), `${name}: ${fn} lacks @param ${id}`);
 			}

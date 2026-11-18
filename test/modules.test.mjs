@@ -293,6 +293,211 @@ export async function testModules(browser, test, root) {
 		}
 	});
 
+	/* Menu button */
+	await browser.navigate(page('menu', `
+		<p><button id="open" type="button" popovertarget="menu">Actions</button></p>
+		<div class="gldn-menu" id="menu" popover role="menu" aria-label="Actions">
+			<button role="menuitem" type="button" id="rename">Rename</button>
+			<button role="menuitem" type="button" id="copy">Copy</button>
+			<a role="menuitem" href="#moved" id="move">Move</a>
+			<hr role="separator">
+			<button role="menuitem" type="button" id="delete" aria-disabled="true">Delete</button>
+		</div>
+		<p><button id="after" type="button">After</button></p>`, `
+		import { createMenuButton } from '${dist('gldn-menu.js')}';
+		import { guardUnavailable } from '${dist('gldn-unavailable.js')}';
+		guardUnavailable(document);
+		window.unavailable = 0;
+		document.addEventListener('gldn-unavailable', () => window.unavailable++);
+		window.api = createMenuButton(document.getElementById('open'));
+		window.chosen = [];
+		document.getElementById('menu').addEventListener('gldn-select', (event) => window.chosen.push(event.detail.item.id));
+		window.ready = true;`), 16);
+	await ready();
+	const menuState = () => browser.evaluate(`({ open: document.getElementById('menu').matches(':popover-open'),
+		expanded: document.getElementById('open').getAttribute('aria-expanded'), focus: document.activeElement.id,
+		chosen: [...window.chosen] })`);
+	const menuSteps = {};
+	await browser.evaluate(`document.getElementById('open').focus()`);
+	await browser.press('ArrowDown');
+	menuSteps.opened = await menuState();
+	await browser.press('ArrowDown');
+	await browser.press('End');
+	menuSteps.end = await active();
+	await browser.press('Home');
+	await browser.press('c');
+	menuSteps.typed = await active();
+	await browser.press('Enter');
+	menuSteps.chosen = await menuState();
+	await browser.press('ArrowUp');
+	menuSteps.last = await menuState();
+	await browser.press('Enter');
+	menuSteps.unavailable = await menuState();
+	await browser.press('Escape');
+	menuSteps.escaped = await menuState();
+	await browser.press('Enter');
+	await browser.press('Tab');
+	menuSteps.tabbed = await menuState();
+
+	// Shift+Tab out of the menu closes it, and an unavailable menu button does not open by arrows.
+	await browser.evaluate(`document.getElementById('open').focus()`);
+	await browser.press('ArrowDown');
+	await browser.press('Tab', ['Shift']);
+	menuSteps.backward = await menuState();
+	await browser.evaluate(`document.getElementById('open').setAttribute('aria-disabled', 'true')`);
+	await browser.press('ArrowDown');
+	await browser.press('ArrowUp');
+	menuSteps.disabled = { ...(await menuState()), unavailable: await browser.evaluate('window.unavailable') };
+	await browser.evaluate(`document.getElementById('open').removeAttribute('aria-disabled')`);
+
+	test('Shift+Tab closes a menu, and an unavailable menu button does not open', () => {
+		const { backward, disabled } = menuSteps;
+		if (backward.open || backward.expanded !== 'false' || backward.focus !== 'open'
+			|| disabled.open || disabled.unavailable < 2) {
+			throw new Error(JSON.stringify({ backward, disabled }));
+		}
+	});
+
+	test('a menu button opens on arrows, moves by keys, chooses, and closes back to the button', () => {
+		const { opened, end, typed, chosen, last, unavailable, escaped, tabbed } = menuSteps;
+		if (!opened.open || opened.expanded !== 'true' || opened.focus !== 'rename' || end !== 'delete'
+			|| typed !== 'copy' || chosen.open || chosen.expanded !== 'false' || chosen.focus !== 'open'
+			|| chosen.chosen.join() !== 'copy' || !last.open || last.focus !== 'delete'
+			|| !unavailable.open || unavailable.chosen.join() !== 'copy' || escaped.open || escaped.focus !== 'open'
+			|| tabbed.open || tabbed.focus !== 'after') {
+			throw new Error(JSON.stringify(menuSteps));
+		}
+	});
+
+	/* Load more: a reset ignores the older request, and a synchronous failure can be retried */
+	await browser.navigate(page('more', `
+		<p><button id="more" type="button">Load more</button> <span id="shown" role="status"></span></p>`, `
+		import { createLoadMore } from '${dist('gldn-more.js')}';
+		window.calls = 0;
+		window.resolvers = [];
+		window.mode = 'promise';
+		window.api = createLoadMore(document.getElementById('more'), {
+			status: document.getElementById('shown'),
+			load: () => {
+				window.calls++;
+				if (window.mode === 'throw') throw new Error('request setup failed');
+				return new Promise((resolve) => window.resolvers.push(resolve));
+			}
+		});
+		window.ready = true;`), 16);
+	await ready();
+	const moreState = `({ shown: document.getElementById('shown').textContent,
+		label: document.getElementById('more').textContent,
+		unavailable: document.getElementById('more').getAttribute('aria-disabled'),
+		pending: window.api.pending, calls: window.calls })`;
+	const stale = await browser.evaluate(`(async () => {
+		window.api.load();
+		window.api.reset({ shown: 0 });
+		const next = window.api.load();
+		// The callback runs a microtask after load(); wait for both requests to begin.
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		window.resolvers[0]({ shown: 25, total: 25, done: true });
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		const afterOld = ${moreState};
+		window.resolvers[1]({ shown: 10 });
+		await next;
+		return { afterOld, afterNew: ${moreState} };
+	})()`);
+	const thrown = await browser.evaluate(`(async () => {
+		window.mode = 'throw';
+		window.calls = 0;
+		await window.api.load();
+		await window.api.load();
+		return ${moreState};
+	})()`);
+
+	test('Load more ignores a request older than a reset, and retries after a synchronous throw', () => {
+		const { afterOld, afterNew } = stale;
+		if (afterOld.shown !== '0 shown' || afterOld.unavailable !== null || afterOld.label !== 'Load more'
+			|| !afterOld.pending || afterNew.shown !== '10 shown' || afterNew.pending
+			|| thrown.calls !== 2 || thrown.pending || thrown.label !== 'Retry') {
+			throw new Error(JSON.stringify({ stale, thrown }));
+		}
+	});
+
+	/* Form groups: a group updates as a whole, and focus skips a disabled fieldset */
+	await browser.navigate(page('form-groups', `
+		<form id="form">
+			<fieldset><legend>Kind</legend>
+				<label><input id="kind-a" type="radio" name="kind" value="a"> A</label>
+				<label><input id="kind-b" type="radio" name="kind" value="b"> B</label>
+				<small data-gldn-error-for="kind" hidden></small></fieldset>
+			<fieldset><legend>Terms</legend>
+				<label><input id="terms-required" type="checkbox" name="terms" value="read" required> Read</label>
+				<label><input id="terms-optional" type="checkbox" name="terms" value="news"> News</label>
+				<small data-gldn-error-for="terms" hidden></small></fieldset>
+			<fieldset disabled><label><input id="size-a" type="radio" name="size" value="a" checked> A</label></fieldset>
+			<label><input id="size-b" type="radio" name="size" value="b"> B</label>
+			<p><button id="send" type="submit">Send</button></p>
+		</form>`, `
+		import { enhanceForm } from '${dist('gldn-form.js')}';
+		window.api = enhanceForm(document.getElementById('form'));
+		window.ready = true;`), 16);
+	await ready();
+	const groupState = (name) => `({ message: (() => { const message = document.querySelector('[data-gldn-error-for="${name}"]');
+			return !message || message.hidden ? '' : message.textContent; })(),
+		invalid: [...document.querySelectorAll('[name="${name}"]')].map((c) => c.getAttribute('aria-invalid')),
+		focus: document.activeElement.id })`;
+	await browser.evaluate(`document.getElementById('send').click()`);
+	await browser.evaluate(`document.getElementById('terms-optional').click()`);
+	const optionalChecked = await browser.evaluate(groupState('terms'));
+	await browser.evaluate(`document.getElementById('terms-required').click()`);
+	const requiredChecked = await browser.evaluate(groupState('terms'));
+	await browser.evaluate(`document.getElementById('send').click();
+		window.api.fail({ size: 'That size is gone.', kind: 'Choose another kind.' })`);
+	const failedSize = await browser.evaluate(groupState('size'));
+	const failedKind = await browser.evaluate(groupState('kind'));
+	await browser.evaluate(`document.getElementById('kind-b').click()`);
+	const correctedKind = await browser.evaluate(groupState('kind'));
+
+	test('a group keeps a member\'s error while a sibling changes, clears when corrected, and focus skips a disabled fieldset', () => {
+		if (!optionalChecked.message || optionalChecked.invalid.join() !== 'true,'
+			|| requiredChecked.message || requiredChecked.invalid.some(Boolean)
+			|| failedSize.focus !== 'size-b' || failedKind.message !== 'Choose another kind.'
+			|| failedKind.invalid.join() !== 'true,true'
+			|| correctedKind.message || correctedKind.invalid.some(Boolean)) {
+			throw new Error(JSON.stringify({ optionalChecked, requiredChecked, failedSize, failedKind, correctedKind }));
+		}
+	});
+
+	/* Unavailable-action guard */
+	await browser.navigate(page('unavailable', `
+		<p><button id="delete" type="button" aria-disabled="true" aria-describedby="why">Delete</button>
+			<small id="why">Only the owner can delete this record.</small>
+			<a id="link" href="#gone" aria-disabled="true" aria-describedby="why">Open</a></p>
+		<form id="form"><input id="field" name="name"> <button id="send" aria-disabled="true" aria-describedby="why">Send</button></form>
+		<p role="status" id="status"></p>`, `
+		import { guardUnavailable } from '${dist('gldn-unavailable.js')}';
+		window.counts = { click: 0, submit: 0, unavailable: 0 };
+		document.getElementById('delete').addEventListener('click', () => window.counts.click++);
+		document.getElementById('form').addEventListener('submit', (event) => { event.preventDefault(); window.counts.submit++; });
+		document.addEventListener('gldn-unavailable', () => window.counts.unavailable++);
+		window.api = guardUnavailable(document, { status: document.getElementById('status') });
+		window.ready = true;`), 16);
+	await ready();
+	await browser.evaluate(`document.getElementById('delete').click(); document.getElementById('link').click()`);
+	await browser.evaluate(`document.getElementById('delete').focus()`);
+	await browser.press('Enter');
+	await browser.evaluate(`document.getElementById('field').focus()`);
+	await browser.press('Enter');
+	const guarded = await browser.evaluate(`({ counts: { ...window.counts }, hash: location.hash,
+		status: document.getElementById('status').textContent })`);
+	await browser.evaluate(`window.api.destroy(); document.getElementById('delete').click()`);
+	const released = await browser.evaluate(`window.counts.click`);
+
+	test('an unavailable action does not act by click, key or submit, and announces its reason', () => {
+		if (guarded.counts.click !== 0 || guarded.counts.submit !== 0 || guarded.hash !== ''
+			|| guarded.counts.unavailable < 4 || guarded.status !== 'Only the owner can delete this record.'
+			|| released !== 1) {
+			throw new Error(JSON.stringify({ guarded, released }));
+		}
+	});
+
 	/* J-06 theme preference */
 	const themeBody = `<select id="theme" aria-label="Theme"><option value="system">System</option>
 		<option value="light">Light</option><option value="dark">Dark</option></select>`;
