@@ -95,6 +95,70 @@ export async function testStates(browser, test, root) {
 		}
 	});
 
+	// Hover: each link is scrolled into view and hovered with a real mouse move. A selected
+	// result keeps the text color on its tint. Visited colors are hidden from scripts.
+	await browser.evaluate(`['light', 'dark'].forEach((theme) => {
+		document.getElementById('states-' + theme).insertAdjacentHTML('beforeend',
+			'<ul class="gldn-results" id="' + theme + '-results">'
+			+ '<li aria-selected="true"><a href="#selected-result" id="' + theme + '-result-selected">Memex</a></li>'
+			+ '<li><a href="#result" id="' + theme + '-result">Trails</a></li></ul>');
+	})`);
+	const linkStyle = async (id, hovered) => {
+		const point = await browser.evaluate(`(() => {
+			const element = document.getElementById('${id}');
+			element.scrollIntoView({ block: 'center' });
+			const box = element.getBoundingClientRect();
+			return [box.left + box.width / 2, box.top + box.height / 2];
+		})()`);
+		await browser.hover(...(hovered ? point : [0, 0]));
+		return browser.evaluate(`getComputedStyle(document.getElementById('${id}')).color`);
+	};
+	const links = [];
+	for (const theme of ['light', 'dark']) {
+		const tokens = await browser.evaluate(`(() => {
+			${contrastFunctions}
+			const card = document.getElementById('states-${theme}');
+			const probe = (name) => {
+				const span = document.createElement('span');
+				span.style.color = 'var(--gldn-' + name + ')';
+				card.appendChild(span);
+				const color = getComputedStyle(span).color;
+				span.remove();
+				return color;
+			};
+			const surface = getComputedStyle(card).backgroundColor;
+			return { link: probe('color-link'), hover: probe('color-link-hover'), text: probe('color-text'),
+				restContrast: contrast(probe('color-link'), surface),
+				hoverContrast: contrast(probe('color-link-hover'), surface) };
+		})()`);
+		const navId = await browser.evaluate(`(() => {
+			const link = document.querySelector('#states-${theme} nav a:not([aria-current])');
+			link.id = '${theme}-nav-link';
+			return link.id;
+		})()`);
+		links.push({
+			theme,
+			...tokens,
+			rest: await linkStyle(`${theme}-link`, false),
+			hovered: await linkStyle(`${theme}-link`, true),
+			nav: await linkStyle(navId, true),
+			result: await linkStyle(`${theme}-result`, true),
+			selectedResult: await linkStyle(`${theme}-result-selected`, true)
+		});
+	}
+	await browser.hover(0, 0);
+	await browser.evaluate(`document.querySelectorAll('.gldn-results').forEach((list) => list.remove())`);
+
+	test('hovered links gain contrast, and a selected result keeps the text color, in both themes', () => {
+		for (const theme of links) {
+			if (theme.rest !== theme.link || theme.hovered !== theme.hover || theme.nav !== theme.hover
+				|| theme.result !== theme.hover || theme.selectedResult !== theme.text
+				|| theme.hoverContrast < 4.5 || theme.hoverContrast <= theme.restContrast) {
+				throw new Error(JSON.stringify(theme));
+			}
+		}
+	});
+
 	test('busy elements show a turning ring, and a disclosure marker turns when expanded', () => {
 		for (const theme of themes) {
 			if (theme.busyRing !== 'solid' || theme.busyPanelRing !== 'solid'

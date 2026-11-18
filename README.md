@@ -190,7 +190,10 @@ picker's button is a bare button. A `dialog` holding one `article` lets the arti
 be its surface. `docs/semantic.html` shows all of it with no class or style attribute.
 
 States carry a cue beside color. A link with `aria-current` is heavier, with a
-thicker underline. An option, row, or cell with `aria-selected="true"` takes a
+thicker underline. Under a pointer that hovers, a link gains contrast. A visited
+link turns violet in content and in result lists; links in `nav`, `header`, trees,
+tab lists, menus and toolbars keep the link color, since nearly every one has been
+visited. An option, row, or cell with `aria-selected="true"` takes a
 tint and an edge bar. A field with `aria-invalid="true"` takes the error boundary
 and a thicker inline-start edge, and `aria-invalid="false"` the success boundary.
 An element with `aria-busy="true"` shows a turning ring before its content, or
@@ -233,7 +236,8 @@ form the single source of truth:
   `color-scheme: light dark`, so a page follows the system scheme. `gldn-theme-light`
   or `gldn-theme-dark` fixes the scheme for a page (on `<html>`) or for one panel
 * *Surfaces:* `--gldn-color-bg/surface/text/muted/primary/primary-hover/primary-fg/link/border`,
-  `--gldn-color-control-border` (a control's boundary, 3:1 against `bg` and
+  `--gldn-color-link-hover` and `--gldn-color-link-visited` (opaque, since a visited
+  link takes its alpha from the unvisited color), `--gldn-color-control-border` (a control's boundary, 3:1 against `bg` and
   `surface`), and `--gldn-shadow`
 * *Lines and corners:* `--gldn-hairline` is the base times phi^-5. `--gldn-radius-sm`,
   `-md`, and `-lg` equal `--gldn-space-xs`, `-sm`, and `-md`. Since

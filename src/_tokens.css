@@ -92,6 +92,9 @@
 		--gldn-color-primary-hover: light-dark(#1d4ed8, #3b82f6);
 		--gldn-color-primary-fg: #ffffff;
 		--gldn-color-link: light-dark(#2563eb, #93c5fd);
+		--gldn-color-link-hover: light-dark(#343489, #cfd5fe);
+		/* Opaque: a visited link takes its alpha from the unvisited color. */
+		--gldn-color-link-visited: light-dark(#7c3aed, #c4b5fd);
 		--gldn-color-border: light-dark(#e5e7eb, #334155);
 		--gldn-color-control-border: light-dark(#7c8492, #71809a);
 		--gldn-color-info: light-dark(#1d4ed8, #60a5fa);

@@ -80,7 +80,10 @@ async function launch(browserPath) {
 	const proc = spawn(browserPath, [
 		'--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${udd}`,
 		'--no-first-run', '--no-default-browser-check', '--disable-gpu',
-		'--allow-file-access-from-files', 'about:blank'
+		'--allow-file-access-from-files',
+		// Headless Chrome reports no pointer; report a desktop mouse, a fine pointer that hovers.
+		'--blink-settings=primaryPointerType=4,availablePointerTypes=4,primaryHoverType=2,availableHoverTypes=2',
+		'about:blank'
 	], { stdio: 'ignore' });
 
 	let target = null;
@@ -188,6 +191,11 @@ async function launch(browserPath) {
 			for (const type of ['mousePressed', 'mouseReleased']) {
 				await send('Input.dispatchMouseEvent', { type, x, y, button: 'left', clickCount: 1 });
 			}
+			await settle();
+		},
+		// Moves the mouse to a point, so the element under it is hovered.
+		hover: async (x, y) => {
+			await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });
 			await settle();
 		},
 		evaluate,

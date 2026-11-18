@@ -389,7 +389,7 @@ test('the opt-in font sheet declares licensed woff2 fonts and redefines every st
 
 test('surface, color, radius, and shadow tokens are defined', () => {
 	for (const name of ['bg', 'surface', 'text', 'muted', 'primary', 'primary-hover',
-		'border', 'control-border', 'primary-fg', 'link']) {
+		'border', 'control-border', 'primary-fg', 'link', 'link-hover', 'link-visited']) {
 		assert.match(tokens, new RegExp(`--gldn-color-${name}:`), `missing --gldn-color-${name}`);
 	}
 	// Colors follow the scheme: each is a light-dark() pair, except those equal in both.
@@ -482,6 +482,32 @@ test('motion runs only when reduced motion is not requested', () => {
 			.filter((d) => /^(?:animation|animation-name|transition)$/.test(d.property))
 			.filter((d) => !d.headers.some((header) => /prefers-reduced-motion:\s*no-preference/.test(header)));
 		assert.deepEqual(moving.map((d) => `${name}: ${d.headers.at(-1)}`), []);
+	}
+});
+
+test('links gain contrast on hover, and only content links and results show visited', () => {
+	// Browsers apply only color properties to :visited, and hide them from scripts, so the
+	// visited rules are checked here rather than rendered.
+	const colorProperty = /^(?:color|background-color|border(?:-[\w-]+)?-color|outline-color|text-decoration-color|column-rule-color|fill|stroke)$/;
+	const declarations = PARTIALS.flatMap((name) => walk(src(name)).declarations);
+	const visited = declarations.filter((d) => d.headers.at(-1).includes(':visited'));
+	assert.ok(visited.length >= 2, 'content links and results must style :visited');
+	for (const d of visited) {
+		const selector = d.headers.at(-1);
+		assert.match(d.property, colorProperty, `${selector} sets ${d.property}`);
+		assert.equal(d.value, 'var(--gldn-color-link-visited)');
+		if (selector.startsWith('.gldn-results')) continue;
+		for (const excluded of ['nav', 'header', '[role="tree"]', '[role="menu"]', '[aria-current]']) {
+			assert.ok(selector.includes(excluded), `${selector} must exclude ${excluded}`);
+		}
+		assert.match(selector, /^a:visited:where\(:not\(/, 'the visited rule keeps the specificity of a:visited');
+	}
+	const hovered = declarations.filter((d) => /\ba(?::where\()?:hover/.test(d.headers.at(-1)));
+	assert.ok(hovered.length >= 2, 'links and results must style :hover');
+	for (const d of hovered) {
+		assert.ok(d.headers.some((header) => /@media \(hover: hover\)/.test(header)),
+			`${d.headers.at(-1)} must apply only where a pointer hovers`);
+		assert.equal(d.value, 'var(--gldn-color-link-hover)');
 	}
 });
 

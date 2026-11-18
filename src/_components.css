@@ -778,6 +778,17 @@
 		list-style: none;
 	}
 
+	/* A visited result turns violet wherever the list sits; a selected one keeps the text color. */
+	.gldn-results a:where(:visited) {
+		color: var(--gldn-color-link-visited);
+	}
+
+	@media (hover: hover) {
+		.gldn-results a:where(:hover) {
+			color: var(--gldn-color-link-hover);
+		}
+	}
+
 	.gldn-results > li {
 		max-width: none;
 		margin: 0;

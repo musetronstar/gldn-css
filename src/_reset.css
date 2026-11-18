@@ -369,6 +369,21 @@
 		color: var(--gldn-color-link);
 	}
 
+	/* A visited content link turns violet. Links in navigation, headers, trees, tab lists, menus
+	 * and toolbars, and current links, keep the link color, since nearly every link there has
+	 * been visited. Browsers apply only color properties to :visited. */
+	a:visited:where(:not(:is(nav, header, [role="navigation"], [role="tree"], [role="tablist"],
+		[role="menu"], [role="menubar"], [role="toolbar"]) a, [aria-current]:not([aria-current="false"]))) {
+		color: var(--gldn-color-link-visited);
+	}
+
+	/* Hover raises a link's contrast; a current link keeps its heavier underline as its cue. */
+	@media (hover: hover) {
+		a:hover {
+			color: var(--gldn-color-link-hover);
+		}
+	}
+
 	img,
 	picture,
 	video,
