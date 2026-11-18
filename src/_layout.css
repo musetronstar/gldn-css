@@ -69,17 +69,17 @@
 	/*
 	Stack
 
-	Arranges children vertically, separated by --gldn-space-lg. The gap alone separates them:
-	their own block margins add nothing.
+	Arranges children vertically, separated by --gldn-stack-space (--gldn-space-lg). The gap
+	alone separates them: their own block margins add nothing.
 
-	Markup: <div class="gldn-stack"><p>one</p><p>two</p></div>
+	Markup: <div class="gldn-stack" style="--gldn-stack-space: var(--gldn-space-sm)"><p>one</p><p>two</p></div>
 
 	Styleguide Layout.Stack
 	*/
 	.gldn-stack {
 		display: flex;
 		flex-direction: column;
-		gap: var(--gldn-space-lg);
+		gap: var(--gldn-stack-space);
 	}
 
 	.gldn-stack > * {
@@ -90,9 +90,10 @@
 	Cluster
 
 	An inline group, such as tags, chips or buttons, on as few lines as fit. It wraps and never
-	stacks; each child keeps its own width.
+	stacks; each child keeps its own width. --gldn-cluster-space sets the gap, and
+	--gldn-cluster-justify the alignment: flex-end or space-between suit a row of actions.
 
-	Markup: <p class="gldn-cluster"><a href="#">Record</a> <a href="#">Consult</a></p>
+	Markup: <p class="gldn-cluster" style="--gldn-cluster-justify: flex-end"><button type="button">Cancel</button> <button class="gldn-btn" type="button">Save</button></p>
 
 	Styleguide Layout.Cluster
 	*/
@@ -100,7 +101,8 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: var(--gldn-space-sm);
+		justify-content: var(--gldn-cluster-justify);
+		gap: var(--gldn-cluster-space);
 	}
 
 	/*
@@ -141,6 +143,60 @@
 		flex-grow: 1;
 		flex-basis: calc((var(--gldn-switch-min) - 100%) * 999);
 		min-width: 0;
+	}
+
+	/*
+	Sided
+
+	A side beside its content: the side keeps --gldn-side-width, and the content takes the rest
+	while it keeps at least --gldn-sided-min (61.8%) of the composition. When it cannot, both
+	take the full width, the side first. There is no breakpoint: the composition answers to its
+	own width. The first child is the side; with gldn-sided-end, the last child is.
+
+	.gldn-sided-end - The side follows the content.
+
+	Markup: <div class="gldn-sided {{modifier_class}}"><img src="cover.jpg" alt=""><div>…</div></div>
+
+	Example: docs/index.html
+
+	Styleguide Layout.Sided
+	*/
+	.gldn-sided {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--gldn-gutter);
+	}
+
+	/* Beside the content, the side takes a thousandth of the free room and the content the rest;
+	 * once the content's minimum no longer fits, it wraps below and each fills its own line. */
+	.gldn-sided > * {
+		flex-grow: 1;
+		flex-basis: var(--gldn-side-width);
+		min-width: 0;
+	}
+
+	.gldn-sided:not(.gldn-sided-end) > :last-child,
+	.gldn-sided-end > :first-child {
+		flex-grow: 999;
+		flex-basis: 0;
+		min-inline-size: var(--gldn-sided-min);
+	}
+
+	/*
+	Context
+
+	Makes an element an inline-size query container named gldn, so the components inside it
+	can adapt to its width with @container gldn (…). A query styles the container's
+	descendants, never the container itself. Size containment means the element's inline size
+	no longer follows its content: give it a definite width, as a block in flow, a grid track or
+	a flex item with a basis has, not a shrink-to-fit one.
+
+	Markup: <section class="gldn-context">…</section>
+
+	Styleguide Layout.Context
+	*/
+	.gldn-context {
+		container: gldn / inline-size;
 	}
 
 	/*

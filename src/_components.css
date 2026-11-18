@@ -185,6 +185,44 @@
 	}
 
 	/*
+	Numerals and capitals
+
+	Opt-in figure and capital styles for fonts that provide them; a font without them keeps its
+	default figures, and the browser synthesizes small capitals. The text in the source keeps its
+	own case, so screen readers and copying are unaffected. Tables already use tabular figures.
+
+	.gldn-nums-oldstyle - Old-style proportional figures, which sit in running text like
+	                      lowercase letters.
+	.gldn-nums-tabular  - Lining figures of one width, which align in columns of data.
+	.gldn-caps          - All capitals, spaced by --gldn-tracking-caps, for short labels.
+	.gldn-small-caps    - Small capitals, spaced by --gldn-tracking-caps, for abbreviations
+	                      and acronyms in running text.
+
+	Markup: <p>In <span class="gldn-nums-oldstyle">1945</span> the <abbr class="gldn-small-caps" title="Office of Scientific Research and Development">OSRD</abbr> ended.</p>
+
+	Example: docs/index.html
+
+	Styleguide Components.Numerals and capitals
+	*/
+	.gldn-nums-oldstyle {
+		font-variant-numeric: oldstyle-nums proportional-nums;
+	}
+
+	.gldn-nums-tabular {
+		font-variant-numeric: lining-nums tabular-nums;
+	}
+
+	.gldn-caps {
+		text-transform: uppercase;
+		letter-spacing: var(--gldn-tracking-caps);
+	}
+
+	.gldn-small-caps {
+		font-variant-caps: all-small-caps;
+		letter-spacing: var(--gldn-tracking-caps);
+	}
+
+	/*
 	Button
 
 	The primary action, for a <button> or an <a>. It has the reset's control size: the same
@@ -221,7 +259,7 @@
 		text-decoration: none;
 	}
 
-	.gldn-btn:hover:not(:disabled) {
+	.gldn-btn:hover:not(:disabled, [aria-disabled="true"]) {
 		border-color: var(--gldn-color-primary-hover);
 		background-color: var(--gldn-color-primary-hover);
 	}
@@ -239,20 +277,20 @@
 	}
 
 	/* Secondary and quiet buttons keep their fill and boundary and take the text tints. */
-	:is(.gldn-btn-secondary, .gldn-btn-quiet):hover:not(:disabled) {
+	:is(.gldn-btn-secondary, .gldn-btn-quiet):hover:not(:disabled, [aria-disabled="true"]) {
 		background-image: linear-gradient(var(--gldn-color-tint), var(--gldn-color-tint));
 	}
 
-	:is(.gldn-btn-secondary, .gldn-btn-quiet):active:not(:disabled) {
+	:is(.gldn-btn-secondary, .gldn-btn-quiet):active:not(:disabled, [aria-disabled="true"]) {
 		background-image: linear-gradient(var(--gldn-color-active), var(--gldn-color-active));
 	}
 
-	.gldn-btn-secondary:hover:not(:disabled) {
+	.gldn-btn-secondary:hover:not(:disabled, [aria-disabled="true"]) {
 		border-color: var(--gldn-color-control-border);
 		background-color: var(--gldn-color-surface);
 	}
 
-	.gldn-btn-quiet:hover:not(:disabled) {
+	.gldn-btn-quiet:hover:not(:disabled, [aria-disabled="true"]) {
 		border-color: transparent;
 		background-color: transparent;
 	}
@@ -265,12 +303,12 @@
 
 	/* Mixing toward the text color darkens the light theme's red and lightens the dark
 	 * theme's, which raises the label's contrast in both. */
-	.gldn-btn-danger:hover:not(:disabled) {
+	.gldn-btn-danger:hover:not(:disabled, [aria-disabled="true"]) {
 		border-color: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-4), var(--gldn-color-error));
 		background-color: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-4), var(--gldn-color-error));
 	}
 
-	.gldn-btn:disabled {
+	.gldn-btn:is(:disabled, [aria-disabled="true"]) {
 		opacity: var(--gldn-opacity-disabled);
 		cursor: default;
 	}
@@ -589,10 +627,6 @@
 		overflow: auto;
 	}
 
-	.gldn-tabpanel[hidden] {
-		display: none;
-	}
-
 	.gldn-code-panel {
 		display: flex;
 		flex-direction: column;
@@ -760,17 +794,13 @@
 		overflow: auto;
 		border-top: var(--gldn-hairline) solid var(--gldn-color-error);
 		background-color: var(--gldn-color-error-surface);
-		box-shadow: var(--gldn-shadow);
+		box-shadow: var(--gldn-shadow-lg);
 	}
 
 	.gldn-dock[data-gldn-expanded="false"] .gldn-dock-popin {
 		top: auto;
 		bottom: var(--gldn-dock-strip-height);
 		max-height: var(--gldn-dock-panel-height);
-	}
-
-	.gldn-dock-popin[hidden] {
-		display: none;
 	}
 
 	.gldn-dock-popin-content {
@@ -1447,14 +1477,19 @@
 		gap: var(--gldn-space-sm);
 	}
 
-	.gldn-timeline .gldn-message[hidden] {
-		display: none;
-	}
-
 	.gldn-message-detail > summary {
 		margin-block-start: var(--gldn-space-xs);
 		color: var(--gldn-color-muted);
 		font-size: var(--gldn-text-sm);
+	}
+
+	/* Small controls are at least --gldn-target-min square (WCAG 2.5.8); on coarse pointers the
+	 * responsive layer raises them to the touch target. */
+	.gldn-chip > button,
+	[aria-expanded] > .gldn-tree-row > .gldn-tree-toggle,
+	.gldn-popin-dismiss {
+		min-inline-size: var(--gldn-target-min);
+		min-block-size: var(--gldn-target-min);
 	}
 
 	/* Forced colors drop fills and shadows: the selected tab keeps an edge in the system

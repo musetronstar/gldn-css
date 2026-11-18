@@ -462,7 +462,7 @@
 	}
 
 	@media (hover: hover) {
-		a:hover {
+		a:hover:not([aria-disabled="true"]) {
 			color: var(--gldn-color-link-hover);
 		}
 	}
@@ -495,6 +495,11 @@
 	:hover    - A bare button takes the text tint over its fill.
 	:active   - A bare button takes the stronger active tint.
 	:disabled - Fades, with the default cursor.
+	[aria-disabled="true"] - An unavailable action that stays focusable: it fades like a
+	                         disabled control, takes no hover tint, and names its reason through
+	                         aria-describedby. The application keeps it from acting.
+
+	Markup: <button type="button" aria-disabled="true" aria-describedby="why">Delete</button> <small id="why">Only the owner can delete this record.</small>
 
 	Example: docs/components/controls.html
 
@@ -527,16 +532,18 @@
 		cursor: pointer;
 	}
 
-	:is(button, input:is([type="button"], [type="submit"], [type="reset"])):hover:not(:disabled) {
+	:is(button, input:is([type="button"], [type="submit"], [type="reset"])):hover:not(:disabled, [aria-disabled="true"]) {
 		background-image: linear-gradient(var(--gldn-color-tint), var(--gldn-color-tint));
 	}
 
-	:is(button, input:is([type="button"], [type="submit"], [type="reset"])):active:not(:disabled) {
+	:is(button, input:is([type="button"], [type="submit"], [type="reset"])):active:not(:disabled, [aria-disabled="true"]) {
 		background-image: linear-gradient(var(--gldn-color-active), var(--gldn-color-active));
 	}
 
-	/* An explicit text color replaces the browser's disabled color, so the reset restores the cue. */
-	:is(button, input, select, textarea):disabled {
+	/* An explicit text color replaces the browser's disabled color, so the reset restores the cue.
+	 * An unavailable action marked aria-disabled stays focusable, so its reason can be read. */
+	:is(button, input, select, textarea):disabled,
+	:is(button, a, [role="button"], [role="link"])[aria-disabled="true"] {
 		opacity: var(--gldn-opacity-disabled);
 		cursor: default;
 	}
@@ -819,7 +826,7 @@
 		border-radius: var(--gldn-radius-md);
 		background-color: var(--gldn-color-surface);
 		color: var(--gldn-color-text);
-		box-shadow: var(--gldn-shadow);
+		box-shadow: var(--gldn-shadow-lg);
 	}
 
 	[popover] {
@@ -842,6 +849,20 @@
 		[popover]:popover-open {
 			animation: gldn-rise var(--gldn-motion-duration) ease-out;
 		}
+	}
+
+	/*
+	Hidden
+
+	An element with the hidden attribute stays hidden even where a component gives it a display,
+	so a hidden tab panel, pop-in or filtered entry takes no space. The rule is important in the
+	first layer, which no later layer overrides; hidden="until-found" keeps the browser's own
+	behavior.
+
+	Styleguide Reset.Hidden
+	*/
+	[hidden]:not([hidden="until-found"]) {
+		display: none !important;
 	}
 
 	/*

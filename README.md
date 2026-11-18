@@ -105,7 +105,8 @@ blocks and the modules in JSDoc.
   base, the space and type scales, colors in light and dark, and thresholds. Scopes
   (`gldn-scope`, `gldn-compact`, `gldn-spacious`) re-derive the scales for a subtree.
 * **Layout primitives** (`src/_layout.css`): container, row, stack, cluster, grid,
-  switcher, frame, and the golden split. None needs a breakpoint.
+  switcher, sided, frame, and the golden split, none of which needs a breakpoint, and
+  `gldn-context`, which lets components inside it adapt to its width.
 * **Components** (`src/_components.css`): workspace, card, header and footer, hero,
   titles, buttons, alerts, field, search, tree, results, chips, pagination, panel,
   metadata, drop zone, application shell, dock, tabs, messages, media, and timeline.

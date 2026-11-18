@@ -204,7 +204,10 @@ const LENGTH_ALLOWLIST = [
 		reason: 'the minimum touch target (WCAG 2.5.5)' },
 	{ property: /^--gldn-dock-expanded-height$/, literals: ['50vh'], reason: 'half the viewport' },
 	{ property: /^(?:min-|max-)?height$/, literals: ['100vh', '100dvh'], reason: 'the full viewport' },
-	{ property: /^--gldn-shadow$/, literals: ['4px', '6px', '-1px'], reason: 'shadow offset and blur' },
+	{ property: /^--gldn-shadow(?:-sm|-lg)?$/, literals: ['1px', '2px', '4px', '6px', '-1px', '12px', '24px', '-4px'],
+		reason: 'shadow offsets, blurs and spreads' },
+	{ property: /^--gldn-target-min$/, literals: ['24px'], reason: 'the minimum target (WCAG 2.5.8)' },
+	{ property: /^--gldn-tracking-caps$/, literals: ['1em'], reason: 'tracking is a share of the type size' },
 	{ selector: /\.gldn-visually-hidden/, literals: ['1px', '-1px'],
 		reason: 'a one-pixel box that screen readers still read' },
 	{ property: /^font-size$/, literals: ['1em'], reason: 'inline code keeps the size of its text' },
@@ -446,7 +449,8 @@ test('every var() reference resolves to a token defined in the tokens layer', ()
 
 test('reset, layout and components define no custom properties; responsive only overrides tokens', () => {
 	for (const layer of ['reset', 'layout', 'components']) {
-		const body = src(`_${layer}.css`);
+		// Examples in comments may set a token on an element; only rules count.
+		const body = stripComments(src(`_${layer}.css`));
 		const defs = [...body.matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]);
 		assert.deepEqual(defs, [], `_${layer}.css must not define custom properties: ${defs}`);
 	}

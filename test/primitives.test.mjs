@@ -36,7 +36,14 @@ const body = `
 	<div id="outer"><div class="gldn-compact" id="compact"><div class="gldn-row" id="compact-row">
 		<div>a</div><div>b</div></div></div></div>
 	<div class="gldn-spacious" id="spacious"></div>
-	<div class="gldn-scope" id="scope" style="--gldn-text-base: 0.875rem"></div>`;
+	<div class="gldn-scope" id="scope" style="--gldn-text-base: 0.875rem"></div>
+	<div class="gldn-sided" id="sided"><div id="side">side</div><div id="sided-content">content</div></div>
+	<div class="gldn-sided gldn-sided-end" id="sided-end"><div id="end-content">content</div><div id="end-side">side</div></div>
+	<div class="gldn-stack" id="stack-tight" style="--gldn-stack-space: 10px"><p>a</p><p>b</p></div>
+	<div class="gldn-cluster" id="cluster-end" style="--gldn-cluster-justify: flex-end"><button type="button" id="cluster-end-item">one</button></div>
+	<style>@container gldn (min-width: 40rem) { .context-probe { outline-style: dashed } }</style>
+	<section class="gldn-context" id="context"><p class="context-probe" id="context-wide">probe</p></section>
+	<section class="gldn-context" style="width: 300px"><p class="context-probe" id="context-narrow">probe</p></section>`;
 
 export async function testPrimitives(browser, test, root) {
 	const file = path.join(os.tmpdir(), 'gldn-primitives.html');
@@ -45,7 +52,8 @@ export async function testPrimitives(browser, test, root) {
 		+ `</head><body>${body}</body></html>`);
 
 	const state = `(() => {
-		const rect = (id) => document.getElementById(id).getBoundingClientRect();
+		// A DOMRect does not cross the test bridge by value; copy its fields.
+		const rect = (id) => document.getElementById(id).getBoundingClientRect().toJSON();
 		const columns = (id) => getComputedStyle(document.getElementById(id))
 			.gridTemplateColumns.split(' ').length;
 		const stacked = (id) => {
@@ -87,7 +95,17 @@ export async function testPrimitives(browser, test, root) {
 			compactText: token('compact', 'text-lg'),
 			outerText: token('outer', 'text-lg'),
 			spaciousMd: token('spacious', 'space-md'),
-			scopeText: token('scope', 'text-lg')
+			scopeText: token('scope', 'text-lg'),
+			sided: rect('sided'),
+			side: rect('side'),
+			sidedContent: rect('sided-content'),
+			endSide: rect('end-side'),
+			endContent: rect('end-content'),
+			sideWidth: token('outer', 'side-width'),
+			tightGap: parseFloat(getComputedStyle(document.getElementById('stack-tight')).rowGap),
+			clusterEnd: rect('cluster-end').right - rect('cluster-end-item').right,
+			contextWide: getComputedStyle(document.getElementById('context-wide')).outlineStyle,
+			contextNarrow: getComputedStyle(document.getElementById('context-narrow')).outlineStyle
 		};
 	})()`;
 
@@ -151,6 +169,32 @@ export async function testPrimitives(browser, test, root) {
 	test('a scope with its own text base re-derives the type scale', () => {
 		if (Math.abs(wide.scopeText - 14 * PHI) > 0.5) {
 			throw new Error(`text-lg in the scope is ${wide.scopeText}px`);
+		}
+	});
+
+	test('a sided composition keeps its side beside the content and wraps below 61.8%', () => {
+		const beside = (side, content) => Math.abs(side.top - content.top) < 1;
+		if (!beside(wide.side, wide.sidedContent) || wide.side.right > wide.sidedContent.left
+			|| Math.abs(wide.side.width - wide.sideWidth) > 2
+			|| wide.sidedContent.width < wide.sided.width * (1 / PHI) - 0.5
+			|| !beside(wide.endSide, wide.endContent) || wide.endSide.left < wide.endContent.right
+			|| Math.abs(wide.endSide.width - wide.sideWidth) > 2
+			|| narrow.sidedContent.top < narrow.side.bottom
+			|| Math.abs(narrow.side.width - narrow.sided.width) > 0.5
+			|| Math.abs(narrow.sidedContent.width - narrow.sided.width) > 0.5) {
+			throw new Error(JSON.stringify({ wide, narrow }));
+		}
+	});
+
+	test('stack space and cluster alignment follow their custom properties', () => {
+		if (Math.abs(wide.tightGap - 10) > 0.1 || Math.abs(wide.clusterEnd) > 0.5) {
+			throw new Error(JSON.stringify({ tightGap: wide.tightGap, clusterEnd: wide.clusterEnd }));
+		}
+	});
+
+	test('a context answers queries by its own width, not the viewport', () => {
+		if (wide.contextWide !== 'dashed' || wide.contextNarrow !== 'none' || narrow.contextWide !== 'none') {
+			throw new Error(JSON.stringify({ wide: [wide.contextWide, wide.contextNarrow], narrow: narrow.contextWide }));
 		}
 	});
 

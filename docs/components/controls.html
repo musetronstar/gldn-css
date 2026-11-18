@@ -37,6 +37,16 @@
 				<p><label for="find-input">Find</label> <input id="find-input" type="search"></p>
 				<dl class="gldn-hints" id="hints"></dl>
 			</section>
+			<section class="gldn-card gldn-stack">
+				<h2 class="gldn-title-3">Unavailable actions</h2>
+				<p>An unavailable action stays in the Tab order, fades, and says why.</p>
+				<p class="gldn-cluster" style="--gldn-cluster-justify: flex-end">
+					<button type="button">Keep</button>
+					<button class="gldn-btn gldn-btn-danger" type="button" aria-disabled="true"
+						aria-describedby="delete-reason">Delete</button>
+				</p>
+				<p><small id="delete-reason">Only the record's owner can delete it.</small></p>
+			</section>
 		</div>
 	</main>
 

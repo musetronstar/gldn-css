@@ -319,7 +319,8 @@
 				The grid, switcher, cluster and frames answer to their own width, not the
 				viewport's. The narrow column and the wide column hold the same markup: the
 				grid fits fewer tracks, the switcher stacks, the cluster wraps, and the frames
-				keep their golden ratio. Golden rows use the same intrinsic rule at 48rem and
+				keep their golden ratio. A sided composition keeps its side beside the text until the
+				text would take less than 61.8%. Golden rows use the same intrinsic rule at 48rem and
 				above; their default token also stacks them on phone-width viewports. Density
 				classes step the space scale, gutter included, one power of phi.
 			</p>
@@ -435,6 +436,26 @@
 					</article>
 				</div>
 			</div>
+			<article class="gldn-card gldn-stack" id="sided-demo">
+				<h3 class="gldn-title-3">sided</h3>
+				<div class="gldn-sided">
+					<div class="gldn-frame demo-frame"><img class="demo-art" src="fibonacci-spiral.svg" alt="Fibonacci spiral in a φ:1 frame"></div>
+					<p>
+						The side keeps its own width beside the text while the text keeps at least
+						61.8% of the composition. Narrow the window and, when the text would fall
+						below that share, the side moves above it and both take the full width.
+					</p>
+				</div>
+				<h3 class="gldn-title-3">numerals and capitals</h3>
+				<p>
+					Old-style figures sit in running text like lowercase letters:
+					<span class="gldn-nums-oldstyle">1618 and 2026</span>. Lining figures of one
+					width align in columns: <span class="gldn-nums-tabular">1618 and 2026</span>.
+					Small capitals set an acronym such as <abbr class="gldn-small-caps"
+					title="Cascading Style Sheets">CSS</abbr> at the height of the text, and a short
+					label can be <span class="gldn-caps">set in capitals</span>, spaced apart.
+				</p>
+			</article>
 		</section>
 
 		<section class="gldn-stack" id="components">

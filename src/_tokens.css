@@ -112,12 +112,15 @@
 		--gldn-leading         - Prose leading: phi.
 		--gldn-leading-heading - Heading leading: 1 + phi^-3.
 		--gldn-measure         - The longest line of running text: 100ch / phi.
+		--gldn-tracking-caps   - Letter spacing for capitals and small capitals: 1em × phi^-6
+		                         (0.056em), within the 5 to 10% that capitals want.
 
 		Styleguide Tokens.Prose
 		*/
 		--gldn-leading: var(--gldn-phi);
 		--gldn-leading-heading: calc(1 + pow(var(--gldn-phi), -3));
 		--gldn-measure: calc(100ch / var(--gldn-phi));
+		--gldn-tracking-caps: calc(1em * pow(var(--gldn-phi), -6));
 
 		/*
 		Thresholds
@@ -127,6 +130,9 @@
 
 		--gldn-grid-min   - The narrowest grid track: 100ch / phi^3 (23.6ch).
 		--gldn-switch-min - The width below which a switcher stacks: 100ch / phi^2 (38.2ch).
+		--gldn-side-width - The side's width in a gldn-sided composition: --gldn-grid-min.
+		--gldn-sided-min  - The least share of a gldn-sided composition its content keeps beside
+		                    the side: phi^-1 (61.8%); below it, both take the full width.
 		--gldn-split-min  - The width below which a golden row stacks: the 38.2ch intrinsic
 		                    threshold, or any width on a viewport narrower than 48rem. At
 		                    48rem and above the second term is negative, and the row's own
@@ -136,6 +142,8 @@
 		*/
 		--gldn-grid-min: calc(100ch / pow(var(--gldn-phi), 3));
 		--gldn-switch-min: calc(100ch / pow(var(--gldn-phi), 2));
+		--gldn-side-width: var(--gldn-grid-min);
+		--gldn-sided-min: var(--gldn-phi-1);
 		--gldn-split-min: max(calc(100ch / pow(var(--gldn-phi), 2)),
 			calc((var(--gldn-bp-sm) - 100vw) * 999));
 
@@ -238,21 +246,28 @@
 		/*
 		Interaction
 
+		--gldn-shadow-sm       - A slight lift, such as a raised control.
 		--gldn-shadow          - The panel shadow, deeper in the dark scheme.
+		--gldn-shadow-lg       - Surfaces over the page: dialogs, popovers and the error pop-in.
 		--gldn-focus-ring      - The outline of a focused element, in the link color.
 		--gldn-z-popover       - The stacking level of an application's floating layers, below the
 		                         dock.
 		--gldn-z-dock          - The stacking level of the dock, above popovers.
 		--gldn-motion-duration - The length of transitions and animations, in ms or s.
+		--gldn-target-min      - The least size of a small control, such as a marker or a chip's
+		                         Remove button: 24px (WCAG 2.5.8).
 		--gldn-touch-target    - The least size of a control for a coarse pointer: 44px.
 
 		Styleguide Tokens.Interaction
 		*/
+		--gldn-shadow-sm: 0 1px 2px light-dark(rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.4));
 		--gldn-shadow: 0 4px 6px -1px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.5));
+		--gldn-shadow-lg: 0 12px 24px -4px light-dark(rgb(0 0 0 / 0.16), rgb(0 0 0 / 0.6));
 		--gldn-focus-ring: calc(var(--gldn-space-xs) / var(--gldn-phi) / var(--gldn-phi)) solid var(--gldn-color-link);
 		--gldn-z-popover: 10000;
 		--gldn-z-dock: 11000;
 		--gldn-motion-duration: 160ms;
+		--gldn-target-min: 24px;
 		--gldn-touch-target: 44px;
 
 		/*
@@ -335,6 +350,13 @@
 		                           48rem. The workspace's columns read it, so they stack when
 		                           the workspace, padding included, is no wider than
 		                           --gldn-bp-sm.
+		--gldn-stack-space       - The gap between a stack's children: space-lg.
+		--gldn-cluster-space     - The gap between a cluster's children: space-sm.
+		--gldn-cluster-justify   - How a cluster aligns its children along the line: flex-start;
+		                           flex-end or space-between suit a row of actions.
+
+		Like the gutter, these inherit: set one on a stack or cluster, and the stacks or clusters
+		inside it take the same value unless they set their own.
 
 		Styleguide Tokens.Space
 		*/
@@ -348,6 +370,10 @@
 		--gldn-gutter: var(--gldn-space-lg);
 
 		--gldn-workspace-padding: var(--gldn-space-lg);
+
+		--gldn-stack-space: var(--gldn-space-lg);
+		--gldn-cluster-space: var(--gldn-space-sm);
+		--gldn-cluster-justify: flex-start;
 
 		/*
 		Type

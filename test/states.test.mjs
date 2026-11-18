@@ -159,6 +159,42 @@ export async function testStates(browser, test, root) {
 		}
 	});
 
+	// Hidden stays hidden over a component's display; small controls are at least 24px square;
+	// an unavailable action fades like a disabled one and takes no hover fill.
+	await browser.evaluate(`document.getElementById('states-light').insertAdjacentHTML('beforeend', \`
+		<div class="gldn-cluster" id="probe-hidden" hidden>hidden</div>
+		<p><span class="gldn-chip">kind <button type="button" id="probe-chip" aria-label="Remove kind">×</button></span></p>
+		<ul class="gldn-tree" role="tree" aria-label="Probe"><li role="treeitem" aria-expanded="false">
+			<span class="gldn-tree-row"><span class="gldn-tree-toggle" id="probe-toggle" aria-hidden="true"></span>
+			<a href="#">item</a></span><ul role="group"><li role="treeitem">child</li></ul></li></ul>
+		<p><button type="button" class="gldn-popin-dismiss" id="probe-dismiss" aria-label="Dismiss">×</button>
+			<button type="button" id="probe-bare" aria-disabled="true">Delete</button>
+			<button type="button" class="gldn-btn" id="probe-btn" aria-disabled="true">Delete</button></p>\`)`);
+	const restFill = await browser.evaluate(`getComputedStyle(document.getElementById('probe-btn')).backgroundColor`);
+	const probeBox = await browser.evaluate(`(() => {
+		const element = document.getElementById('probe-btn');
+		element.scrollIntoView({ block: 'center' });
+		const box = element.getBoundingClientRect();
+		return [box.left + box.width / 2, box.top + box.height / 2];
+	})()`);
+	await browser.hover(...probeBox);
+	const small = await browser.evaluate(`(() => {
+		const size = (id) => { const box = document.getElementById(id).getBoundingClientRect(); return [box.width, box.height]; };
+		const style = (id) => getComputedStyle(document.getElementById(id));
+		return { hidden: style('probe-hidden').display, chip: size('probe-chip'), toggle: size('probe-toggle'),
+			dismiss: size('probe-dismiss'), bare: style('probe-bare').opacity, btn: style('probe-btn').opacity,
+			hoverFill: style('probe-btn').backgroundColor };
+	})()`);
+	await browser.hover(0, 0);
+
+	test('hidden stays hidden, small controls are 24px targets, and unavailable actions fade', () => {
+		const target = (size) => size.every((side) => side >= 24 - 0.01);
+		if (small.hidden !== 'none' || !target(small.chip) || !target(small.toggle) || !target(small.dismiss)
+			|| small.bare !== '0.5' || small.btn !== '0.5' || small.hoverFill !== restFill) {
+			throw new Error(JSON.stringify({ small, restFill }));
+		}
+	});
+
 	test('busy elements show a turning ring, and a disclosure marker turns when expanded', () => {
 		for (const theme of themes) {
 			if (theme.busyRing !== 'solid' || theme.busyPanelRing !== 'solid'
