@@ -1,11 +1,11 @@
 # gldn-css - The Divine Proportional Semantic CSS System (DPS-CSS)
 
-**gldn-css** is a lightweight **Utility-First CSS** framework with a
-**Semantic Composition** established by **Golden Ratio** principles. Its typography and
-composition draw on Robert Bringhurst, Tim Brown's modular scales, Utopia, Every Layout,
+**gldn-css** is a lightweight, **CSS-first** framework for **semantic HTML** and
+**composition**, guided by **golden-ratio** proportions. Its typography and composition
+draw on Robert Bringhurst, Tim Brown's modular scales, Utopia, Every Layout,
 CUBE CSS, Open Props, and Pico CSS.
 
-Whereas other Utility-First CSS frameworks run counter to **separation of concerns**
+Whereas Utility-First CSS frameworks run counter to **separation of concerns**
 (separating presentation, markup and content), and purely semantic CSS classes
 tend to *expand linearly* as the project grows, we are trying to strike a balance,
 the best of both worlds in a beautiful and harmonious system:
