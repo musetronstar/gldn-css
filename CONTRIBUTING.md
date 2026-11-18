@@ -62,7 +62,7 @@ Styleguide Components.Button
 ## README
 
 The README introduces gldn-css to someone trying it for the first time: what it is, its
-lineage, a quick start, what is included and where it is documented, the files, building
+inspirations, a quick start, what is included and where it is documented, the files, building
 and testing, and the license. Reference material belongs in the code.
 
 ## Tests
