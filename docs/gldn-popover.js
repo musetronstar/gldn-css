@@ -25,7 +25,25 @@ function place(popover, opener) {
 	popover.dataset.gldnPlacement = top >= anchor.bottom ? 'below' : 'above';
 }
 
-/** Anchors a native popover to its opener. Returns { update, destroy }. */
+/**
+ * @typedef {object} PopoverAnchor
+ * @property {() => void} update - Places an open popover again, as after a layout change.
+ * @property {() => void} destroy - Removes the module's listeners.
+ */
+
+/**
+ * Anchors a native popover to its opener. The popover opens below the opener, or above it when
+ * only the space above is enough, stays inside the viewport, and records the side in
+ * `data-gldn-placement` (`below` or `above`). Focus returns to the opener when the popover
+ * closes from inside.
+ * @param {HTMLElement} popover - An element with the `popover` attribute.
+ * @param {HTMLElement} opener - The button that opens it, usually through `popovertarget`.
+ * @returns {PopoverAnchor} The anchor's controls.
+ * @throws {Error} When `popover` has no `popover` attribute.
+ * @example
+ * // <button popovertarget="menu">Actions</button> <div id="menu" popover>…</div>
+ * anchorPopover(document.querySelector('#menu'), document.querySelector('[popovertarget="menu"]'));
+ */
 export function anchorPopover(popover, opener) {
 	if (!popover.hasAttribute('popover')) throw new Error('anchorPopover requires a [popover] element');
 	const view = popover.ownerDocument.defaultView;

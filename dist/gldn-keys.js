@@ -30,7 +30,35 @@ function editable(element) {
 	return element?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]');
 }
 
-/** Listens for registered shortcuts on target. Returns { register, unregister, list, destroy }. */
+/**
+ * @typedef {object} Shortcut
+ * @property {string} combo - The keys joined by `+`, such as `Ctrl+K`, with `Mod` resolved.
+ * @property {string} description - What the shortcut does.
+ */
+
+/**
+ * @typedef {object} Shortcuts
+ * @property {(combo: string, handler: (event: KeyboardEvent) => void,
+ *   options?: { description?: string, editable?: boolean }) => void} register - Registers a
+ *   shortcut such as `Mod+K` or `F2`. With `editable: true`, it also acts in fields. Throws a
+ *   `RangeError` for an unknown modifier or a key without Ctrl, Alt or Meta that is not a
+ *   function key.
+ * @property {(combo: string) => void} unregister - Removes a shortcut by the combo it was
+ *   registered with.
+ * @property {() => Shortcut[]} list - The registered shortcuts, for a hint panel.
+ * @property {() => void} destroy - Removes the module's listener.
+ */
+
+/**
+ * Listens for registered shortcuts. The first matching shortcut runs and its key press is
+ * prevented; repeats and already prevented presses are ignored.
+ * @param {Document | HTMLElement} [target=document] - Where key presses are heard.
+ * @returns {Shortcuts} The registry.
+ * @example
+ * const keys = createShortcuts();
+ * keys.register('Mod+K', () => search.focus(), { description: 'Search' });
+ * renderHints(document.querySelector('.gldn-hints'), keys.list());
+ */
 export function createShortcuts(target = document) {
 	const owner = target.ownerDocument || target;
 	const apple = /Mac|iPhone|iPad/.test(owner.defaultView.navigator.platform);
@@ -68,7 +96,12 @@ export function createShortcuts(target = document) {
 	};
 }
 
-/** Writes a shortcut list into a <dl> as <kbd> keys and their descriptions, as text. */
+/**
+ * Writes shortcuts into a `<dl>`, such as a `gldn-hints` list: each combo as `<kbd>` keys, and
+ * its description, as text.
+ * @param {HTMLDListElement} list - The list; its children are replaced.
+ * @param {Shortcut[]} shortcuts - The shortcuts, usually from `list()`.
+ */
 export function renderHints(list, shortcuts) {
 	const owner = list.ownerDocument;
 	list.replaceChildren(...shortcuts.flatMap(({ combo, description }) => {

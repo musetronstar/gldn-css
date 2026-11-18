@@ -10,8 +10,15 @@
  */
 @layer responsive {
 
-	/* Coarse pointers: every control is at least a 44px target. The dock's strip already
-	 * is, and keeps its own sizes. */
+	/*
+	Coarse pointers
+
+	On a coarse pointer every control is at least --gldn-touch-target (44px), and so are icon
+	buttons, chips' Remove buttons, tree rows and tree markers. The dock's strip already is,
+	and keeps its own sizes.
+
+	Styleguide Responsive.Coarse pointers
+	*/
 	@media (pointer: coarse) {
 		:is(button, select, textarea, .gldn-btn,
 			input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"])):not(
@@ -30,8 +37,17 @@
 		}
 	}
 
-	/* Small screens: the workspace and the hero tighten their padding, and the
-	 * shell's navigation and its bar's search fold behind their toggles. */
+	/*
+	Small screens
+
+	The workspace and the layout primitives respond to their own width, and no media query
+	stacks them. At 48rem and below, the workspace and the hero tighten their padding, the
+	shell's navigation and its bar's search fold behind their toggles, and the dock becomes a
+	one-line strip whose panels and errors open as sheets over the content. Type and space
+	need no override, because their shared base interpolates smoothly.
+
+	Styleguide Responsive.Small screens
+	*/
 	@media (max-width: 48rem) {
 		.gldn-shell-toggle {
 			display: inline-flex;

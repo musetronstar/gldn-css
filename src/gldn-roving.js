@@ -19,7 +19,30 @@ function isEditable(element) {
 	return element.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]');
 }
 
-/** Adds roving focus to root. Returns { items, focus, destroy }. */
+/**
+ * @typedef {object} Roving
+ * @property {() => HTMLElement[]} items - The visible items, in document order.
+ * @property {(item: HTMLElement) => void} focus - Makes `item` the widget's Tab stop and focuses
+ *   it.
+ * @property {() => void} destroy - Removes the module's listeners and observer.
+ */
+
+/**
+ * Adds roving focus to a listbox, menu or tree. The Tab stop starts on the first visible item
+ * that is selected or current, or else on the first visible item.
+ * @param {HTMLElement} root - The element with `role="listbox"`, `"menu"` or `"tree"`.
+ * @param {object} [options]
+ * @param {boolean} [options.selectFollowsFocus=false] - Whether moving focus also sets
+ *   `aria-selected` on the focused item and clears it on the others.
+ * @returns {Roving} The widget's controls.
+ * @fires gldn-expand - On a tree item, bubbling, when it opens; `detail.item` is the item.
+ * @fires gldn-collapse - On a tree item, bubbling, when it closes; `detail.item` is the item.
+ * @fires gldn-activate - On an item, bubbling, for Enter or Space; `detail.item` is the item.
+ * @example
+ * const tree = document.querySelector('.gldn-tree');
+ * createRoving(tree);
+ * tree.addEventListener('gldn-expand', ({ detail }) => loadChildren(detail.item));
+ */
 export function createRoving(root, { selectFollowsFocus = false } = {}) {
 	let typed = '';
 	let typedAt = 0;

@@ -16,7 +16,36 @@ function describe(control, message) {
 	control.setAttribute('aria-describedby', [...ids].join(' '));
 }
 
-/** Enhances a form. Returns { submit, done, fail, cancel, busy, destroy }. */
+/**
+ * @typedef {object} FormControl
+ * @property {(button?: HTMLElement) => void} submit - Submits the form as `button` would.
+ * @property {() => void} done - Ends the busy state after a successful request.
+ * @property {(errors?: Object<string, string>) => void} fail - Ends the busy state and shows each
+ *   message beside the control with that name; focus moves to the first of them.
+ * @property {() => void} cancel - Ends the busy state and dispatches `gldn-cancel`; does nothing
+ *   when the form is not busy.
+ * @property {boolean} busy - Whether the application is working on a submission; read-only.
+ * @property {() => void} destroy - Removes the module's listeners.
+ */
+
+/**
+ * Enhances a form. Each control's message goes in the element whose `data-gldn-error-for` names
+ * the control's `id`, linked by `aria-describedby`; after a first attempt, messages update as
+ * the reader types. The form and its submit button carry `aria-busy="true"` while busy.
+ * @param {HTMLFormElement} form - The form; the module sets `noValidate` on it.
+ * @returns {FormControl} The form's state and controls.
+ * @fires gldn-submit - On `form` when every control is valid; `detail.data` is the `FormData`
+ *   and `detail.submitter` the button that submitted it.
+ * @fires gldn-invalid - On `form` when a control is invalid; `detail.controls` lists them.
+ * @fires gldn-cancel - On `form` when a busy submission is cancelled, also by Escape.
+ * @example
+ * const control = enhanceForm(form);
+ * form.addEventListener('gldn-submit', async ({ detail }) => {
+ *   const stored = await store(detail.data);
+ *   if (stored) control.done();
+ *   else control.fail({ name: 'That name is taken.' });
+ * });
+ */
 export function enhanceForm(form) {
 	let busy = false;
 	let submitter = null;

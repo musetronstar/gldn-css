@@ -16,7 +16,34 @@ function size(bytes) {
 	return `${unit === 0 ? value : value.toFixed(1)} ${units[unit]}`;
 }
 
-/** Connects a drop zone, its file input and its pending list. Returns { files, remove, clear, destroy }. */
+/**
+ * @typedef {object} FileDrop
+ * @property {File[]} files - A copy of the pending files, in order; read-only.
+ * @property {(index: number) => void} remove - Removes the pending file at `index`.
+ * @property {() => void} clear - Removes every pending file.
+ * @property {() => void} destroy - Removes the module's listeners; the files stay pending.
+ */
+
+/**
+ * Connects a drop zone, its file input and its pending list. Each entry shows the file's name,
+ * its size and a Remove button, and `[data-gldn-file-count]` shows the count. An input without
+ * `multiple` keeps only the latest file.
+ * @param {HTMLElement} zone - The `gldn-dropzone`, usually a `<label>` around the input.
+ * @param {object} [options]
+ * @param {HTMLInputElement} [options.input] - The `<input type="file">`; by default the first in
+ *   `zone`.
+ * @param {HTMLElement} [options.list] - The pending list; by default `zone`'s
+ *   `[data-gldn-files]`. Without one, the module keeps the input's files only.
+ * @param {(files: File[]) => void} [options.onChange] - Receives the pending files after each
+ *   change.
+ * @returns {FileDrop} The pending files and their controls.
+ * @throws {Error} When there is no file input.
+ * @fires gldn-files - On `zone`, bubbling, after each change; `detail.files` holds the pending
+ *   files.
+ * @example
+ * const drop = createFileDrop(document.querySelector('.gldn-dropzone'));
+ * form.addEventListener('submit', () => console.log(drop.files.length));
+ */
 export function createFileDrop(zone, { input = zone.querySelector('input[type="file"]'),
 	list = zone.querySelector('[data-gldn-files]'), onChange } = {}) {
 	if (!input) throw new Error('a file drop zone requires an <input type="file">');

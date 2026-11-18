@@ -16,7 +16,15 @@
 		padding: 0;
 	}
 
-	/* Long words and URLs wrap rather than widen the page. */
+	/*
+	Page
+
+	Every box sizes by its border box and starts without margin or padding. The page takes
+	the sans font, golden leading, the base type size and the page colors; long words and URLs
+	wrap rather than widen it.
+
+	Styleguide Reset.Page
+	*/
 	html {
 		font-family: var(--gldn-font-sans);
 		line-height: var(--gldn-leading);
@@ -33,6 +41,17 @@
 		font-size: var(--gldn-text-base);
 	}
 
+	/*
+	Headings
+
+	Headings use the display font, the tighter heading leading and balanced wrapping, at
+	--gldn-text-2xl for h1 down to --gldn-text-sm for h6. In an hgroup the subtitle follows
+	the heading closely, muted.
+
+	Markup: <hgroup><h1>As We May Think</h1><p>Vannevar Bush</p></hgroup>
+
+	Styleguide Reset.Headings
+	*/
 	h1,
 	h2,
 	h3,
@@ -54,6 +73,15 @@
 	h5 { font-size: var(--gldn-text-base); }
 	h6 { font-size: var(--gldn-text-sm); }
 
+	/*
+	Spacing
+
+	Space belongs between siblings: blocks stand --gldn-space-md apart, and unclassed
+	sections, articles and asides a larger step. The first and last child of a container add
+	none, so a panel's padding alone sets the space around its content. A rule is a hairline.
+
+	Styleguide Reset.Spacing
+	*/
 	p,
 	ul,
 	ol,
@@ -69,7 +97,6 @@
 		margin-block-end: var(--gldn-space-md);
 	}
 
-	/* Unclassed sections of a document stand a larger step apart. */
 	:is(section, article, aside):not([class]) {
 		margin-block-end: var(--gldn-space-lg);
 	}
@@ -80,8 +107,6 @@
 		border-block-start: var(--gldn-hairline) solid var(--gldn-color-border);
 	}
 
-	/* Space belongs between siblings. The first and last child of a container add none, so a
-	 * panel's padding alone sets the space around its content. */
 	:is(h1, h2, h3, h4, h5, h6, hr):first-child {
 		margin-block-start: 0;
 	}
@@ -91,8 +116,19 @@
 		margin-block-end: 0;
 	}
 
-	/* An unclassed page: its top-level header, main and footer are centered columns, and an
-	 * unclassed article is a card. Pages that lay themselves out with classes are untouched. */
+	/*
+	Unclassed page
+
+	Semantic HTML needs no classes. A top-level header, main or footer without a class is a
+	centered column at the --gldn-bp-lg width, and the footer is muted. An unclassed article is
+	a card, its own header and footer set off by hairlines. Elements with classes are
+	untouched, so pages that lay themselves out keep their layout. docs/semantic.html shows
+	every element with no class or style attribute.
+
+	Markup: <body><header>…</header><main><article><header>…</header><p>…</p></article></main></body>
+
+	Styleguide Reset.Unclassed page
+	*/
 	body > :is(header, main, footer):not([class]) {
 		max-inline-size: var(--gldn-bp-lg);
 		margin-inline: auto;
@@ -123,8 +159,7 @@
 		color: var(--gldn-color-muted);
 	}
 
-	/* A heading group: the heading, then its subtitle, close together and muted. */
-	hgroup > :is(h1, h2, h3, h4, h5, h6) {
+	hgroup >:is(h1, h2, h3, h4, h5, h6) {
 		margin-block-end: var(--gldn-space-xs);
 	}
 
@@ -133,8 +168,16 @@
 		color: var(--gldn-color-muted);
 	}
 
-	/* A header's navigation is a row of links; navigation elsewhere, such as a tree in a
-	 * sidebar, keeps its lists. */
+	/*
+	Header navigation
+
+	A header's nav lays its lists out as a row of links; navigation elsewhere, such as a tree
+	in a sidebar, keeps its lists.
+
+	Markup: <header><nav><strong>gldn-css</strong><ul><li><a href="#">Tour</a></li><li><a href="#">Fonts</a></li></ul></nav></header>
+
+	Styleguide Reset.Header navigation
+	*/
 	header nav {
 		display: flex;
 		flex-wrap: wrap;
@@ -158,8 +201,16 @@
 		margin: 0;
 	}
 
-	/* The measure belongs to running text. Lists, code and tables span their
-	 * container, so navigation, trees and data keep the width they are given. */
+	/*
+	Prose
+
+	Paragraphs, list items, definitions and quotations keep the readable measure, and
+	paragraphs wrap prettily. Lists, code and tables span their container, so navigation,
+	trees and data keep the width they are given. A blockquote is muted serif beside an edge,
+	its footer the attribution below it, smaller and upright; a figcaption is muted and small.
+
+	Styleguide Reset.Prose
+	*/
 	p,
 	li,
 	dd,
@@ -196,7 +247,6 @@
 		font-size: var(--gldn-text-md);
 	}
 
-	/* A quotation's attribution sits below it, smaller and upright. */
 	blockquote > footer {
 		margin-block-start: var(--gldn-space-xs);
 		font-family: var(--gldn-font-sans);
@@ -217,7 +267,17 @@
 		border-radius: var(--gldn-radius-sm);
 	}
 
-	/* Text-level semantics: each keeps a cue beside color. */
+	/*
+	Text-level semantics
+
+	Each keeps a cue beside color. mark is highlighted, abbr[title] dotted-underlined, del
+	struck through in the error color, ins underlined in the success color, and var serif.
+	Superscripts and subscripts step down by the square root of phi and leave the line's
+	leading alone. A kbd reads as a key: a boundary with a heavier lower edge. An unclassed
+	details is one row of an accordion; progress and meter span their line.
+
+	Styleguide Reset.Text-level semantics
+	*/
 	mark {
 		padding-inline: var(--gldn-hairline);
 		border-radius: var(--gldn-radius-sm);
@@ -245,8 +305,6 @@
 		font-family: var(--gldn-font-serif);
 	}
 
-	/* Superscripts and subscripts step down by the square root of phi and leave the
-	 * line's leading alone. */
 	sub,
 	sup {
 		font-size: calc(1em / sqrt(var(--gldn-phi)));
@@ -261,7 +319,6 @@
 		cursor: pointer;
 	}
 
-	/* An unclassed disclosure reads as one row of an accordion. */
 	details:not([class]) {
 		padding-block: var(--gldn-space-sm);
 		border-block-end: var(--gldn-hairline) solid var(--gldn-color-border);
@@ -282,7 +339,6 @@
 		vertical-align: middle;
 	}
 
-	/* A key reads as a key: a boundary with a heavier lower edge. */
 	kbd {
 		padding-inline: var(--gldn-space-xs);
 		border: var(--gldn-hairline) solid var(--gldn-color-control-border);
@@ -292,6 +348,16 @@
 		white-space: nowrap;
 	}
 
+	/*
+	Code
+
+	Code, keys, samples and preformatted blocks use the mono font. Inline code keeps the size
+	of the text around it, in headings and tables alike: the mono stacks have x-heights close
+	to those of the text stacks. Code sits on the text tint, resolved where it is used, so it
+	shows on the page, on cards and in both schemes; a preformatted block scrolls sideways.
+
+	Styleguide Reset.Code
+	*/
 	code,
 	kbd,
 	samp,
@@ -299,8 +365,6 @@
 		font-family: var(--gldn-font-mono);
 	}
 
-	/* Inline code keeps the size of the text around it, in headings and tables
-	 * alike: the mono stacks have x-heights close to those of the text stacks. */
 	code,
 	kbd,
 	samp {
@@ -311,8 +375,6 @@
 		font-size: var(--gldn-text-sm);
 	}
 
-	/* Code sits on a tint of the text color, resolved where it is used, so it
-	 * shows on the page, on cards and in both themes. */
 	code,
 	pre {
 		background-color: var(--gldn-color-tint);
@@ -334,7 +396,15 @@
 		background-color: transparent;
 	}
 
-	/* A table's border attribute draws nothing; rows are divided by hairlines. */
+	/*
+	Tables
+
+	A table spans its container in the small size with tabular numbers, its rows divided by
+	hairlines; its border attribute draws nothing. The caption sits above it, muted. Wrap a
+	wide table in a gldn-scroll region.
+
+	Styleguide Reset.Tables
+	*/
 	table {
 		width: 100%;
 		border: 0;
@@ -365,19 +435,32 @@
 		font-weight: 600;
 	}
 
+	/*
+	Links
+
+	Links take the link color and keep the browser's underline. A current link is heavier,
+	with a thicker underline.
+
+	:visited - Violet, in content only. Links in navigation, headers, trees, tab lists, menus
+	           and toolbars, and current links, keep the link color, since nearly every link
+	           there has been visited. Browsers apply only color properties to :visited.
+	:hover   - Higher contrast, under a pointer that hovers. A current link keeps its heavier
+	           underline as its cue.
+	[aria-current] - Heavier, with an underline of --gldn-edge-width.
+
+	Example: docs/components/states.html
+
+	Styleguide Reset.Links
+	*/
 	a {
 		color: var(--gldn-color-link);
 	}
 
-	/* A visited content link turns violet. Links in navigation, headers, trees, tab lists, menus
-	 * and toolbars, and current links, keep the link color, since nearly every link there has
-	 * been visited. Browsers apply only color properties to :visited. */
 	a:visited:where(:not(:is(nav, header, [role="navigation"], [role="tree"], [role="tablist"],
 		[role="menu"], [role="menubar"], [role="toolbar"]) a, [aria-current]:not([aria-current="false"]))) {
 		color: var(--gldn-color-link-visited);
 	}
 
-	/* Hover raises a link's contrast; a current link keeps its heavier underline as its cue. */
 	@media (hover: hover) {
 		a:hover {
 			color: var(--gldn-color-link-hover);
@@ -400,10 +483,23 @@
 		font: inherit;
 	}
 
-	/* Text controls and bare buttons share one quiet look: the surface, the text color, a
-	 * boundary with 3:1 contrast against the page and panels (WCAG 1.4.11), and the small
-	 * radius. The same padding and boundary give a button the height of the field beside it.
-	 * A control never grows wider than its container, whatever its default size. */
+	/*
+	Controls
+
+	Text fields, selects and bare buttons share one quiet look: the surface, the text color, a
+	boundary with 3:1 contrast against the page and panels (WCAG 1.4.11), and the small
+	radius. The same padding and boundary make a bare button as tall as the field beside it;
+	gldn-btn marks the primary action. A control never grows wider than its container.
+	Checkboxes, radios, ranges and progress bars take the primary color as their accent.
+
+	:hover    - A bare button takes the text tint over its fill.
+	:active   - A bare button takes the stronger active tint.
+	:disabled - Fades, with the default cursor.
+
+	Example: docs/components/controls.html
+
+	Styleguide Reset.Controls
+	*/
 	:is(
 		input:not([type]),
 		input:is([type="text"], [type="email"], [type="password"], [type="search"], [type="tel"],
@@ -431,7 +527,6 @@
 		cursor: pointer;
 	}
 
-	/* Hover and press lay the text tints over the button's own fill. */
 	:is(button, input:is([type="button"], [type="submit"], [type="reset"])):hover:not(:disabled) {
 		background-image: linear-gradient(var(--gldn-color-tint), var(--gldn-color-tint));
 	}
@@ -446,8 +541,23 @@
 		cursor: default;
 	}
 
-	/* Invalid and valid fields: the boundary color and, when invalid, a thicker inline-start
-	 * edge, so the state never rests on color alone. */
+	/*
+	States
+
+	Each state carries a cue beside color. The ring of a busy element turns only under
+	prefers-reduced-motion: no-preference; in forced colors, selection keeps an outline in the
+	system highlight.
+
+	[aria-invalid="true"]  - On a field: the error boundary and a thicker inline-start edge.
+	[aria-invalid="false"] - On a field: the success boundary.
+	[aria-selected="true"] - On an option, row or cell: the selected tint and an edge bar.
+	[aria-busy="true"]     - A ring in the text color turns before the content, which stays
+	                         readable; an empty busy element shows the ring alone, centered.
+
+	Example: docs/components/states.html
+
+	Styleguide Reset.States
+	*/
 	:is(input, select, textarea)[aria-invalid="true"] {
 		border-color: var(--gldn-color-invalid);
 		border-inline-start-width: var(--gldn-edge-width);
@@ -520,8 +630,23 @@
 		accent-color: var(--gldn-color-primary);
 	}
 
-	/* Forms. In an unclassed form, text controls fill their line, as in a column of fields;
-	 * a hint in <small> after a control sits below it. */
+	/*
+	Forms
+
+	In an unclassed form, text fields, selects and text areas fill their line, as a column of
+	fields; a file picker and a range each take their own line, and a <small> after a control
+	is its hint, below it. A label around a checkbox or radio sits beside it. A fieldset and
+	its legend frame a group; fieldset[role="group"] joins its controls on one line, such as a
+	field with its button. A checkbox with role="switch" is a track whose knob moves to the end
+	when it is on, so position, not only color, shows the state. The file picker's button is a
+	bare button.
+
+	Markup: <form><label for="q">Query</label><input id="q"><small>Words or a phrase</small><label><input type="checkbox" role="switch"> Exact</label></form>
+
+	Example: docs/semantic.html
+
+	Styleguide Reset.Forms
+	*/
 	:where(form:not([class])) :is(
 		input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"],
 			[type="button"], [type="submit"], [type="reset"], [type="image"], [type="hidden"]),
@@ -606,8 +731,6 @@
 		position: relative;
 	}
 
-	/* A switch: a checkbox drawn as a track whose knob moves to the end when on. Position,
-	 * not only color, shows the state. */
 	input[type="checkbox"][role="switch"] {
 		appearance: none;
 		inline-size: calc(1em * var(--gldn-phi) * var(--gldn-phi));
@@ -658,7 +781,21 @@
 		background-color: var(--gldn-color-surface);
 	}
 
-	/* A dialog holding one article lets the article be its surface. */
+	/*
+	Dialogs and popovers
+
+	A dialog or popover is a surface over the page, in the page's scheme, at most the measure
+	wide. The backdrop dims the page behind a modal dialog, and a dialog holding one article
+	lets the article be its surface. Both rise into view only under
+	prefers-reduced-motion: no-preference. gldn-dialog.js and gldn-popover.js add focus
+	handling and placement.
+
+	Markup: <dialog><article><header>Delete?</header><p>…</p><footer><button>Delete</button></footer></article></dialog>
+
+	Example: docs/semantic.html
+
+	Styleguide Reset.Dialogs and popovers
+	*/
 	dialog:has(> article:only-child) {
 		padding: 0;
 	}
@@ -707,7 +844,13 @@
 		}
 	}
 
-	/* One focus ring for every focusable element, components included. */
+	/*
+	Focus
+
+	One ring, --gldn-focus-ring, marks every focused element, components included.
+
+	Styleguide Reset.Focus
+	*/
 	:focus-visible {
 		outline: var(--gldn-focus-ring);
 		outline-offset: calc(var(--gldn-space-xs) / var(--gldn-phi) / var(--gldn-phi));

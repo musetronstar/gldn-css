@@ -1,8 +1,53 @@
+/*
+ * WAI-ARIA tabs with unread marks and a collapsible panel area. Each tab names its panel by
+ * data-gldn-tab, or else by aria-controls. Arrow keys, Home and End move among the tabs and
+ * select them. A [data-gldn-tab-mark] in a tab counts entries that arrived while its panel was
+ * hidden, with [data-gldn-tab-count] and an error sign in [data-gldn-tab-error]; selecting the
+ * tab clears its mark. A [data-gldn-tabs-collapse] button hides and shows every panel. On
+ * narrow screens, selecting the active tab again collapses the panels.
+ */
+
 function panelName(tab) {
 	return tab.dataset.gldnTab || tab.getAttribute('aria-controls');
 }
 
-/** Generic WAI-ARIA tabs with unread marks and a collapsible panel area. */
+/**
+ * @typedef {object} TabsState
+ * @property {string} active - The selected tab's panel name.
+ * @property {boolean} expanded - Whether the panels show.
+ */
+
+/**
+ * @typedef {object} Tabs
+ * @property {TabsState} state - The live state; read it, change it through the methods.
+ * @property {(name: string, options?: { focus?: boolean }) => void} select - Selects a tab,
+ *   shows the panels and clears the tab's mark; `focus` also focuses the tab. Throws a
+ *   `RangeError` for an unknown name.
+ * @property {() => void} collapse - Hides the panels.
+ * @property {() => void} expand - Shows the panels with the active tab selected.
+ * @property {(name: string, options?: { count?: number, error?: boolean }) => void} mark - Adds
+ *   `count` (by default 1) to a tab's mark and, with `error`, shows its error sign; a tab whose
+ *   panel shows is not marked.
+ * @property {(name: string) => void} clearMark - Clears a tab's mark.
+ */
+
+/**
+ * Connects tabs and their panels. `root` and an enclosing `[data-gldn-dock]` carry the state as
+ * `data-gldn-active` and `data-gldn-expanded`.
+ * @param {HTMLElement} root - The element holding the `role="tab"` and `role="tabpanel"`
+ *   elements.
+ * @param {object} [options]
+ * @param {string} [options.active] - The tab to select first; by default the one with
+ *   `aria-selected="true"`, or else the first.
+ * @param {boolean} [options.expanded=true] - Whether the panels show at first.
+ * @param {(state: TabsState) => void} [options.onStateChange] - Receives a copy of the state
+ *   after each change, for the application to remember.
+ * @returns {Tabs} The tabs' state and controls.
+ * @throws {Error} When there is no tab, or a tab has no panel.
+ * @example
+ * const tabs = createTabs(document.querySelector('[data-gldn-tabs]'), { active: 'input' });
+ * tabs.mark('messages', { error: true });
+ */
 export function createTabs(root, options = {}) {
 	const tabs = [...root.querySelectorAll('[role="tab"]')];
 	const panels = [...root.querySelectorAll('[role="tabpanel"]')];

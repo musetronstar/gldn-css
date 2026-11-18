@@ -25,13 +25,38 @@ function write(storage, key, value) {
 	}
 }
 
-/** Applies a theme choice to root: "system", "light" or "dark". */
+/**
+ * Applies a theme choice: `gldn-theme-light` or `gldn-theme-dark` on `root`, or neither, so the
+ * page follows the system scheme.
+ * @param {Element} root - The element whose subtree takes the scheme, usually `<html>`.
+ * @param {'system' | 'light' | 'dark'} value - The choice.
+ */
 export function applyTheme(root, value) {
 	root.classList.toggle('gldn-theme-light', value === 'light');
 	root.classList.toggle('gldn-theme-dark', value === 'dark');
 }
 
-/** Connects a theme control. Returns { value, set, destroy }. */
+/**
+ * @typedef {object} ThemeControl
+ * @property {'system' | 'light' | 'dark'} value - The current choice; read-only.
+ * @property {(value: 'system' | 'light' | 'dark') => void} set - Applies, remembers and shows a
+ *   choice. Throws a `RangeError` for any other value.
+ * @property {() => void} destroy - Removes the module's listener; the scheme stays applied.
+ */
+
+/**
+ * Connects a theme control and applies the remembered choice, or `system`.
+ * @param {HTMLSelectElement | HTMLElement} control - A `<select>`, or an element holding radio
+ *   buttons, whose values are `system`, `light` and `dark`.
+ * @param {object} [options]
+ * @param {Element} [options.root=document.documentElement] - The element that takes the theme
+ *   class.
+ * @param {string} [options.storageKey='gldn-theme'] - The local storage key for the choice.
+ * @returns {ThemeControl} The control's state and controls.
+ * @example
+ * // <select id="theme"><option value="system">System</option>…</select>
+ * createThemeControl(document.querySelector('#theme'));
+ */
 export function createThemeControl(control, { root = control.ownerDocument.documentElement,
 	storageKey = 'gldn-theme' } = {}) {
 	const view = control.ownerDocument.defaultView;

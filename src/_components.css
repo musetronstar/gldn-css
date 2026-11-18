@@ -5,7 +5,17 @@
  */
 @layer components {
 
-	/* Shared panel surface: sidebar, main, cards and view panels present identically. */
+	/*
+	Card
+
+	The shared panel surface: background, medium radius, shadow and --gldn-space-lg padding.
+	The workspace's sidebar and main columns and view panels present the same surface, and
+	the reset gives an unclassed article the same look.
+
+	Markup: <article class="gldn-card"><h2 class="gldn-title-2">Title</h2><p>…</p></article>
+
+	Styleguide Components.Card
+	*/
 	.gldn-sidebar,
 	.gldn-main,
 	.gldn-card,
@@ -17,10 +27,25 @@
 		padding: var(--gldn-space-lg);
 	}
 
-	/* The workspace fills the viewport and splits into golden columns. It
-	 * stacks when it is no wider than --gldn-bp-sm, padding included, by the
-	 * same max() basis as the golden row primitives; a page-wide workspace
-	 * therefore stacks exactly where the small-screen media query begins. */
+	/*
+	Workspace
+
+	A full-height frame that splits a page into a minor sidebar and a major main column, each
+	with the card surface. The bases follow the golden split's contract, so the padded panels
+	split the workspace in exactly the golden ratio. The columns stack when the workspace,
+	--gldn-workspace-padding included, is no wider than --gldn-bp-sm, so a page-wide workspace
+	stacks exactly where the small-screen media query begins; there its padding tightens to
+	--gldn-space-sm. Wide content overflows its own column rather than taking the other's
+	share.
+
+	.gldn-sidebar - The minor column, 38.197%.
+	.gldn-main    - The major column, 61.803%. It fills the workspace while a gldn-shell-nav
+	                beside it is closed.
+
+	Markup: <div class="gldn-workspace"><aside class="gldn-sidebar">…</aside><main class="gldn-main">…</main></div>
+
+	Styleguide Components.Workspace
+	*/
 	.gldn-workspace {
 		display: flex;
 		flex-wrap: wrap;
@@ -30,9 +55,6 @@
 		min-height: 100dvh;
 	}
 
-	/* Same contract as the layout primitives: the bases are border-box
-	 * sizes minus each column's golden share of the gutter, so the padded
-	 * panels split their container in exactly the golden ratio. */
 	.gldn-sidebar {
 		flex: 0 0 max(calc(var(--gldn-minor) - var(--gldn-gutter) / var(--gldn-phi) / var(--gldn-phi)),
 			calc((var(--gldn-bp-sm) + 1px - 2 * var(--gldn-workspace-padding) - 100%) * 999));
@@ -47,9 +69,19 @@
 		max-width: 100%;
 	}
 
-	/* Surface bands anchoring the top and bottom of a page. They are full
-	 * width in block flow or a stacked workspace, not in a horizontal flex
-	 * workspace. */
+	/*
+	Header and footer
+
+	Full-width surface bands for the top and bottom of a page, set off by a hairline. They
+	span the page in block flow or a stacked workspace, not in a horizontal one.
+
+	.gldn-header - The top band.
+	.gldn-footer - The bottom band.
+
+	Markup: <header class="gldn-header"><nav class="gldn-nav">…</nav></header>
+
+	Styleguide Components.Header and footer
+	*/
 	.gldn-header,
 	.gldn-footer {
 		background-color: var(--gldn-color-surface);
@@ -64,7 +96,16 @@
 		border-top: var(--gldn-hairline) solid var(--gldn-color-border);
 	}
 
-	/* Display band for the top of a page. */
+	/*
+	Hero
+
+	A centered display section with the card surface and the largest padding, which steps
+	down to --gldn-space-xl on small screens.
+
+	Markup: <section class="gldn-hero"><h1 class="gldn-title-hero">gldn-css</h1></section>
+
+	Styleguide Components.Hero
+	*/
 	.gldn-hero {
 		background-color: var(--gldn-color-surface);
 		border-radius: var(--gldn-radius-md);
@@ -73,6 +114,15 @@
 		text-align: center;
 	}
 
+	/*
+	Nav
+
+	A horizontal list of links with golden gaps, wrapping when it must.
+
+	Markup: <nav class="gldn-nav"><a href="#">Record</a> <a href="#">Consult</a></nav>
+
+	Styleguide Components.Nav
+	*/
 	.gldn-nav {
 		display: flex;
 		flex-wrap: wrap;
@@ -82,10 +132,24 @@
 		list-style: none;
 	}
 
-	/* Typography components ride the golden type scale and carry their own
-	 * weight, so they render the same on any element. Display sizes use
-	 * tighter leading than the phi leading reserved for prose. Long words
-	 * must wrap rather than clip: narrow screens are a fact of life. */
+	/*
+	Titles and text
+
+	Headings and text on the golden type scale. Each carries its own size and weight, so it
+	renders the same on any element. Titles use the display font, the tighter heading
+	leading and balanced wrapping, and long words wrap rather than clip.
+
+	.gldn-title-hero - A display heading at --gldn-text-3xl.
+	.gldn-title-1    - A section heading at --gldn-text-2xl.
+	.gldn-title-2    - A subsection heading at --gldn-text-xl.
+	.gldn-title-3    - A small, semibold heading at --gldn-text-lg.
+	.gldn-lede       - A section's introduction at --gldn-text-md, muted, at the measure.
+	.gldn-text       - Body copy at the base size, muted, at the measure.
+
+	Markup: <h2 class="gldn-title-2">Consult</h2><p class="gldn-lede">…</p>
+
+	Styleguide Components.Titles and text
+	*/
 	.gldn-title-hero,
 	.gldn-title-1,
 	.gldn-title-2,
@@ -120,9 +184,28 @@
 		text-wrap: pretty;
 	}
 
-	/* A button has the size of the reset's controls: the same block padding, boundary and
-	 * radius as a field or a bare button, so controls set side by side align. gldn-btn is the
-	 * primary action; each variant changes only colors. */
+	/*
+	Button
+
+	The primary action, for a <button> or an <a>. It has the reset's control size: the same
+	block padding, boundary and radius as a field or a bare button, so controls set side by
+	side align. A variant changes only colors.
+
+	.gldn-btn-secondary - The surface and the control boundary, beside a primary action.
+	.gldn-btn-quiet     - No fill and no visible boundary, for actions of low emphasis.
+	.gldn-btn-danger    - The error color, for destructive actions; the label names the
+	                      action too.
+	.gldn-btn-icon      - A square button for one icon, named by aria-label.
+	:hover              - Primary and danger buttons deepen; secondary and quiet ones take
+	                      the text tint, and the active tint while pressed.
+	:disabled           - Fades.
+
+	Markup: <button class="gldn-btn {{modifier_class}}" type="button">Save</button>
+
+	Example: docs/components/controls.html
+
+	Styleguide Components.Button
+	*/
 	.gldn-btn {
 		display: inline-flex;
 		align-items: center;
@@ -143,14 +226,12 @@
 		background-color: var(--gldn-color-primary-hover);
 	}
 
-	/* Secondary: the bare button's surface and boundary, beside a primary action. */
 	.gldn-btn-secondary {
 		border-color: var(--gldn-color-control-border);
 		background-color: var(--gldn-color-surface);
 		color: var(--gldn-color-text);
 	}
 
-	/* Quiet: no fill and no visible boundary, for actions of low emphasis. */
 	.gldn-btn-quiet {
 		border-color: transparent;
 		background-color: transparent;
@@ -176,7 +257,6 @@
 		background-color: transparent;
 	}
 
-	/* Danger: the error color for destructive actions; the label names the action too. */
 	.gldn-btn-danger {
 		border-color: var(--gldn-color-error);
 		background-color: var(--gldn-color-error);
@@ -195,15 +275,25 @@
 		cursor: default;
 	}
 
-	/* A square button for one icon; its accessible name comes from aria-label. A flex item
-	 * has no line-height strut, so the block size is set as well as the inline size. */
+	/* A flex item has no line-height strut, so the block size is set as well as the inline size. */
 	.gldn-btn-icon {
 		inline-size: var(--gldn-control-height);
 		block-size: var(--gldn-control-height);
 		padding-inline: 0;
 	}
 
-	/* Buttons joined into one control: shared boundaries, outer corners only. */
+	/*
+	Button group
+
+	Buttons joined into one control, with shared boundaries and rounded outer corners only.
+	Give the group role="group" and a label.
+
+	Markup: <span class="gldn-btn-group" role="group" aria-label="View"><button class="gldn-btn gldn-btn-secondary" type="button" aria-pressed="true">List</button><button class="gldn-btn gldn-btn-secondary" type="button" aria-pressed="false">Grid</button></span>
+
+	Example: docs/components/states.html
+
+	Styleguide Components.Button group
+	*/
 	.gldn-btn-group {
 		display: inline-flex;
 	}
@@ -223,8 +313,19 @@
 		position: relative;
 	}
 
-	/* An icon sized to its text: inline SVG drawn in the text color, or one text symbol.
-	 * A decorative icon carries aria-hidden="true"; the text beside it names the action. */
+	/*
+	Icon
+
+	An icon at the size of its text: inline SVG drawn in the text color, or one text symbol.
+	A decorative icon carries aria-hidden="true"; the text beside it, or the button's
+	aria-label, names the action.
+
+	Markup: <svg class="gldn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M7 1h2v6h6v2H9v6H7V9H1V7h6z"/></svg>
+
+	Example: docs/components/states.html
+
+	Styleguide Components.Icon
+	*/
 	.gldn-icon {
 		display: inline-block;
 		flex: none;
@@ -236,7 +337,20 @@
 		fill: currentColor;
 	}
 
-	/* A button that shows or hides a region: a marker that turns with aria-expanded. */
+	/*
+	Disclosure
+
+	A button that shows or hides a region, with a marker that turns with aria-expanded. The
+	marker turns smoothly only under prefers-reduced-motion: no-preference.
+
+	[aria-expanded="true"] - The marker points down.
+
+	Markup: <button class="gldn-btn gldn-btn-quiet gldn-disclosure" type="button" aria-expanded="false" aria-controls="region">Details</button>
+
+	Example: docs/components/states.html
+
+	Styleguide Components.Disclosure
+	*/
 	.gldn-disclosure::before {
 		content: "▸" / "";
 		display: inline-block;
@@ -253,7 +367,17 @@
 		}
 	}
 
-	/* Nothing to show yet: a dashed frame around a sentence that says so. */
+	/*
+	Empty state
+
+	A dashed frame around a muted sentence that says nothing is there yet.
+
+	Markup: <p class="gldn-empty">No entries match this search.</p>
+
+	Example: docs/components/states.html
+
+	Styleguide Components.Empty state
+	*/
 	.gldn-empty {
 		padding: var(--gldn-space-lg);
 		border: var(--gldn-hairline) dashed var(--gldn-color-control-border);
@@ -262,7 +386,22 @@
 		text-align: center;
 	}
 
-	/* A notice in the flow of a page, by kind; its text names the kind as well. */
+	/*
+	Alert
+
+	A notice in the flow of a page, on a tinted surface with a thicker inline-start edge. Its
+	text names the kind as well as its color does. Without a kind, it is information.
+
+	[data-gldn-kind="success"] - The success colors.
+	[data-gldn-kind="warning"] - The warning colors.
+	[data-gldn-kind="error"]   - The error colors.
+
+	Markup: <p class="gldn-alert" data-gldn-kind="error"><strong>Error:</strong> enter a value.</p>
+
+	Example: docs/components/states.html
+
+	Styleguide Components.Alert
+	*/
 	.gldn-alert {
 		padding: var(--gldn-space-sm) var(--gldn-space-md);
 		border: var(--gldn-hairline) solid var(--gldn-color-info);
@@ -286,16 +425,53 @@
 		background-color: var(--gldn-color-error-surface);
 	}
 
-	/* Wide content (tables, code, data) scrolls inside its own region, not the page. Give it
-	 * tabindex="0" and a label, so a keyboard can scroll it. */
+	/*
+	Scroll region
+
+	Wide content, such as a table, code or data, scrolls inside its own region rather than
+	the page. Give the region tabindex="0", role="region" and a label, so a keyboard can
+	scroll it.
+
+	Markup: <div class="gldn-scroll" tabindex="0" role="region" aria-label="Methods"><table>…</table></div>
+
+	Example: docs/components/states.html
+
+	Styleguide Components.Scroll region
+	*/
 	.gldn-scroll {
 		max-inline-size: 100%;
 		overflow-x: auto;
 		overscroll-behavior-inline: contain;
 	}
 
-	/* The page reserves the measured dock height. On narrow screens the module
-	 * reserves only the strip while panels and errors overlay the content. */
+	/*
+	Dock
+
+	A fixed bottom panel: a strip of tabs over tab panels, with an error pop-in. A
+	gldn-has-dock body reserves --gldn-dock-reserve as bottom padding, which gldn-dock.js
+	measures, so the dock never covers the page. Below 48rem the dock is a one-line strip:
+	panels open as sheets over the content, and errors use a smaller sheet above the strip.
+	The pop-in enters and leaves with motion only under prefers-reduced-motion: no-preference.
+
+	.gldn-has-dock              - On the body: bottom padding of --gldn-dock-reserve.
+	.gldn-dock-strip            - The strip holding the tab list and the dock's own controls.
+	.gldn-dock-control          - A control in the strip or a panel, such as Collapse.
+	.gldn-dock-panels           - The area holding the tab panels.
+	.gldn-code-panel            - A tab panel holding a gldn-code-input.
+	.gldn-message-panel         - A tab panel holding a gldn-messages log.
+	.gldn-message-tools         - The message panel's controls, such as Expand and Clear.
+	.gldn-dock-popin            - The error pop-in, role="alert".
+	.gldn-dock-popin-content    - The entry the pop-in shows.
+	.gldn-popin-dismiss         - The pop-in's Dismiss button.
+	.gldn-dock-popin-entering   - Set by the module while the pop-in enters.
+	.gldn-dock-popin-leaving    - Set by the module while the pop-in leaves.
+	[data-gldn-expanded="false"]         - The panels are collapsed to the strip.
+	[data-gldn-messages-expanded="true"] - The dock grows to --gldn-dock-expanded-height.
+
+	Example: docs/components/dock.html
+
+	Styleguide Components.Dock
+	*/
 	.gldn-has-dock {
 		padding-bottom: var(--gldn-dock-reserve);
 	}
@@ -322,6 +498,23 @@
 		max-height: 100vh;
 	}
 
+	/*
+	Tabs
+
+	WAI-ARIA tabs and their panels, which gldn-tabs.js connects. The selected tab is bold,
+	with an edge along its top and a tint. A tab's mark counts entries that arrived while its
+	panel was hidden; in forced colors the selected tab keeps its edge in the system highlight.
+
+	.gldn-tablist  - The role="tablist" row, which scrolls when the tabs do not fit.
+	.gldn-tab      - A role="tab" button; aria-selected="true" marks the selected one.
+	.gldn-tab-mark - A tab's mark: a count, and an error sign.
+	.gldn-tab-error - The mark's error sign, in the error color.
+	.gldn-tabpanel - A role="tabpanel"; a hidden panel takes no space.
+
+	Example: docs/components/dock.html
+
+	Styleguide Components.Tabs
+	*/
 	.gldn-tabs {
 		display: flex;
 		flex-direction: column;
@@ -428,6 +621,25 @@
 		gap: var(--gldn-space-sm);
 	}
 
+	/*
+	Messages
+
+	A newest-first, scrollable role="log" of entries, which gldn-messages.js writes. Each entry
+	is a tinted article whose kind shows in an icon, in words and in color.
+
+	.gldn-message        - One entry; data-gldn-kind is info, success, warning or error.
+	.gldn-message-meta   - The entry's icon, kind and time, on one line.
+	.gldn-message-icon   - The kind's icon in a disc of its color.
+	.gldn-message-kind   - The kind in words.
+	.gldn-message-time   - The time, muted and at the end of the line.
+	.gldn-message-header - A one-line heading, cut with an ellipsis.
+	.gldn-message-body   - Preformatted detail in the mono font.
+	.gldn-message-detail - A <details> that folds the body away.
+
+	Example: docs/components/dock.html
+
+	Styleguide Components.Messages
+	*/
 	.gldn-messages {
 		flex: 1;
 		min-height: 0;
@@ -610,10 +822,21 @@
 		}
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-01 Field: a label, an optional hint, the control, and a message the
-	 * form module links to it with aria-describedby.
-	 * ---------------------------------------------------------------- */
+	/*
+	Field
+
+	A label, an optional hint, the control, which fills the field's width, and an error
+	message, stacked. gldn-form.js links the message to the control with aria-describedby.
+
+	.gldn-hint  - A muted hint, in small text.
+	.gldn-error - The message, in the invalid color; data-gldn-error-for names the control's id.
+
+	Markup: <p class="gldn-field"><label for="name">Name</label><span class="gldn-hint" id="name-hint">As it should appear.</span><input id="name" required aria-describedby="name-hint"><span class="gldn-error" data-gldn-error-for="name" hidden></span></p>
+
+	Example: docs/components/field.html
+
+	Styleguide Components.Field
+	*/
 	.gldn-field {
 		display: flex;
 		flex-direction: column;
@@ -635,10 +858,21 @@
 		font-weight: 600;
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-02 Code input and output: a monospace editor and a result shown as
-	 * literal, preformatted text.
-	 * ---------------------------------------------------------------- */
+	/*
+	Code input and output
+
+	A monospace editor, and a result shown as literal, preformatted text on the text tint. The
+	output scrolls beyond five control heights.
+
+	.gldn-code-input  - A <textarea> in the mono font that fills its panel.
+	.gldn-code-output - The result, in the mono font at the small size.
+
+	Markup: <textarea class="gldn-code-input" aria-label="Command"></textarea><output class="gldn-code-output">…</output>
+
+	Example: docs/components/code.html
+
+	Styleguide Components.Code input and output
+	*/
 	.gldn-code-output {
 		display: block;
 		max-block-size: calc(var(--gldn-control-height) * 5);
@@ -651,10 +885,18 @@
 		white-space: pre-wrap;
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-03 Search bar: a labelled query, optional controls and an explicit
-	 * Search button, wrapping on narrow screens without hiding anything.
-	 * ---------------------------------------------------------------- */
+	/*
+	Search
+
+	A role="search" form: a labelled query, optional controls and an explicit Search button.
+	It wraps on narrow screens without hiding anything; the query takes the room left.
+
+	Markup: <form class="gldn-search" role="search"><label class="gldn-visually-hidden" for="q">Search</label><input id="q" type="search"><button class="gldn-btn">Search</button></form>
+
+	Example: docs/components/search.html
+
+	Styleguide Components.Search
+	*/
 	.gldn-search {
 		display: flex;
 		flex-wrap: wrap;
@@ -667,11 +909,26 @@
 		min-inline-size: 0;
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-04 Navigation tree: nested role="tree" lists. A closed item hides its
-	 * group; the row's marker turns when the item opens. Focus rests on the
-	 * item, which holds its subtree, so the ring is drawn on its row.
-	 * ---------------------------------------------------------------- */
+	/*
+	Tree
+
+	Nested role="tree" lists, which gldn-roving.js makes one Tab stop. A closed item hides its
+	group, and the row's marker turns when the item opens. Focus rests on the item, which
+	holds its subtree, so the focus ring is drawn on its row. A selected row takes the
+	selected tint and an edge bar, and its link the text color.
+
+	.gldn-tree-row    - An item's own row: its marker, its link and any controls of its own,
+	                    such as an Add button.
+	.gldn-tree-toggle - The marker as an element a pointer clicks to open or close the item.
+	[aria-expanded="false"] - On an item: closed, its group hidden.
+	[aria-selected="true"]  - On an item: selected.
+
+	Markup: <ul class="gldn-tree" role="tree" aria-label="Sections"><li role="treeitem" aria-expanded="false"><span class="gldn-tree-row"><span class="gldn-tree-toggle" aria-hidden="true"></span><a href="#">Record</a></span><ul role="group">…</ul></li></ul>
+
+	Example: docs/components/tree.html
+
+	Styleguide Components.Tree
+	*/
 	.gldn-tree,
 	.gldn-tree [role="group"] {
 		margin: 0;
@@ -715,8 +972,7 @@
 		rotate: 90deg;
 	}
 
-	/* A row may hold its marker as a gldn-tree-toggle, which a pointer clicks to open or
-	 * close the item; keys do the same on the item itself. */
+	/* Keys open and close the item itself; a toggle replaces the row's own marker. */
 	.gldn-tree-row:has(> .gldn-tree-toggle)::before {
 		content: none;
 	}
@@ -769,9 +1025,21 @@
 		}
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-05 Result list: ordinary links with a kind, an identity and a snippet.
-	 * ---------------------------------------------------------------- */
+	/*
+	Results
+
+	A list of results, each an ordinary link with a metadata line and a snippet, divided by
+	hairlines. aria-current or aria-selected on an item marks it with the selected tint and an
+	edge bar. A visited result's link turns violet, and under a pointer a link gains contrast.
+
+	.gldn-result-meta - The result's kind and identity, muted and wrapping.
+
+	Markup: <ol class="gldn-results"><li><a href="#">Title</a><p class="gldn-result-meta"><span>kind</span><span>identity</span></p><p>snippet</p></li></ol>
+
+	Example: docs/components/results.html
+
+	Styleguide Components.Results
+	*/
 	.gldn-results {
 		margin: 0;
 		padding-inline-start: 0;
@@ -811,10 +1079,21 @@
 		overflow-wrap: anywhere;
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-06 Chips and facets: a chip labels one filter and may hold its own
-	 * Remove button; facets apply only when submitted.
-	 * ---------------------------------------------------------------- */
+	/*
+	Chips and facets
+
+	A chip labels one filter and may hold its own Remove button; aria-pressed="true" marks an
+	active one. Facets are a fieldset of choices that apply only when the form is submitted.
+
+	.gldn-chip   - A filter label, with an optional button.
+	.gldn-facets - A column of choices.
+
+	Markup: <span class="gldn-chip">kind: page <button type="button" aria-label="Remove kind: page">×</button></span>
+
+	Example: docs/components/chips.html
+
+	Styleguide Components.Chips and facets
+	*/
 	.gldn-chip {
 		display: inline-flex;
 		align-items: center;
@@ -846,10 +1125,19 @@
 		gap: var(--gldn-space-xs);
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-07 Pagination: links to pages, the current page marked, and the
-	 * unavailable ends shown as text rather than links.
-	 * ---------------------------------------------------------------- */
+	/*
+	Pagination
+
+	A <nav> of page links, each at least a control's height square. aria-current="page"
+	marks the current page in the primary color, and an unavailable end is a
+	<span aria-disabled="true"> that fades, not a link.
+
+	Markup: <nav class="gldn-pagination" aria-label="Pages"><ul><li><span aria-disabled="true">Previous</span></li><li><a href="#" aria-current="page">1</a></li><li><a href="#">2</a></li></ul></nav>
+
+	Example: docs/components/pagination.html
+
+	Styleguide Components.Pagination
+	*/
 	.gldn-pagination ul {
 		display: flex;
 		flex-wrap: wrap;
@@ -886,11 +1174,22 @@
 		opacity: var(--gldn-opacity-disabled);
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-08 View panel: a header (title, metadata, actions), content and a
-	 * footer. The active panel has an edge; aria-busy, gldn-empty and
-	 * gldn-alert give its loading, empty and error states.
-	 * ---------------------------------------------------------------- */
+	/*
+	Panel
+
+	A view panel with the card surface: a <header> with a title, metadata and actions, the
+	content, and a <footer> of actions, each set off by a hairline. aria-current="true" marks
+	the active panel with an edge; aria-busy, a gldn-empty or a gldn-alert give its loading,
+	empty and error states.
+
+	.gldn-panel-title - The panel's heading at --gldn-text-lg.
+
+	Markup: <section class="gldn-panel"><header><h2 class="gldn-panel-title">Title</h2></header><p>…</p><footer><button type="button">Close</button></footer></section>
+
+	Example: docs/components/panel.html
+
+	Styleguide Components.Panel
+	*/
 	.gldn-panel > header {
 		display: flex;
 		flex-wrap: wrap;
@@ -921,10 +1220,22 @@
 		font-size: var(--gldn-text-lg);
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-09 Metadata and badges: a key-value list, a badge, and text cut to
-	 * one line that keeps its full content for assistive technology.
-	 * ---------------------------------------------------------------- */
+	/*
+	Metadata and badges
+
+	A key-value list, a short label, and text cut to one line.
+
+	.gldn-meta     - A <dl> of muted keys beside their values.
+	.gldn-badge    - A short label on the text tint.
+	.gldn-truncate - Cuts text to one line with an ellipsis and keeps its full content for
+	                 assistive technology.
+
+	Markup: <dl class="gldn-meta"><dt>kind</dt><dd><span class="gldn-badge">page</span></dd></dl>
+
+	Example: docs/components/meta.html
+
+	Styleguide Components.Metadata and badges
+	*/
 	.gldn-meta {
 		display: grid;
 		grid-template-columns: max-content minmax(0, 1fr);
@@ -961,10 +1272,20 @@
 		white-space: nowrap;
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-10 File drop zone: the native picker inside a dashed frame that turns
-	 * solid while files are dragged over it, and the pending list below.
-	 * ---------------------------------------------------------------- */
+	/*
+	Drop zone
+
+	A <label> around a file input, its count and its pending list, in a dashed frame that
+	turns solid while files are dragged over it. gldn-files.js fills the list.
+
+	[data-gldn-dragging] - Set by the module while files are over the zone.
+
+	Markup: <label class="gldn-dropzone">Choose or drop files <input type="file" multiple><span data-gldn-file-count></span><ul data-gldn-files></ul></label>
+
+	Example: docs/components/files.html
+
+	Styleguide Components.Drop zone
+	*/
 	.gldn-dropzone {
 		display: flex;
 		flex-direction: column;
@@ -996,10 +1317,27 @@
 		max-width: none;
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-11 Application shell: a power bar above the workspace, with the
-	 * navigation behind a toggle on narrow screens (see _responsive.css).
-	 * ---------------------------------------------------------------- */
+	/*
+	Shell
+
+	A gldn-shell is an application page: a gldn-shell-bar above a workspace that fills the
+	rest of the viewport. Below 48rem, a gldn-shell-nav and a gldn-search in the bar fold
+	behind gldn-shell-toggle buttons while they carry data-gldn-collapsed, and an unfolded
+	region sits above the content. A gldn-shell-close button closes the navigation at any width: the
+	application sets data-gldn-closed on the navigation and on its toggle, which then shows to
+	reopen it, and the gldn-main beside it fills the workspace.
+
+	.gldn-shell-bar    - The bar of global controls, such as a search.
+	.gldn-shell-nav    - The navigation column, usually a gldn-sidebar.
+	.gldn-shell-toggle - A button that folds or reopens a region; hidden unless needed.
+	.gldn-shell-close  - A button in the navigation that closes it; hidden below 48rem.
+	[data-gldn-collapsed] - On a region: folded below 48rem.
+	[data-gldn-closed]    - On the navigation and its toggle: closed at every width.
+
+	Example: docs/components/shell.html
+
+	Styleguide Components.Shell
+	*/
 	.gldn-shell {
 		display: flex;
 		flex-direction: column;
@@ -1030,8 +1368,6 @@
 		display: none;
 	}
 
-	/* A gldn-shell-close button closes the navigation at every width. The application sets
-	 * data-gldn-closed on the navigation and on its toggle, which then shows to reopen it. */
 	.gldn-shell-nav[data-gldn-closed] {
 		display: none;
 	}
@@ -1045,9 +1381,17 @@
 		flex-basis: 100%;
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-12 Keyboard hints: shortcut keys beside what they do.
-	 * ---------------------------------------------------------------- */
+	/*
+	Keyboard hints
+
+	A <dl> of shortcut keys beside what they do; gldn-keys.js can write it.
+
+	Markup: <dl class="gldn-hints"><dt><kbd>Ctrl</kbd>+<kbd>K</kbd></dt><dd>Search</dd></dl>
+
+	Example: docs/components/controls.html
+
+	Styleguide Components.Keyboard hints
+	*/
 	.gldn-hints {
 		display: grid;
 		grid-template-columns: max-content minmax(0, 1fr);
@@ -1059,9 +1403,17 @@
 		margin: 0;
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-13 Media viewer: framed media, native players, pages and cues.
-	 * ---------------------------------------------------------------- */
+	/*
+	Media
+
+	Framed images, native players that fill their width, pages and cues, which gldn-media.js
+	connects. The cue under the playhead carries aria-current="time" and takes the selected
+	tint.
+
+	Example: docs/components/media.html
+
+	Styleguide Components.Media
+	*/
 	.gldn-media {
 		display: flex;
 		flex-direction: column;
@@ -1078,10 +1430,17 @@
 		font-weight: 600;
 	}
 
-	/* ------------------------------------------------------------------
-	 * C-14 Event timeline: the message log with a filter bar; filtering hides
-	 * entries without removing them from the log.
-	 * ---------------------------------------------------------------- */
+	/*
+	Timeline
+
+	A gldn-timeline is a gldn-messages log with a filter bar above it. Filtering hides
+	entries without removing them from the log; a [data-gldn-messages-older] control asks
+	for older entries.
+
+	Example: docs/components/timeline.html
+
+	Styleguide Components.Timeline
+	*/
 	.gldn-timeline {
 		display: flex;
 		flex-direction: column;

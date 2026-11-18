@@ -901,4 +901,91 @@ test('unterminated comments fail the build loudly', () => {
 	assert.throws(() => stripComments('a { color: red } /* oops'), /unterminated/);
 });
 
+/* --------------------------------------------------------------------------
+ * 11. Documentation as Code
+ *
+ * The stylesheets carry their reference as KSS blocks: a title, a description,
+ * optional modifier lines (`.class - meaning`, `:state - meaning`, or for tokens
+ * `--gldn-token - meaning`), optional Markup: and Example: sections, and a
+ * closing Styleguide reference. The modules carry theirs as JSDoc. The README
+ * introduces the project and points to both.
+ * ------------------------------------------------------------------------ */
+
+// A KSS block is a comment whose last line is its Styleguide reference.
+function kssBlocks(css) {
+	return [...css.matchAll(/\/\*\n((?:(?!\*\/)[\s\S])*?)\n\s*Styleguide ([^\n]+)\n\s*\*\//g)]
+		.map(([, body, reference]) => {
+			const lines = body.split('\n').map((line) => line.trim());
+			return { title: lines.find(Boolean), body, reference: reference.trim(),
+				example: /^\s*Example: (\S+)$/m.exec(body)?.[1] };
+		});
+}
+
+const names = (text, pattern) => new Set([...text.matchAll(pattern)].map((m) => m[1]));
+const WORD = (name) => new RegExp(`(?<![\\w-])${name}(?![\\w-])`);
+
+test('every KSS block has a title, a description and a unique Styleguide reference', () => {
+	const blocks = PARTIALS.flatMap((name) => kssBlocks(src(name)).map((block) => ({ name, ...block })));
+	assert.ok(blocks.length >= 50, `only ${blocks.length} KSS blocks`);
+	const references = new Set();
+	for (const { name, title, body, reference, example } of blocks) {
+		assert.match(reference, /^(?:Reset|Tokens|Layout|Components|Responsive)\.[A-Z]/, `${name}: ${reference}`);
+		assert.equal(reference.split('.').at(-1), title, `${name}: ${reference} is titled ${title}`);
+		assert.ok(body.split('\n').filter((line) => line.trim()).length >= 2, `${reference} has no description`);
+		assert.ok(!references.has(reference), `${reference} is used twice`);
+		references.add(reference);
+		if (example) assert.ok(existsSync(path.join(root, example)), `${reference}: missing ${example}`);
+	}
+});
+
+test('every gldn- class in the stylesheets is documented in a KSS block', () => {
+	const css = PARTIALS.map(src).join('\n');
+	const documented = kssBlocks(css).map((block) => block.body).join('\n');
+	const classes = names(stripComments(css), /\.(gldn-[\w-]+)/g);
+	const missing = [...classes].filter((name) => !WORD(name).test(documented));
+	assert.deepEqual(missing, [], `classes without a KSS block: ${missing}`);
+});
+
+test('every token is documented in a KSS block of the tokens layer', () => {
+	const documented = kssBlocks(tokens).map((block) => block.body).join('\n');
+	const missing = [...names(stripComments(tokens), /(--gldn-[\w-]+)\s*:/g)]
+		.filter((name) => !new RegExp(`^\\s*${name}\\s+- `, 'm').test(documented));
+	assert.deepEqual(missing, [], `tokens without a documented line: ${missing}`);
+});
+
+test('a component example page shows the component it documents', () => {
+	for (const block of kssBlocks(components)) {
+		if (!block.example) continue;
+		const page = readFileSync(path.join(root, block.example), 'utf8');
+		const classes = [...names(block.body, /(gldn-[\w-]+)/g)];
+		assert.ok(classes.some((name) => WORD(name).test(page)), `${block.example} shows none of ${block.reference}`);
+	}
+});
+
+test('every module opens with a description, and every export has JSDoc', () => {
+	for (const name of MODULES) {
+		const source = src(name);
+		assert.match(source, /^\/\*\n \* \S/, `${name} must open with a block comment`);
+		for (const match of source.matchAll(/(\/\*\*(?:(?!\*\/)[\s\S])*\*\/)?\nexport function (\w+)\(([^)]*(?:\([^)]*\)[^)]*)*)\) \{\n([\s\S]*?)\n\}/g)) {
+			const [, doc, fn, params, body] = match;
+			assert.ok(doc, `${name}: ${fn} has no JSDoc`);
+			for (const param of params.split(/,(?![^{]*\})/).map((p) => p.trim()).filter(Boolean)) {
+				const id = param.startsWith('{') ? 'options' : param.split('=')[0].trim();
+				assert.match(doc, new RegExp(`@param \\{[^}]+\\} \\[?${id}\\b`), `${name}: ${fn} lacks @param ${id}`);
+			}
+			if (/^\treturn\b/m.test(body)) assert.match(doc, /@returns \{/, `${name}: ${fn} lacks @returns`);
+			for (const event of names(body, /new CustomEvent\('([\w-]+)'/g)) {
+				assert.match(doc, new RegExp(`@fires ${event}\\b`), `${name}: ${fn} lacks @fires ${event}`);
+			}
+		}
+	}
+});
+
+test('README lines fit in 100 columns', () => {
+	const long = readFileSync(path.join(root, 'README.md'), 'utf8').split('\n')
+		.map((line, index) => ({ line: index + 1, width: line.replace(/\t/g, '    ').length }))
+		.filter(({ width }) => width > 100);
+	assert.deepEqual(long, [], 'README lines wider than 100 columns');
+});
+
 console.log(`\n${passed} contract tests passed${failed ? `, ${failed} failed` : ''}`);

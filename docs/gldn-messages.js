@@ -1,3 +1,11 @@
+/*
+ * A newest-first message log (role="log") and the error pop-in over its dock. Entries are text
+ * only: the module never parses HTML from a message. Showing an entry or an error never moves
+ * focus; Escape, the Dismiss button or a click elsewhere dismisses the pop-in and leaves the
+ * entry in the log. The pop-in animates only under prefers-reduced-motion: no-preference. The
+ * application owns storage, channels and how many entries to keep.
+ */
+
 const KINDS = {
 	info: { label: 'Information', icon: 'i' },
 	success: { label: 'Success', icon: '✓' },
@@ -59,11 +67,41 @@ function renderEntry(entry) {
 	return article;
 }
 
-/*
- * A newest-first message log with an optional error pop-in over its dock. With
- * { details: true }, each body folds into a <details> element. filter() hides entries that do
- * not match, without removing them; append() adds older entries at the end, which a
- * [data-gldn-messages-older] control asks for by dispatching gldn-older on the log.
+/**
+ * @typedef {object} MessageEntry
+ * @property {'info' | 'success' | 'warning' | 'error'} [kind='info'] - The kind, which the entry
+ *   names in words as well as by color.
+ * @property {string | number | Date} time - When it happened; shown as a local time.
+ * @property {string} header - A one-line summary.
+ * @property {string} [body] - Preformatted detail.
+ * @property {string | number} [id] - Recorded as `data-gldn-message-id`.
+ */
+
+/**
+ * @typedef {object} Messages
+ * @property {(entry: MessageEntry, options?: { popIn?: boolean }) => void} add - Prepends an
+ *   entry, keeping the reader's scroll position. An error also shows in the pop-in unless
+ *   `popIn` is false. Throws a `RangeError` for an unknown kind.
+ * @property {(entries: MessageEntry[]) => void} replace - Restores a newest-first list.
+ * @property {() => void} clear - Empties the log.
+ * @property {(entries: MessageEntry[]) => void} append - Adds older entries at the end.
+ * @property {(options?: { text?: string, kinds?: string[] | null }) => void} filter - Hides
+ *   entries whose kind is not in `kinds` or whose text lacks `text`, without removing them.
+ * @property {() => void} dismissError - Dismisses the error pop-in.
+ */
+
+/**
+ * Connects a message log. Controls in its panel or timeline: `[data-gldn-messages-expand]`
+ * lets the dock grow to `--gldn-dock-expanded-height`, `[data-gldn-messages-clear]` empties the
+ * log, and `[data-gldn-messages-older]` asks for older entries.
+ * @param {HTMLElement} log - The `[data-gldn-messages]` element.
+ * @param {object} [options]
+ * @param {boolean} [options.details=false] - Whether each body folds into a `<details>`.
+ * @returns {Messages} The log's controls.
+ * @fires gldn-older - On `log`, bubbling, when `[data-gldn-messages-older]` is clicked.
+ * @example
+ * const messages = createMessages(document.querySelector('[data-gldn-messages]'));
+ * messages.add({ kind: 'success', time: Date.now(), header: 'Stored' });
  */
 export function createMessages(log, { details = false } = {}) {
 	const document = log.ownerDocument;

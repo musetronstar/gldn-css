@@ -2,7 +2,8 @@
  * gldn-css layout - golden layout primitives.
  *
  * The utility layer: low-level golden proportions composed by the semantic
- * component layer and by user components. Two split strategies:
+ * component layer and by user components. None of these primitives needs a
+ * breakpoint or sets a color, radius or shadow. Two split strategies:
  *
  *   fixed  (.gldn-major / .gldn-minor): each basis is its golden percentage
  *          minus the column's golden share of the row gutter, so the bases
@@ -26,6 +27,16 @@
  */
 @layer layout {
 
+	/*
+	Container
+
+	Centers content at the --gldn-bp-lg maximum width (75rem), with inline padding of
+	--gldn-space-md.
+
+	Markup: <div class="gldn-container">…</div>
+
+	Styleguide Layout.Container
+	*/
 	.gldn-container {
 		width: 100%;
 		max-width: var(--gldn-bp-lg);
@@ -33,29 +44,58 @@
 		padding-inline: var(--gldn-space-md);
 	}
 
+	/*
+	Row
+
+	Arranges children horizontally, separated by --gldn-gutter. A plain row keeps its children
+	on one line; a row of golden columns wraps, so the columns stack when the row is narrower
+	than --gldn-split-min.
+
+	.gldn-center - Centers the children on both axes; also applies to a stack.
+
+	Markup: <div class="gldn-row {{modifier_class}}"><div>one</div><div>two</div></div>
+
+	Styleguide Layout.Row
+	*/
 	.gldn-row {
 		display: flex;
 		gap: var(--gldn-gutter);
 	}
 
-	/* Only rows of golden columns wrap; a plain row keeps its children on one line. */
 	.gldn-row:has(> :is(.gldn-major, .gldn-minor, .gldn-major-fluid, .gldn-minor-fluid, .gldn-sidebar, .gldn-main)) {
 		flex-wrap: wrap;
 	}
 
+	/*
+	Stack
+
+	Arranges children vertically, separated by --gldn-space-lg. The gap alone separates them:
+	their own block margins add nothing.
+
+	Markup: <div class="gldn-stack"><p>one</p><p>two</p></div>
+
+	Styleguide Layout.Stack
+	*/
 	.gldn-stack {
 		display: flex;
 		flex-direction: column;
 		gap: var(--gldn-space-lg);
 	}
 
-	/* The gap alone separates a stack's children; their own block margins add nothing. */
 	.gldn-stack > * {
 		margin-block: 0;
 	}
 
-	/* An inline group (tags, chips, buttons) that wraps onto new lines and never stacks:
-	 * each child keeps its own width. */
+	/*
+	Cluster
+
+	An inline group, such as tags, chips or buttons, on as few lines as fit. It wraps and never
+	stacks; each child keeps its own width.
+
+	Markup: <p class="gldn-cluster"><a href="#">Record</a> <a href="#">Consult</a></p>
+
+	Styleguide Layout.Cluster
+	*/
 	.gldn-cluster {
 		display: flex;
 		flex-wrap: wrap;
@@ -63,18 +103,34 @@
 		gap: var(--gldn-space-sm);
 	}
 
-	/* As many equal columns as fit --gldn-grid-min, with no breakpoint; a container
-	 * narrower than one track gets a single full-width column. */
+	/*
+	Grid
+
+	As many equal columns as fit --gldn-grid-min, with no breakpoint. A container narrower than
+	one track gets a single full-width column. Retune --gldn-grid-min on the element.
+
+	Markup: <div class="gldn-grid"><div>one</div><div>two</div><div>three</div></div>
+
+	Styleguide Layout.Grid
+	*/
 	.gldn-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--gldn-grid-min)), 1fr));
 		gap: var(--gldn-gutter);
 	}
 
-	/* Equal columns that become a stack below --gldn-switch-min. Each child's basis is
-	 * (threshold - container width) * 999: hugely positive below the threshold, so each
-	 * child takes its own line, and hugely negative above it, so all share one line and
-	 * grow equally. */
+	/*
+	Switcher
+
+	Equal columns on one line that become a stack when the switcher is narrower than
+	--gldn-switch-min. Each child's basis is (threshold - container width) * 999: hugely
+	positive below the threshold, so each child takes its own line, and hugely negative above
+	it, so all share one line and grow equally.
+
+	Markup: <div class="gldn-switcher"><div>one</div><div>two</div><div>three</div></div>
+
+	Styleguide Layout.Switcher
+	*/
 	.gldn-switcher {
 		display: flex;
 		flex-wrap: wrap;
@@ -87,8 +143,18 @@
 		min-width: 0;
 	}
 
-	/* A golden box, phi wide to 1 high (portrait: 1 to phi). Hidden overflow lets the
-	 * ratio hold against taller content, and its media child covers it. */
+	/*
+	Frame
+
+	A golden box, phi wide to 1 high. Hidden overflow lets the ratio hold against taller
+	content; an img, video, canvas, svg or iframe child covers the box, cropped.
+
+	.gldn-frame-portrait - 1 wide to phi high.
+
+	Markup: <div class="gldn-frame {{modifier_class}}"><img src="photo.jpg" alt=""></div>
+
+	Styleguide Layout.Frame
+	*/
 	.gldn-frame {
 		aspect-ratio: var(--gldn-phi) / 1;
 		overflow: hidden;
@@ -109,6 +175,16 @@
 		justify-content: center;
 	}
 
+	/*
+	Visually hidden
+
+	Hides content visually and keeps it in the accessibility tree, such as a label that a
+	visible icon replaces.
+
+	Markup: <span class="gldn-visually-hidden">Close</span>
+
+	Styleguide Layout.Visually hidden
+	*/
 	.gldn-visually-hidden {
 		position: absolute;
 		width: 1px;
@@ -121,9 +197,30 @@
 		border: 0;
 	}
 
-	/* Each column gives up its own golden share of the single gutter:
-	 * major + minor + gutter = (1/phi + 1/phi^2)(100% - gutter) + gutter
-	 * = 100%. Retune the gutter through the --gldn-gutter token. */
+	/*
+	Golden split
+
+	Splits a row in the golden ratio: one major and one minor column. Each basis is its golden
+	percentage minus the column's golden share of the one gutter:
+	major + minor + gutter = (1/phi + 1/phi^2)(100% - gutter) + gutter = 100%.
+	The border-box basis never shrinks or redistributes. Retune the gutter through
+	--gldn-gutter, never by setting gap, and give it a length: 0px, not 0, since a unitless
+	number cannot be subtracted from a percentage.
+
+	The columns stack when the row is narrower than --gldn-split-min. By default that is
+	38.2ch at 48rem and above, and every width below 48rem; set the token on the row to
+	replace both. At the 38.2ch threshold the columns are about 22ch and 13ch wide: enough
+	for navigation and metadata, not for prose.
+
+	.gldn-major       - The major column, 61.803% of the row.
+	.gldn-minor       - The minor column, 38.197% of the row.
+	.gldn-major-fluid - Grows by weight phi, keeping the ratio at any width.
+	.gldn-minor-fluid - Grows by weight 1, beside a gldn-major-fluid.
+
+	Markup: <div class="gldn-row"><main class="gldn-major">…</main><aside class="gldn-minor">…</aside></div>
+
+	Styleguide Layout.Golden split
+	*/
 	.gldn-major {
 		flex: 0 0 max(calc(var(--gldn-major) - var(--gldn-gutter) / var(--gldn-phi)),
 			calc((var(--gldn-split-min) - 100%) * 999));

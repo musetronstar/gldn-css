@@ -5,30 +5,56 @@
  * Every other layer composes these properties; none may define new ones.
  * The build also ships this layer alone as gldn-tokens.min.css, for pages
  * that bring their own rules.
+ *
+ * Override a token on :root to re-theme a page without touching markup. Leaf
+ * tokens, such as colors and the shadow, may be overridden on any element.
+ * Derived tokens (space, type, gutter, radii, hairline) inherit as computed
+ * values, so they follow a new base only where they are derived again: on
+ * :root and on a scope element.
  */
 @layer tokens {
 
-	/* ----------------------------------------------------------------------
-	 * 1. The golden ratio constant and the golden split of 100%.
-	 *    major and minor are the first two terms of the cascade below,
-	 *    so the split is exact rather than a rounded literal.
-	 * ------------------------------------------------------------------ */
 	:root {
 		color-scheme: light dark;
+
+		/*
+		Proportions
+
+		The golden ratio and the golden split of 100%. The major and minor shares are the
+		first two terms of the division cascade, so the split is exact rather than a
+		rounded literal: 1/phi + 1/phi^2 = 1.
+
+		--gldn-phi   - The golden ratio, 1.61803398875.
+		--gldn-major - The major share, phi^-1: 61.803%.
+		--gldn-minor - The minor share, phi^-2: 38.197%.
+
+		Styleguide Tokens.Proportions
+		*/
 		--gldn-phi: 1.61803398875;
 
 		--gldn-major: var(--gldn-phi-1);
 		--gldn-minor: var(--gldn-phi-2);
 
-		/* ------------------------------------------------------------------
-		 * 2. Golden division cascade: phi^-1 .. phi^-10 as percentages.
-		 *
-		 * Each term divides the previous term by phi, so term n is exactly
-		 * phi^-n of the whole. phi^-2 stays a subtraction so the first two
-		 * terms sum to exactly 100%, which is what the golden split needs.
-		 * The cascade gives the framework a full proportional scale for
-		 * widths and other horizontal proportions.
-		 * ---------------------------------------------------------------- */
+		/*
+		Golden division cascade
+
+		The percentages phi^-1 to phi^-10, a proportional scale for widths, tints and other
+		shares. Each term divides the previous one by phi, so term n is exactly phi^-n of the
+		whole; phi^-2 stays a subtraction, so the first two terms sum to exactly 100%.
+
+		--gldn-phi-1  - 61.803%.
+		--gldn-phi-2  - 38.197%, 100% less phi^-1.
+		--gldn-phi-3  - 23.607%.
+		--gldn-phi-4  - 14.590%.
+		--gldn-phi-5  - 9.017%.
+		--gldn-phi-6  - 5.573%.
+		--gldn-phi-7  - 3.444%.
+		--gldn-phi-8  - 2.129%.
+		--gldn-phi-9  - 1.316%.
+		--gldn-phi-10 - 0.813%.
+
+		Styleguide Tokens.Golden division cascade
+		*/
 		--gldn-phi-1: calc(100% / var(--gldn-phi));
 		--gldn-phi-2: calc(100% - var(--gldn-phi-1));
 		--gldn-phi-3: calc(var(--gldn-phi-2) / var(--gldn-phi));
@@ -40,12 +66,25 @@
 		--gldn-phi-9: calc(var(--gldn-phi-8) / var(--gldn-phi));
 		--gldn-phi-10: calc(var(--gldn-phi-9) / var(--gldn-phi));
 
-		/* ------------------------------------------------------------------
-		 * 3. One fluid base for type and space. The endpoints are plain numbers
-		 *    in rem, so every step multiplies a length by a number: the base
-		 *    grows from 1rem at a 20rem viewport to 1.125rem at 75rem. These
-		 *    four numbers are the only measurements of the scale.
-		 * ---------------------------------------------------------------- */
+		/*
+		Fluid base
+
+		One base for type and space that grows from 1rem at a 20rem viewport to 1.125rem at
+		75rem. The endpoints are plain numbers in rem, so every step multiplies a length by a
+		number; these four numbers are the only measurements of the scale. Only the base is
+		fluid: no breakpoint overrides the type or space scale.
+
+		--gldn-base-min     - The base at the narrowest viewport, in rem: 1.
+		--gldn-base-max     - The base at the widest viewport, in rem: 1.125.
+		--gldn-viewport-min - The narrowest viewport, in rem: 20.
+		--gldn-viewport-max - The widest viewport, in rem: 75.
+		--gldn-fluid-slope  - The base's growth per rem of viewport width.
+		--gldn-fluid-base   - The clamped, interpolated base.
+		--gldn-space-base   - The base of the space scale; a scope may set its own.
+		--gldn-text-base    - The base of the type scale; a scope may set its own.
+
+		Styleguide Tokens.Fluid base
+		*/
 		--gldn-base-min: 1;
 		--gldn-base-max: 1.125;
 		--gldn-viewport-min: 20;
@@ -61,29 +100,69 @@
 			var(--gldn-base-max) * 1rem
 		);
 
-		/* The two bases of the scales below. A scope element may set its own. */
 		--gldn-space-base: var(--gldn-fluid-base);
 		--gldn-text-base: var(--gldn-fluid-base);
 
-		/* Prose keeps golden leading and a 100ch / phi measure; headings tighten
-		 * their leading by phi^-3. */
+		/*
+		Prose
+
+		Running text keeps golden leading and a readable measure; headings tighten their
+		leading.
+
+		--gldn-leading         - Prose leading: phi.
+		--gldn-leading-heading - Heading leading: 1 + phi^-3.
+		--gldn-measure         - The longest line of running text: 100ch / phi.
+
+		Styleguide Tokens.Prose
+		*/
 		--gldn-leading: var(--gldn-phi);
 		--gldn-leading-heading: calc(1 + pow(var(--gldn-phi), -3));
 		--gldn-measure: calc(100ch / var(--gldn-phi));
 
-		/* Thresholds of the intrinsic primitives, retuned on the element like the
-		 * gutter: a grid track is at least 100ch / phi^3 (23.6ch) wide, and a
-		 * switcher or a golden row stacks below 100ch / phi^2 (38.2ch). Golden
-		 * rows also stack on phone-width viewports; above 48rem the second term
-		 * is negative and the row's own width alone controls the split. */
+		/*
+		Thresholds
+
+		The widths at which the intrinsic primitives change shape. Retune each on the
+		element, like --gldn-gutter.
+
+		--gldn-grid-min   - The narrowest grid track: 100ch / phi^3 (23.6ch).
+		--gldn-switch-min - The width below which a switcher stacks: 100ch / phi^2 (38.2ch).
+		--gldn-split-min  - The width below which a golden row stacks: the 38.2ch intrinsic
+		                    threshold, or any width on a viewport narrower than 48rem. At
+		                    48rem and above the second term is negative, and the row's own
+		                    width alone controls the split. A row override replaces both.
+
+		Styleguide Tokens.Thresholds
+		*/
 		--gldn-grid-min: calc(100ch / pow(var(--gldn-phi), 3));
 		--gldn-switch-min: calc(100ch / pow(var(--gldn-phi), 2));
 		--gldn-split-min: max(calc(100ch / pow(var(--gldn-phi), 2)),
 			calc((var(--gldn-bp-sm) - 100vw) * 999));
 
-		/* ------------------------------------------------------------------
-		 * 4. Surfaces, colors, shadow, interaction.
-		 * ---------------------------------------------------------------- */
+		/*
+		Surface colors
+
+		Every color is a light-dark() pair, except those equal in both schemes, so a page
+		follows the system scheme. Text colors keep AA contrast on bg and surface.
+
+		--gldn-color-bg             - The page.
+		--gldn-color-surface        - Cards, panels, controls and bands.
+		--gldn-color-text           - Text.
+		--gldn-color-muted          - Secondary text: hints, metadata, subtitles.
+		--gldn-color-primary        - The primary action and the selected edge.
+		--gldn-color-primary-hover  - The primary action under a pointer.
+		--gldn-color-primary-fg     - Text on the primary color.
+		--gldn-color-link           - Links.
+		--gldn-color-link-hover     - A link under a pointer: higher contrast, its hue turned
+		                              slightly toward red.
+		--gldn-color-link-visited   - A visited content link: violet. Opaque, since a visited
+		                              link takes its alpha from the unvisited color.
+		--gldn-color-border         - Hairlines between regions.
+		--gldn-color-control-border - A control's boundary, 3:1 against bg and surface.
+		--gldn-color-mark           - The highlight behind <mark>.
+
+		Styleguide Tokens.Surface colors
+		*/
 		--gldn-color-bg: light-dark(#f4f5f7, #0f172a);
 		--gldn-color-surface: light-dark(#ffffff, #1e293b);
 		--gldn-color-text: light-dark(#111827, #f1f5f9);
@@ -93,10 +172,32 @@
 		--gldn-color-primary-fg: #ffffff;
 		--gldn-color-link: light-dark(#2563eb, #93c5fd);
 		--gldn-color-link-hover: light-dark(#343489, #cfd5fe);
-		/* Opaque: a visited link takes its alpha from the unvisited color. */
 		--gldn-color-link-visited: light-dark(#7c3aed, #c4b5fd);
 		--gldn-color-border: light-dark(#e5e7eb, #334155);
 		--gldn-color-control-border: light-dark(#7c8492, #71809a);
+		--gldn-color-mark: light-dark(#fde68a, #854d0e);
+
+		/*
+		Status colors
+
+		Each kind has a base color for edges and icons, an -fg color for text on the base, and
+		a -surface tint for a background, in both schemes.
+
+		--gldn-color-info            - Information.
+		--gldn-color-info-fg         - Text on information.
+		--gldn-color-info-surface    - A background for information.
+		--gldn-color-success         - Success.
+		--gldn-color-success-fg      - Text on success.
+		--gldn-color-success-surface - A background for success.
+		--gldn-color-warning         - A warning.
+		--gldn-color-warning-fg      - Text on a warning.
+		--gldn-color-warning-surface - A background for a warning.
+		--gldn-color-error           - An error.
+		--gldn-color-error-fg        - Text on an error.
+		--gldn-color-error-surface   - A background for an error.
+
+		Styleguide Tokens.Status colors
+		*/
 		--gldn-color-info: light-dark(#1d4ed8, #60a5fa);
 		--gldn-color-info-fg: light-dark(#ffffff, #0f172a);
 		--gldn-color-info-surface: light-dark(#eff6ff, #172554);
@@ -109,10 +210,23 @@
 		--gldn-color-error: light-dark(#b91c1c, #f87171);
 		--gldn-color-error-fg: light-dark(#ffffff, #0f172a);
 		--gldn-color-error-surface: light-dark(#fef2f2, #450a0a);
-		--gldn-color-mark: light-dark(#fde68a, #854d0e);
 
-		/* State colors. Tints of the text and primary colors are mixed where they are used,
-		 * so they follow the scheme of the element that uses them. */
+		/*
+		State colors
+
+		Tints of the text and primary colors are mixed where they are used, so they follow
+		the scheme of the element that uses them.
+
+		--gldn-color-tint       - Code, badges and a hovered bare button: text at phi^-6.
+		--gldn-color-active     - A pressed bare button: text at phi^-5.
+		--gldn-color-selected   - A selected option, row or chip: primary at phi^-4.
+		--gldn-color-valid      - A valid field's boundary: the success color.
+		--gldn-color-invalid    - An invalid field's boundary and message: the error color.
+		--gldn-color-overlay    - The backdrop behind a modal dialog.
+		--gldn-opacity-disabled - A disabled control's opacity.
+
+		Styleguide Tokens.State colors
+		*/
 		--gldn-color-tint: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-6), transparent);
 		--gldn-color-active: color-mix(in srgb, var(--gldn-color-text) var(--gldn-phi-5), transparent);
 		--gldn-color-selected: color-mix(in srgb, var(--gldn-color-primary) var(--gldn-phi-4), transparent);
@@ -121,44 +235,109 @@
 		--gldn-color-overlay: light-dark(rgb(15 23 42 / 0.382), rgb(0 0 0 / 0.618));
 		--gldn-opacity-disabled: 0.5;
 
+		/*
+		Interaction
+
+		--gldn-shadow          - The panel shadow, deeper in the dark scheme.
+		--gldn-focus-ring      - The outline of a focused element, in the link color.
+		--gldn-z-popover       - The stacking level of an application's floating layers, below the
+		                         dock.
+		--gldn-z-dock          - The stacking level of the dock, above popovers.
+		--gldn-motion-duration - The length of transitions and animations, in ms or s.
+		--gldn-touch-target    - The least size of a control for a coarse pointer: 44px.
+
+		Styleguide Tokens.Interaction
+		*/
 		--gldn-shadow: 0 4px 6px -1px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.5));
 		--gldn-focus-ring: calc(var(--gldn-space-xs) / var(--gldn-phi) / var(--gldn-phi)) solid var(--gldn-color-link);
 		--gldn-z-popover: 10000;
 		--gldn-z-dock: 11000;
 		--gldn-motion-duration: 160ms;
 		--gldn-touch-target: 44px;
+
+		/*
+		Dock
+
+		--gldn-dock-strip-height    - The tab strip: one touch target.
+		--gldn-dock-panel-height    - The panels: five lines of base text.
+		--gldn-dock-height          - The strip and the panels.
+		--gldn-dock-expanded-height - The dock with its message log expanded: half the
+		                              viewport.
+		--gldn-dock-reserve         - The bottom padding of a gldn-has-dock body, which
+		                              gldn-dock.js measures; only the strip below 48rem.
+
+		Styleguide Tokens.Dock
+		*/
 		--gldn-dock-strip-height: var(--gldn-touch-target);
 		--gldn-dock-panel-height: calc(var(--gldn-text-base) * var(--gldn-leading) * 5);
 		--gldn-dock-height: calc(var(--gldn-dock-strip-height) + var(--gldn-dock-panel-height));
 		--gldn-dock-expanded-height: 50vh;
 		--gldn-dock-reserve: var(--gldn-dock-height);
 
+		/*
+		Fonts
+
+		Platform fonts shipped with macOS, Windows and Linux; the opt-in font sheet
+		redefines every stack with bundled variable fonts. For serif headings, set
+		--gldn-font-display: var(--gldn-font-serif) on :root.
+
+		--gldn-font-sans    - Text and controls.
+		--gldn-font-serif   - Quotations and <var>.
+		--gldn-font-mono    - Code, keys and preformatted text.
+		--gldn-font-display - Headings: the sans stack.
+
+		Styleguide Tokens.Fonts
+		*/
 		--gldn-font-sans: system-ui, -apple-system, 'Segoe UI', Cantarell, Ubuntu, sans-serif;
 		--gldn-font-serif: Palatino, 'Palatino Linotype', P052, 'URW Palladio L', Georgia, serif;
 		--gldn-font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
 		--gldn-font-display: var(--gldn-font-sans);
 
-		/* ------------------------------------------------------------------
-		 * 5. Breakpoint reference values. Media query conditions cannot read
-		 * custom properties, so _responsive.css repeats these literals; the
-		 * tokens exist so value contexts (clamp, container queries in user
-		 * code) share the same source of truth.
-		 * ---------------------------------------------------------------- */
+		/*
+		Breakpoints
+
+		Reference values for value contexts, such as clamp() or container queries in a
+		page's own rules. Media query conditions cannot read custom properties, so
+		_responsive.css repeats these literals.
+
+		--gldn-bp-sm - Small screens end: 48rem. The workspace and golden rows stack below it.
+		--gldn-bp-lg - The container's maximum width: 75rem.
+
+		Styleguide Tokens.Breakpoints
+		*/
 		--gldn-bp-sm: 48rem;
 		--gldn-bp-lg: 75rem;
 	}
 
-	/* ----------------------------------------------------------------------
-	 * 6. The scales, derived from the two bases on :root and again on every
-	 *    scope element. Custom properties inherit as computed values, so a base
-	 *    set lower in the tree changes the scales only where they are derived
-	 *    again: a scope re-derives them for its subtree.
-	 * ------------------------------------------------------------------ */
+	/* The scales, derived from the two bases on :root and again on every scope element.
+	 * Custom properties inherit as computed values, so a base set lower in the tree changes
+	 * the scales only where they are derived again: a scope re-derives them for its subtree. */
 	:root,
 	.gldn-scope,
 	.gldn-compact,
 	.gldn-spacious {
-		/* Space advances by whole phi steps. */
+		/*
+		Space
+
+		Space advances by whole phi steps from --gldn-space-base.
+
+		--gldn-space-xs          - base × phi^-2.
+		--gldn-space-sm          - base × phi^-1.
+		--gldn-space-md          - The base.
+		--gldn-space-lg          - base × phi.
+		--gldn-space-xl          - base × phi^2.
+		--gldn-space-2xl         - base × phi^3.
+		--gldn-gutter            - The single gutter between golden split columns: space-lg.
+		                           Each column deducts its golden share of it, so the bases
+		                           plus the gutter sum to exactly 100%. Retune a row's gutter
+		                           through this token, never by setting gap.
+		--gldn-workspace-padding - The workspace's padding: space-lg, and space-sm below
+		                           48rem. The workspace's columns read it, so they stack when
+		                           the workspace, padding included, is no wider than
+		                           --gldn-bp-sm.
+
+		Styleguide Tokens.Space
+		*/
 		--gldn-space-xs: calc(var(--gldn-space-base) * pow(var(--gldn-phi), -2));
 		--gldn-space-sm: calc(var(--gldn-space-base) * pow(var(--gldn-phi), -1));
 		--gldn-space-md: var(--gldn-space-base);
@@ -166,17 +345,26 @@
 		--gldn-space-xl: calc(var(--gldn-space-base) * pow(var(--gldn-phi), 2));
 		--gldn-space-2xl: calc(var(--gldn-space-base) * pow(var(--gldn-phi), 3));
 
-		/* The single gutter between golden split columns. Each column deducts
-		 * its golden share of it from its basis (1/phi + 1/phi^2 = 1, so the
-		 * bases plus the gutter sum to exactly 100%). Retune a row's gutter
-		 * through this token, never by setting gap directly. */
 		--gldn-gutter: var(--gldn-space-lg);
 
-		/* The workspace's padding. Its columns stack when the workspace, padding
-		 * included, is no wider than --gldn-bp-sm, so they read it too. */
 		--gldn-workspace-padding: var(--gldn-space-lg);
 
-		/* Type advances by half phi steps. */
+		/*
+		Type
+
+		Type advances by half phi steps from --gldn-text-base.
+
+		--gldn-text-xs  - base × phi^-1 (9.9px at a 20rem viewport): marks such as
+		                  superscripts, not text people read.
+		--gldn-text-sm  - base × phi^-0.5: the smallest size for text people read.
+		--gldn-text-md  - base × phi^0.5.
+		--gldn-text-lg  - base × phi.
+		--gldn-text-xl  - base × phi^1.5.
+		--gldn-text-2xl - base × phi^2.
+		--gldn-text-3xl - base × phi^2.5.
+
+		Styleguide Tokens.Type
+		*/
 		--gldn-text-xs: calc(var(--gldn-text-base) * pow(var(--gldn-phi), -1));
 		--gldn-text-sm: calc(var(--gldn-text-base) * pow(var(--gldn-phi), -0.5));
 		--gldn-text-md: calc(var(--gldn-text-base) * pow(var(--gldn-phi), 0.5));
@@ -185,27 +373,54 @@
 		--gldn-text-2xl: calc(var(--gldn-text-base) * pow(var(--gldn-phi), 2));
 		--gldn-text-3xl: calc(var(--gldn-text-base) * pow(var(--gldn-phi), 2.5));
 
-		/* Radii are space steps. Because phi^n = phi^(n-1) + phi^(n-2), a radius-lg
-		 * panel padded by space-xs holds radius-md children with concentric corners,
-		 * and padded by space-sm holds radius-sm children. */
+		/*
+		Lines and corners
+
+		Radii are space steps. Because phi^n = phi^(n-1) + phi^(n-2), a radius-lg panel
+		padded by space-xs holds radius-md children with concentric corners, and padded by
+		space-sm holds radius-sm children.
+
+		--gldn-radius-sm      - space-xs: controls, buttons, badges, alerts and code.
+		--gldn-radius-md      - space-sm: cards, panels, popovers and preformatted blocks.
+		--gldn-radius-lg      - space-md: chips and their buttons.
+		--gldn-hairline       - The thinnest line, base × phi^-5: rules, separators and
+		                        control boundaries.
+		--gldn-edge-width     - The edge that marks a state beside color, base × phi^-3: a
+		                        selected tab or row, an invalid field.
+		--gldn-control-height - One line of a control's own text, its block padding and its
+		                        boundary. 1lh resolves where the token is used, so it follows
+		                        that control's font.
+
+		Styleguide Tokens.Lines and corners
+		*/
 		--gldn-radius-sm: calc(var(--gldn-space-base) * pow(var(--gldn-phi), -2));
 		--gldn-radius-md: calc(var(--gldn-space-base) * pow(var(--gldn-phi), -1));
 		--gldn-radius-lg: var(--gldn-space-base);
 
-		/* The thinnest line: rules, separators and control boundaries. */
 		--gldn-hairline: calc(var(--gldn-space-base) * pow(var(--gldn-phi), -5));
 
-		/* The edge that marks a state beside color: a selected tab or row, an invalid field. */
 		--gldn-edge-width: calc(var(--gldn-space-base) * pow(var(--gldn-phi), -3));
 
-		/* A control's height: one line of its own text, its block padding and its boundary.
-		 * 1lh resolves where the token is used, so it follows that control's font. */
 		--gldn-control-height: calc(1lh + 2 * var(--gldn-space-xs) + 2 * var(--gldn-hairline));
 	}
 
-	/* Density: space one phi step below or above the page's base; type keeps its
-	 * scale. A custom property cannot refer to itself, so the step is taken from
-	 * the fluid base, and nested density scopes do not compound. */
+	/*
+	Scopes
+
+	A scope re-derives the space and type scales for its subtree from its own
+	--gldn-space-base and --gldn-text-base. Density classes are scopes whose space base is one
+	phi step below or above the page's; type keeps its scale. A compact card has a smaller
+	padding, and a row inside it a smaller gutter. A custom property cannot refer to itself,
+	so the step is taken from the fluid base, and nested density scopes do not compound.
+
+	.gldn-scope    - Re-derives the scales from the bases set on it.
+	.gldn-compact  - Space one phi step below the page's.
+	.gldn-spacious - Space one phi step above the page's.
+
+	Markup: <section class="gldn-scope" style="--gldn-text-base: 0.875rem">…</section>
+
+	Styleguide Tokens.Scopes
+	*/
 	.gldn-compact {
 		--gldn-space-base: calc(var(--gldn-fluid-base) / var(--gldn-phi));
 	}
@@ -214,8 +429,20 @@
 		--gldn-space-base: calc(var(--gldn-fluid-base) * var(--gldn-phi));
 	}
 
-	/* Every color is a light-dark() pair, so a page follows the system scheme. One class
-	 * fixes a scheme for a subtree: the whole page on <html>, or a single panel. */
+	/*
+	Color schemes
+
+	:root sets color-scheme: light dark, so a page follows the system scheme. A class fixes
+	the scheme for a subtree: the whole page on <html>, or a single panel. gldn-theme.js
+	offers the choice to the reader.
+
+	.gldn-theme-light - The light scheme.
+	.gldn-theme-dark  - The dark scheme.
+
+	Markup: <html class="gldn-theme-dark">
+
+	Styleguide Tokens.Color schemes
+	*/
 	.gldn-theme-light {
 		color-scheme: light;
 	}

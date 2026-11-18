@@ -6,7 +6,30 @@
  * current time or page; the application owns anchors and what an annotation becomes.
  */
 
-/** Connects media navigation inside root. Returns { seek, page, destroy }. */
+/**
+ * @typedef {object} MediaNav
+ * @property {(time: number) => void} seek - Moves the playhead to `time` seconds and marks its
+ *   cue. Throws an `Error` without an audio or video element.
+ * @property {(number: number) => void} page - Shows page `number`, counting from 1, clamped to
+ *   the pages there are.
+ * @property {() => void} destroy - Removes the module's listeners.
+ */
+
+/**
+ * Connects media navigation inside `root`. Paged content uses `[data-gldn-page]` pages,
+ * `[data-gldn-page-prev]` and `[data-gldn-page-next]` controls, which disable at the ends, and a
+ * `[data-gldn-page-status]` such as "Page 2 of 5".
+ * @param {HTMLElement} root - The `gldn-media` element.
+ * @param {object} [options]
+ * @param {HTMLMediaElement} [options.media] - The player; by default the first `<audio>` or
+ *   `<video>` in `root`.
+ * @returns {MediaNav} The navigation's controls.
+ * @fires gldn-annotate - On `root`, bubbling, when a `[data-gldn-annotate]` control is clicked;
+ *   `detail.time` is the playhead in seconds, or `detail.page` the page shown.
+ * @example
+ * // <button data-gldn-time="42">0:42 Selection</button>
+ * createMediaNav(document.querySelector('.gldn-media'));
+ */
 export function createMediaNav(root, { media = root.querySelector('audio, video') } = {}) {
 	const pages = [...root.querySelectorAll('[data-gldn-page]')];
 	const previous = root.querySelector('[data-gldn-page-prev]');
