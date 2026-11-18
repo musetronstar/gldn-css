@@ -126,6 +126,9 @@ if (invokedDirectly) {
 		// Replace the whole directory so a renamed or removed font leaves no stale copy.
 		rmSync(path.join(outDir, 'fonts'), { recursive: true, force: true });
 		cpSync(path.join(srcDir, 'fonts'), path.join(outDir, 'fonts'), { recursive: true });
+		/* TODO: strip comments from the dist/ modules, as the CSS bundles do, so pages and
+		 * vendored copies load no JSDoc; src/ keeps the documented modules. Stripping must
+		 * leave strings, template literals and regular expressions byte for byte. */
 		for (const name of modules) {
 			writeFileSync(path.join(outDir, name), readFileSync(path.join(srcDir, name)));
 		}
