@@ -28,15 +28,15 @@ See it in action in the [gldn-css demo](https://musetronstar.github.io/gldn-css/
 dictating markup. It draws inspiration and learns from the following seven works
 but copies none of them:
 
-|    Source    |       Lesson        |                        In gldn-css                        |
-| ------------ | ------------------- | --------------------------------------------------------- |
-| Bringhurst   | measure and rhythm  | φ leading, a `100ch / φ` measure, no space at panel edges |
-| Tim Brown    | one ratio, one base | type, space, radii and lines are the base times φ^n       |
-| Utopia       | fluid type, space   | one `clamp()` base from a 20rem to a 75rem viewport       |
-| Every Layout | intrinsic layout    | splits, stack, cluster, grid, switcher and frame          |
-| CUBE CSS     | styles by intent    | five layers, from reset to responsive                     |
-| Open Props   | tokens used alone   | `--gldn-*` tokens, also alone in `gldn-tokens.min.css`    |
-| Pico CSS     | plain HTML composed | the reset styles prose, code, tables and forms            |
+|    Source    |              Lesson               |                  In gldn-css                  |
+| ------------ | --------------------------------- | --------------------------------------------- |
+| Bringhurst   | a readable measure, steady rhythm | φ leading, a `100ch / φ` measure              |
+| Tim Brown    | scales from meaningful ratios     | one ratio, φ, for type, space, radii, lines   |
+| Utopia       | fluid type and space              | one `clamp()` base from 20rem to 75rem        |
+| Every Layout | layouts that answer to their room | stack, cluster, grid, switcher, sided, frame  |
+| CUBE CSS     | composition before components     | five cascade layers, from reset to responsive |
+| Open Props   | tokens useful on their own        | `--gldn-*` tokens, also alone as a bundle     |
+| Pico CSS     | semantic HTML, few classes        | the reset styles prose, code, tables, forms   |
 
 ### Sources
 
